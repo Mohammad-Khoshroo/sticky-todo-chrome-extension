@@ -2,6 +2,7 @@ let msnry;
 let currentDragType = null;
 let draggedTaskInfo = null;
 let draggedNoteId = null;
+let draggedStackId = null;
 let noteLayouts = {};
 const taskContextMenu = document.getElementById("task-context-menu");
 let contextTaskInfo = null;
@@ -49,22 +50,30 @@ const isExtension =
     chrome.storage &&
     chrome.storage.local;
 
+let stacks = {};
+let activeStackId = null;
+
 function loadNotes(callback) {
     if (isExtension) {
-        chrome.storage.local.get(["fridgeNotes"], (result) => {
-            callback(result.fridgeNotes || []);
+        chrome.storage.local.get(["fridgeNotes", "fridgeStacks"], (result) => {
+            callback(result.fridgeNotes || [], result.fridgeStacks || {});
         });
     } else {
         const raw = localStorage.getItem("fridgeNotes");
-        callback(raw ? JSON.parse(raw) : []);
+        const rawStacks = localStorage.getItem("fridgeStacks");
+        callback(
+            raw ? JSON.parse(raw) : [],
+            rawStacks ? JSON.parse(rawStacks) : {}
+        );
     }
 }
 
 function saveNotes() {
     if (isExtension) {
-        chrome.storage.local.set({ fridgeNotes: notes });
+        chrome.storage.local.set({ fridgeNotes: notes, fridgeStacks: stacks });
     } else {
         localStorage.setItem("fridgeNotes", JSON.stringify(notes));
+        localStorage.setItem("fridgeStacks", JSON.stringify(stacks));
     }
 }
 
@@ -112,39 +121,61 @@ function cleanupOldScribbles() {
 // Periodic cleanup
 setInterval(cleanupOldScribbles, 5 * 60 * 1000);
 
+function getStackNotes(stackId) {
+    return notes.filter(n => !n.deletedAt && n.stackId === stackId);
+}
+
 // ----------------------
 //     INITIAL LOAD
 // ----------------------
-loadNotes((loaded) => {
-    notes = loaded;
-    let changed = false;
+function initApp() {
+    loadNotes((loaded, loadedStacks) => {
+        notes = loaded;
+        stacks = loadedStacks || {};
+        let changed = false;
 
-    notes.forEach(note => {
-        if (!note.id) {
-            note.id = 'note_' + Date.now() + '_' + Math.random();
-            changed = true;
-        }
+        notes.forEach(note => {
+            if (!note.id) {
+                note.id = 'note_' + Date.now() + '_' + Math.random();
+                changed = true;
+            }
 
-        if (!Array.isArray(note.tasks)) {
-            note.tasks = [];
-            changed = true;
-        }
+            if (!Array.isArray(note.tasks)) {
+                note.tasks = [];
+                changed = true;
+            }
 
-        note.tasks.forEach(task => {
-            if (!("deadline" in task)) {
-                task.deadline = null;
+            note.tasks.forEach(task => {
+                if (!("deadline" in task)) {
+                    task.deadline = null;
+                    changed = true;
+                }
+            });
+            if (!note.layout && typeof createRandomNoteLayout === 'function') {
+                note.layout = createRandomNoteLayout(note);
+                changed = true;
+            }
+
+            if (note.stackId && !stacks[note.stackId]) {
+                stacks[note.stackId] = {
+                    id: note.stackId,
+                    title: note.stackTitle || 'دسته یادداشت',
+                    activeNoteId: note.id
+                };
                 changed = true;
             }
         });
-        if (!note.layout) {
-            note.layout = createRandomNoteLayout(note);
-            changed = true;
-        }
+
+        if (changed) saveNotes();
+
+        if (typeof cleanupOldScribbles === 'function') cleanupOldScribbles();
+        if (typeof cleanupTrash === 'function') cleanupTrash();
+        if (typeof renderAllNotes === 'function') renderAllNotes();
     });
+}
 
-    if (changed) saveNotes();
-
-    cleanupOldScribbles();
-    cleanupTrash();
-    renderAllNotes();
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

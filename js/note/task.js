@@ -79,10 +79,25 @@ fridgeContainer.addEventListener("dragstart", (e) => {
         return;
     }
 
+    const stackHeader = e.target.closest(".stack-header-paper");
+    if (stackHeader) {
+        const stackWrapper = stackHeader.closest(".note-wrapper.is-stack");
+        const stackId = stackWrapper?.dataset.stackId;
+        if (stackId) {
+            currentDragType = "stack";
+            draggedStackId = stackId;
+            draggedNoteId = null;
+            e.dataTransfer.setData("text/plain", "stack");
+            e.dataTransfer.effectAllowed = "move";
+            stackWrapper.classList.add("dragging-note");
+            return;
+        }
+    }
+
     const wrapper = e.target.closest(".note-wrapper");
 
     if (wrapper) {
-        const notePaper = wrapper.querySelector(".note-paper");
+        const notePaper = e.target.closest(".note-paper") || wrapper.querySelector(".note-paper");
         if (!notePaper) return;
 
         const noteIndex = Number(notePaper.dataset.noteIndex);
@@ -97,6 +112,7 @@ fridgeContainer.addEventListener("dragstart", (e) => {
         currentDragType = "note";
         draggedTaskInfo = null;
         draggedNoteId = note.id;
+        draggedStackId = null;
 
         e.dataTransfer.setData("text/plain", "note");
         e.dataTransfer.effectAllowed = "move";
@@ -118,14 +134,39 @@ document.addEventListener("dragend", () => {
         el.classList.remove("drag-over");
     });
 
+    document.querySelectorAll(".can-stack-drop").forEach(el => {
+        el.classList.remove("can-stack-drop");
+    });
+
     trashBin.classList.remove("drag-over");
 
     currentDragType = null;
     draggedTaskInfo = null;
     draggedNoteId = null;
+    draggedStackId = null;
 });
 
 fridgeContainer.addEventListener("dragover", (e) => {
+    if (currentDragType === "note") {
+        const targetStack = e.target.closest(".note-wrapper.is-stack");
+        const targetNoteWrapper = e.target.closest(".note-wrapper:not(.is-stack)");
+        const target = targetStack || targetNoteWrapper;
+
+        document.querySelectorAll(".can-stack-drop").forEach(el => {
+            if (el !== target) el.classList.remove("can-stack-drop");
+        });
+
+        if (target) {
+            const isSelf = (target.dataset.noteId === draggedNoteId);
+            if (!isSelf) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                target.classList.add("can-stack-drop");
+                return;
+            }
+        }
+    }
+
     // ۱. اگر درگ مربوط به ما نیست کلاً خارج شو
     if (!["task", "pen", "eraser"].includes(currentDragType)) return;
 
@@ -149,6 +190,11 @@ fridgeContainer.addEventListener("dragover", (e) => {
 });
 
 fridgeContainer.addEventListener("dragleave", (e) => {
+    const targetWrap = e.target.closest(".note-wrapper");
+    if (targetWrap && !targetWrap.contains(e.relatedTarget)) {
+        targetWrap.classList.remove("can-stack-drop");
+    }
+
     const taskItem = e.target.closest(".note-task");
     if (!taskItem) return;
 
@@ -162,6 +208,51 @@ fridgeContainer.addEventListener("dragleave", (e) => {
 });
 
 fridgeContainer.addEventListener("drop", (e) => {
+    if (currentDragType === "note" && draggedNoteId) {
+        const targetStack = e.target.closest(".note-wrapper.is-stack");
+        const targetNoteWrapper = e.target.closest(".note-wrapper:not(.is-stack)");
+
+        document.querySelectorAll(".can-stack-drop").forEach(el => el.classList.remove("can-stack-drop"));
+
+        const sourceNote = notes.find(n => n.id === draggedNoteId);
+        if (!sourceNote) return;
+
+        if (targetStack) {
+            const targetStackId = targetStack.dataset.stackId;
+            if (targetStackId && sourceNote.stackId !== targetStackId) {
+                e.preventDefault();
+                e.stopPropagation();
+                sourceNote.stackId = targetStackId;
+                if (stacks[targetStackId]) {
+                    stacks[targetStackId].activeNoteId = sourceNote.id;
+                }
+                activeStackId = targetStackId;
+                saveNotes();
+                renderAllNotes();
+                return;
+            }
+        }
+
+        if (targetNoteWrapper && targetNoteWrapper.dataset.noteId !== draggedNoteId) {
+            const targetNote = notes.find(n => n.id === targetNoteWrapper.dataset.noteId);
+            if (targetNote) {
+                e.preventDefault();
+                e.stopPropagation();
+                const newStackId = 'stack_' + Date.now();
+                stacks[newStackId] = {
+                    id: newStackId,
+                    title: 'دسته یادداشت',
+                    activeNoteId: sourceNote.id
+                };
+                sourceNote.stackId = newStackId;
+                targetNote.stackId = newStackId;
+                activeStackId = newStackId;
+                saveNotes();
+                renderAllNotes();
+                return;
+            }
+        }
+    }
     const targetTaskEl = e.target.closest(".note-task");
     if (!targetTaskEl) return;
 

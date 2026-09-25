@@ -22,7 +22,7 @@ function updateTrashIcon() {
 }
 
 trashBin.addEventListener("dragover", (e) => {
-    if (currentDragType !== "note") return;
+    if (currentDragType !== "note" && currentDragType !== "stack") return;
 
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -34,15 +34,37 @@ trashBin.addEventListener("dragleave", () => {
 });
 
 trashBin.addEventListener("drop", (e) => {
-    if (currentDragType !== "note") return;
+    if (currentDragType !== "note" && currentDragType !== "stack") return;
 
     e.preventDefault();
     trashBin.classList.remove("drag-over");
+
+    if (currentDragType === "stack" && draggedStackId) {
+        notes.forEach(n => {
+            if (n.stackId === draggedStackId) {
+                n.deletedAt = Date.now();
+            }
+        });
+        delete stacks[draggedStackId];
+        saveNotes();
+        renderAllNotes();
+        updateTrashIcon();
+        return;
+    }
 
     const note = notes.find(n => n.id === draggedNoteId);
 
     if (note) {
         note.deletedAt = Date.now();
+        if (note.stackId) {
+            const remaining = getStackNotes(note.stackId);
+            if (remaining.length === 1) {
+                remaining[0].stackId = null;
+                delete stacks[note.stackId];
+            } else if (remaining.length > 1 && stacks[note.stackId]?.activeNoteId === note.id) {
+                stacks[note.stackId].activeNoteId = remaining[0].id;
+            }
+        }
         saveNotes();
         renderAllNotes();
         updateTrashIcon();

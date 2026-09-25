@@ -190,3 +190,143 @@ document.addEventListener("keydown", (e) => {
 
 window.addEventListener("resize", closeTaskContextMenu);
 window.addEventListener("scroll", closeTaskContextMenu, true);
+
+// ----------------------
+//   NOTE & STACK CONTEXT MENU
+// ----------------------
+const noteContextMenu = document.getElementById("note-context-menu");
+const ctxDetachNoteBtn = document.getElementById("ctx-detach-note-btn");
+const ctxDissolveStackBtn = document.getElementById("ctx-dissolve-stack-btn");
+let contextNoteTarget = null; // { type: 'note', noteId } or { type: 'stack', stackId }
+
+function closeNoteContextMenu() {
+    if (noteContextMenu) {
+        noteContextMenu.classList.add("hidden");
+        contextNoteTarget = null;
+    }
+}
+
+fridgeContainer.addEventListener("contextmenu", (e) => {
+    // If clicking on a task, let task context menu handle it
+    if (e.target.closest(".note-task")) return;
+
+    const stackHeader = e.target.closest(".stack-header-paper");
+    const notePaper = e.target.closest(".note-paper");
+
+    if (!stackHeader && !notePaper) return;
+
+    e.preventDefault();
+    closeTaskContextMenu();
+
+    if (stackHeader) {
+        const stackWrapper = stackHeader.closest(".note-wrapper.is-stack");
+        const stackId = stackWrapper?.dataset.stackId;
+        if (!stackId) return;
+
+        contextNoteTarget = { type: 'stack', stackId };
+        ctxDetachNoteBtn.classList.add("hidden");
+        ctxDissolveStackBtn.classList.remove("hidden");
+    } else if (notePaper) {
+        const noteIndex = Number(notePaper.dataset.noteIndex);
+        const note = notes[noteIndex];
+        if (!note) return;
+
+        contextNoteTarget = { type: 'note', noteId: note.id, noteIndex };
+        if (note.stackId) {
+            ctxDetachNoteBtn.classList.remove("hidden");
+        } else {
+            ctxDetachNoteBtn.classList.add("hidden");
+        }
+        ctxDissolveStackBtn.classList.add("hidden");
+    }
+
+    noteContextMenu.classList.remove("hidden");
+    noteContextMenu.style.left = `${e.clientX}px`;
+    noteContextMenu.style.top = `${e.clientY}px`;
+
+    const r = noteContextMenu.getBoundingClientRect();
+    if (r.right > window.innerWidth) {
+        noteContextMenu.style.left = `${window.innerWidth - r.width - 8}px`;
+    }
+    if (r.bottom > window.innerHeight) {
+        noteContextMenu.style.top = `${window.innerHeight - r.height - 8}px`;
+    }
+});
+
+noteContextMenu?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn || !contextNoteTarget) return;
+
+    const action = btn.dataset.action;
+
+    if (action === "detach-note" && contextNoteTarget.type === 'note') {
+        const note = notes.find(n => n.id === contextNoteTarget.noteId);
+        if (note && note.stackId) {
+            const oldStackId = note.stackId;
+            note.stackId = null;
+            const remaining = getStackNotes(oldStackId);
+            if (remaining.length <= 1) {
+                remaining.forEach(r => r.stackId = null);
+                delete stacks[oldStackId];
+            } else if (stacks[oldStackId]?.activeNoteId === note.id) {
+                stacks[oldStackId].activeNoteId = remaining[0].id;
+            }
+            saveNotes();
+            renderAllNotes();
+        }
+    }
+
+    if (action === "dissolve-stack" && contextNoteTarget.type === 'stack') {
+        const stackId = contextNoteTarget.stackId;
+        notes.forEach(n => {
+            if (n.stackId === stackId) n.stackId = null;
+        });
+        delete stacks[stackId];
+        saveNotes();
+        renderAllNotes();
+    }
+
+    if (action === "delete-note") {
+        if (contextNoteTarget.type === 'stack') {
+            const stackId = contextNoteTarget.stackId;
+            notes.forEach(n => {
+                if (n.stackId === stackId) n.deletedAt = Date.now();
+            });
+            delete stacks[stackId];
+        } else if (contextNoteTarget.type === 'note') {
+            const note = notes.find(n => n.id === contextNoteTarget.noteId);
+            if (note) {
+                note.deletedAt = Date.now();
+                if (note.stackId) {
+                    const remaining = getStackNotes(note.stackId);
+                    if (remaining.length <= 1) {
+                        remaining.forEach(r => r.stackId = null);
+                        delete stacks[note.stackId];
+                    }
+                }
+            }
+        }
+        saveNotes();
+        renderAllNotes();
+        updateTrashIcon();
+    }
+
+    closeNoteContextMenu();
+});
+
+document.addEventListener("click", (e) => {
+    if (noteContextMenu && !noteContextMenu.classList.contains("hidden")) {
+        if (!e.target.closest("#note-context-menu")) {
+            closeNoteContextMenu();
+        }
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeNoteContextMenu();
+    }
+});
+
+window.addEventListener("resize", closeNoteContextMenu);
+window.addEventListener("scroll", closeNoteContextMenu, true);
