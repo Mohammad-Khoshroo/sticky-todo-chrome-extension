@@ -21,32 +21,26 @@ body {
     margin: 0;
     padding: 30px;
     padding-top: 45px;
+    padding-right: 380px;
     height: 100vh;
     box-sizing: border-box;
     overflow-y: auto;
     min-height: 100vh;
     background-size: cover;
     background-attachment: fixed;
-    transition: padding-right 0.5s ease;
+    transition: padding-right 0.3s ease;
 }
 
-body.is-maximized {
-    padding-right: 350px !important;
+body.no-calendar-transition {
+    transition: none !important;
 }
 
-body.is-maximized.calendar-closed {
+body.calendar-closed {
     padding-right: 30px !important;
 }
 
-body.is-maximized-window .Calendar {
-    display: block;
-}
-
-body.is-maximized-window {
-    padding-right: 350px !important;
-}
-
-body.is-maximized-window.calendar-closed {
-    padding-right: 30px !important;
-    padding-top: 45px !important;
+@media (max-width: 768px) {
+    body {
+        padding-right: 30px;
+    }
 }

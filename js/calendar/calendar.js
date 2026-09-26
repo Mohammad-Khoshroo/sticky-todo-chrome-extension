@@ -82,19 +82,111 @@ function formatPersianDeadlineTitle(key) {
     return `${toFarsiNumber(jd)} ${monthNames[jm - 1]} ${toFarsiNumber(jy)}`;
 }
 
+const DEADLINE_EXPAND_THRESHOLD = 2;
+const STANDARD_DEADLINE_LIST_MAX_HEIGHT = 220;
+
+let isDeadlinePanelUserCollapsed = false;
+let currentPanelDeadlineKey = null;
+let previousDeadlineItemsCount = 0;
+
+function getAvailableDeadlineListHeight() {
+    const eraser = document.getElementById("eraser");
+    const pen = document.getElementById("pen");
+    const deadlineList = document.getElementById("deadline-list");
+    const deadlinePanel = document.getElementById("deadline-panel");
+
+    if (!deadlineList) return STANDARD_DEADLINE_LIST_MAX_HEIGHT;
+
+    // Bottom barrier: top of eraser or pen
+    let barrier = window.innerHeight - 110;
+    if (eraser && pen) {
+        const eraserTop = eraser.getBoundingClientRect().top;
+        const penTop = pen.getBoundingClientRect().top;
+        barrier = Math.min(eraserTop, penTop);
+    } else if (eraser) {
+        barrier = eraser.getBoundingClientRect().top;
+    } else if (pen) {
+        barrier = pen.getBoundingClientRect().top;
+    }
+
+    // Leave a comfortable gap of 20px above eraser & pen
+    const targetBottom = barrier - 20;
+
+    // Current top of deadlineList
+    const listRect = deadlineList.getBoundingClientRect();
+    let listTop = listRect.top;
+
+    if (!listTop || listTop <= 0) {
+        const panelRect = deadlinePanel ? deadlinePanel.getBoundingClientRect() : null;
+        if (panelRect && panelRect.top > 0) {
+            listTop = panelRect.top + 42;
+        } else {
+            const calendarEl = document.getElementById("calendar");
+            const calHeight = (calendarEl && !calendarEl.classList.contains("minimized")) ? 445 : 38;
+            listTop = 30 + calHeight + 10 + 42;
+        }
+    }
+
+    const available = Math.floor(targetBottom - listTop);
+    return Math.max(available, 140);
+}
+
+function applyDeadlinePanelState() {
+    const toggleBtn = document.getElementById("deadline-panel-toggle-btn");
+    const listEl = document.getElementById("deadline-list");
+
+    if (!toggleBtn || !listEl) return;
+
+    const items = getTasksByDeadlineKey(selectedDeadlineKey);
+    const hasManyItems = items.length > DEADLINE_EXPAND_THRESHOLD;
+
+    if (!hasManyItems) {
+        toggleBtn.classList.add("hidden");
+        listEl.style.maxHeight = `${STANDARD_DEADLINE_LIST_MAX_HEIGHT}px`;
+        return;
+    }
+
+    toggleBtn.classList.remove("hidden");
+    const availableHeight = getAvailableDeadlineListHeight();
+
+    if (isDeadlinePanelUserCollapsed) {
+        toggleBtn.innerText = "+ بزرگ کردن";
+        toggleBtn.title = "باز کردن و بزرگ‌نمایی پنجره برای مشاهده تمام ددلاین‌ها";
+        listEl.style.maxHeight = `${Math.min(STANDARD_DEADLINE_LIST_MAX_HEIGHT, availableHeight)}px`;
+    } else {
+        toggleBtn.innerText = "− کوچک کردن";
+        toggleBtn.title = "بستن و کوچک کردن به اندازه استاندارد";
+        listEl.style.maxHeight = `${availableHeight}px`;
+    }
+}
+
 function updateDeadlinePanel(deadlineKey) {
     const titleEl = document.getElementById("deadline-panel-title");
     const listEl = document.getElementById("deadline-list");
 
     if (!titleEl || !listEl) return;
 
+    if (currentPanelDeadlineKey !== deadlineKey) {
+        currentPanelDeadlineKey = deadlineKey;
+        isDeadlinePanelUserCollapsed = false;
+        previousDeadlineItemsCount = 0;
+    }
+
     const items = getTasksByDeadlineKey(deadlineKey);
 
-    titleEl.textContent = `ددلاین‌های ${formatPersianDeadlineTitle(deadlineKey)}`;
+    if (items.length > previousDeadlineItemsCount && items.length > DEADLINE_EXPAND_THRESHOLD) {
+        isDeadlinePanelUserCollapsed = false;
+    }
+    previousDeadlineItemsCount = items.length;
+
+    const titleText = `ددلاین‌های ${formatPersianDeadlineTitle(deadlineKey)}`;
+    titleEl.textContent = titleText;
+    titleEl.title = titleText;
     listEl.innerHTML = "";
 
     if (!items.length) {
         listEl.innerHTML = `<div class="deadline-empty">ددلاینی برای این روز وجود ندارد</div>`;
+        applyDeadlinePanelState();
         return;
     }
 
@@ -115,6 +207,7 @@ function updateDeadlinePanel(deadlineKey) {
         listEl.appendChild(item);
     });
 
+    applyDeadlinePanelState();
 }
 
 function renderCalendar(jy, jm) {
@@ -229,7 +322,22 @@ function applyCalendarState(isMinimized) {
     toggleBtn.innerText = isMinimized
         ? '+ نمایش تقویم'
         : '− بستن تقویم';
+
+    setTimeout(() => {
+        applyDeadlinePanelState();
+        if (typeof updateNotesLayout === 'function') {
+            updateNotesLayout();
+        }
+    }, 320);
 }
+
+document.body.addEventListener('transitionend', (e) => {
+    if (e.target === document.body && e.propertyName === 'padding-right') {
+        if (typeof updateNotesLayout === 'function') {
+            updateNotesLayout();
+        }
+    }
+});
 
 if (toggleBtn && calendar) {
     const savedMinimized = getSavedCalendarState();
@@ -250,4 +358,25 @@ if (toggleBtn && calendar) {
     });
 }
 
+const deadlineToggleBtn = document.getElementById('deadline-panel-toggle-btn');
+if (deadlineToggleBtn) {
+    deadlineToggleBtn.addEventListener('click', () => {
+        isDeadlinePanelUserCollapsed = !isDeadlinePanelUserCollapsed;
+        applyDeadlinePanelState();
+    });
+}
+
+window.addEventListener('resize', () => {
+    applyDeadlinePanelState();
+});
+
+if (calendar) {
+    calendar.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'height') {
+            applyDeadlinePanelState();
+        }
+    });
+}
+
 renderCalendar(currentJy, currentJm);
+updateDeadlinePanel(selectedDeadlineKey);

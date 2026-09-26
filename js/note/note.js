@@ -346,19 +346,25 @@ function renderAllNotes() {
     updateDeadlinePanel(selectedDeadlineKey);
 
     setTimeout(() => {
-        if (msnry) {
-            msnry.destroy();
-        }
-
-        msnry = new Masonry(fridgeContainer, {
-            itemSelector: '.note-wrapper',
-            columnWidth: 270,
-            gutter: 20,
-            fitWidth: true,
-            transitionDuration: '0.2s'
-        });
+        updateNotesLayout();
     }, 50);
 }
+
+function updateNotesLayout() {
+    if (typeof Masonry === 'undefined' || !fridgeContainer) return;
+    if (msnry) {
+        msnry.destroy();
+    }
+
+    msnry = new Masonry(fridgeContainer, {
+        itemSelector: '.note-wrapper',
+        columnWidth: 270,
+        gutter: 20,
+        fitWidth: true,
+        transitionDuration: '0.2s'
+    });
+}
+window.updateNotesLayout = updateNotesLayout;
 
 // ----------------------
 //          EVENTS

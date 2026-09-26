@@ -9,5 +9,10 @@ function checkWindowMaximized() {
     }
 }
 
-window.addEventListener('resize', checkWindowMaximized);
+window.addEventListener('resize', () => {
+    checkWindowMaximized();
+    if (typeof updateNotesLayout === 'function') {
+        updateNotesLayout();
+    }
+});
 checkWindowMaximized();
