@@ -86,8 +86,160 @@ const DEADLINE_EXPAND_THRESHOLD = 2;
 const STANDARD_DEADLINE_LIST_MAX_HEIGHT = 220;
 
 let isDeadlinePanelUserCollapsed = false;
+let isOverdueSectionCollapsed = localStorage.getItem("overdueSectionCollapsed") === "true";
 let currentPanelDeadlineKey = null;
 let previousDeadlineItemsCount = 0;
+
+function getDeadlineInfo(deadlineKey, isChecked) {
+    if (!deadlineKey) return null;
+
+    try {
+        const { jy, jm, jd } = parseJalaliKey(deadlineKey);
+        if (!jy || !jm || !jd) return null;
+        const g = jalaali.toGregorian(jy, jm, jd);
+        const deadlineEnd = new Date(g.gy, g.gm - 1, g.gd, 23, 59, 59, 999).getTime();
+        const now = Date.now();
+        const diffMs = deadlineEnd - now;
+        const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+        if (isChecked) {
+            return {
+                status: "done",
+                isOverdue: false,
+                color: "#10b981",
+                bgColor: "rgba(16, 185, 129, 0.08)",
+                borderColor: "rgba(16, 185, 129, 0.35)",
+                badgeText: "✓ انجام شد",
+                badgeClass: "badge-done",
+                diffMs,
+                deadlineEnd
+            };
+        }
+
+        if (diffMs < 0) {
+            const overdueDays = Math.ceil(Math.abs(diffMs) / (24 * 60 * 60 * 1000));
+            let badgeText = "⚠️ عقب‌افتاده";
+            if (overdueDays === 1) {
+                badgeText = "⚠️ دیروز (عقب‌افتاده)";
+            } else if (overdueDays > 1) {
+                badgeText = `⚠️ ${toFarsiNumber(overdueDays)} روز عقب‌افتاده`;
+            }
+
+            return {
+                status: "overdue",
+                isOverdue: true,
+                color: "#ef4444",
+                bgColor: "rgba(239, 68, 68, 0.08)",
+                borderColor: "rgba(239, 68, 68, 0.35)",
+                badgeText,
+                badgeClass: "badge-overdue",
+                diffMs,
+                deadlineEnd
+            };
+        }
+
+        if (diffMs <= THREE_DAYS_MS) {
+            const ratio = Math.max(0, Math.min(1, 1 - (diffMs / THREE_DAYS_MS)));
+            const hue = Math.round(48 * (1 - ratio));
+            const color = `hsl(${hue}, 92%, 46%)`;
+            const bgColor = `hsla(${hue}, 92%, 46%, 0.08)`;
+            const borderColor = `hsla(${hue}, 92%, 46%, 0.35)`;
+
+            let badgeText = "";
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            if (diffMs <= oneDayMs) {
+                const hoursLeft = Math.max(1, Math.ceil(diffMs / (60 * 60 * 1000)));
+                badgeText = `⏳ امروز (${toFarsiNumber(hoursLeft)} ساعت)`;
+            } else if (diffMs <= 2 * oneDayMs) {
+                badgeText = "⏳ فردا";
+            } else {
+                const daysLeft = Math.ceil(diffMs / oneDayMs);
+                badgeText = `⏳ ${toFarsiNumber(daysLeft)} روز مانده`;
+            }
+
+            return {
+                status: "approaching",
+                isOverdue: false,
+                ratio,
+                hue,
+                color,
+                bgColor,
+                borderColor,
+                badgeText,
+                badgeClass: "badge-urgent",
+                diffMs,
+                deadlineEnd
+            };
+        }
+
+        const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+        return {
+            status: "normal",
+            isOverdue: false,
+            color: "#6366f1",
+            bgColor: "rgba(99, 102, 241, 0.06)",
+            borderColor: "rgba(99, 102, 241, 0.25)",
+            badgeText: `📅 ${toFarsiNumber(daysLeft)} روز مانده`,
+            badgeClass: "badge-normal",
+            diffMs,
+            deadlineEnd
+        };
+    } catch (err) {
+        console.error("Error computing deadline info:", err);
+        return null;
+    }
+}
+
+function getOverdueTasks() {
+    const overdue = [];
+    const now = Date.now();
+
+    notes.forEach((note, noteIndex) => {
+        if (note.deletedAt) return;
+
+        (note.tasks || []).forEach((task, taskIndex) => {
+            if (task.checked) return;
+            const key = getTaskDeadlineKey(task);
+            if (!key) return;
+
+            try {
+                const { jy, jm, jd } = parseJalaliKey(key);
+                if (!jy || !jm || !jd) return;
+                const g = jalaali.toGregorian(jy, jm, jd);
+                const deadlineEnd = new Date(g.gy, g.gm - 1, g.gd, 23, 59, 59, 999).getTime();
+
+                if (deadlineEnd < now) {
+                    overdue.push({
+                        noteIndex,
+                        taskIndex,
+                        note,
+                        task,
+                        deadlineKey: key,
+                        deadlineEnd
+                    });
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        });
+    });
+
+    overdue.sort((a, b) => a.deadlineEnd - b.deadlineEnd);
+    return overdue;
+}
+
+function getDayUrgencyColor(dayKey) {
+    const dayTasks = getTasksByDeadlineKey(dayKey);
+    if (!dayTasks.length) return null;
+
+    const uncompleted = dayTasks.filter(item => !item.task.checked);
+    if (!uncompleted.length) {
+        return "#10b981";
+    }
+
+    const info = getDeadlineInfo(dayKey, false);
+    return info ? info.color : "#ef4444";
+}
 
 function getAvailableDeadlineListHeight() {
     const eraser = document.getElementById("eraser");
@@ -95,40 +247,42 @@ function getAvailableDeadlineListHeight() {
     const deadlineList = document.getElementById("deadline-list");
     const deadlinePanel = document.getElementById("deadline-panel");
 
-    if (!deadlineList) return STANDARD_DEADLINE_LIST_MAX_HEIGHT;
+    if (!deadlineList || !deadlinePanel) return STANDARD_DEADLINE_LIST_MAX_HEIGHT;
 
     // Bottom barrier: top of eraser or pen
     let barrier = window.innerHeight - 110;
     if (eraser && pen) {
         const eraserTop = eraser.getBoundingClientRect().top;
         const penTop = pen.getBoundingClientRect().top;
-        barrier = Math.min(eraserTop, penTop);
-    } else if (eraser) {
-        barrier = eraser.getBoundingClientRect().top;
-    } else if (pen) {
-        barrier = pen.getBoundingClientRect().top;
-    }
-
-    // Leave a comfortable gap of 20px above eraser & pen
-    const targetBottom = barrier - 20;
-
-    // Current top of deadlineList
-    const listRect = deadlineList.getBoundingClientRect();
-    let listTop = listRect.top;
-
-    if (!listTop || listTop <= 0) {
-        const panelRect = deadlinePanel ? deadlinePanel.getBoundingClientRect() : null;
-        if (panelRect && panelRect.top > 0) {
-            listTop = panelRect.top + 42;
-        } else {
-            const calendarEl = document.getElementById("calendar");
-            const calHeight = (calendarEl && !calendarEl.classList.contains("minimized")) ? 445 : 38;
-            listTop = 30 + calHeight + 10 + 42;
+        if (eraserTop > 0 && penTop > 0) {
+            barrier = Math.min(eraserTop, penTop);
+        } else if (eraserTop > 0) {
+            barrier = eraserTop;
+        } else if (penTop > 0) {
+            barrier = penTop;
         }
+    } else if (eraser) {
+        const eraserTop = eraser.getBoundingClientRect().top;
+        if (eraserTop > 0) barrier = eraserTop;
+    } else if (pen) {
+        const penTop = pen.getBoundingClientRect().top;
+        if (penTop > 0) barrier = penTop;
     }
 
-    const available = Math.floor(targetBottom - listTop);
-    return Math.max(available, 140);
+    // Leave a comfortable gap of 18px above eraser & pen
+    const targetBottom = barrier - 18;
+
+    const panelRect = deadlinePanel.getBoundingClientRect();
+    let panelTop = panelRect.top;
+    if (!panelTop || panelTop <= 0) {
+        const calendarEl = document.getElementById("calendar");
+        const calHeight = (calendarEl && !calendarEl.classList.contains("minimized")) ? 445 : 38;
+        panelTop = 30 + calHeight + 10;
+    }
+
+    const headerHeight = deadlinePanel.querySelector(".deadline-panel-header")?.offsetHeight || 42;
+    const available = Math.floor(targetBottom - panelTop - headerHeight - 4);
+    return Math.max(available, 60);
 }
 
 function applyDeadlinePanelState() {
@@ -137,8 +291,15 @@ function applyDeadlinePanelState() {
 
     if (!toggleBtn || !listEl) return;
 
-    const items = getTasksByDeadlineKey(selectedDeadlineKey);
-    const hasManyItems = items.length > DEADLINE_EXPAND_THRESHOLD;
+    const allItems = listEl.querySelectorAll('.deadline-item');
+    let visibleCount = 0;
+    allItems.forEach(item => {
+        if (!item.closest('.overdue-items-container.collapsed')) {
+            visibleCount++;
+        }
+    });
+
+    const hasManyItems = visibleCount > DEADLINE_EXPAND_THRESHOLD;
 
     if (!hasManyItems) {
         toggleBtn.classList.add("hidden");
@@ -160,6 +321,48 @@ function applyDeadlinePanelState() {
     }
 }
 
+function createDeadlineItemElement({ note, task, noteIndex, info, isOverdue }) {
+    const item = document.createElement("div");
+    item.className = `deadline-item ${task.checked ? "done" : ""} ${isOverdue ? "overdue" : ""}`;
+    if (info) {
+        item.style.setProperty("--deadline-item-color", info.color);
+        item.style.borderRightColor = info.color;
+        item.style.backgroundColor = info.bgColor || "#f9fafb";
+    }
+
+    const noteTitleText = escapeHTML(note.title?.trim() || "بدون عنوان");
+    const taskContentText = escapeHTML(task.text?.trim() || "(بدون متن)");
+
+    let badgeHTML = "";
+    if (info && info.badgeText) {
+        badgeHTML = `
+            <span class="deadline-item-badge ${info.badgeClass || ''}" style="color: ${info.color}; border-color: ${info.borderColor}; background-color: ${info.bgColor}">
+                ${info.badgeText}
+            </span>
+        `;
+    }
+
+    item.innerHTML = `
+        <div class="deadline-item-header">
+            <span class="deadline-item-note" title="${noteTitleText}">${noteTitleText}</span>
+            ${badgeHTML}
+        </div>
+        <div class="deadline-item-text">${taskContentText}</div>
+    `;
+
+    item.addEventListener("click", () => {
+        activeNoteIndex = noteIndex;
+        if (note.stackId && typeof stacks !== "undefined" && stacks[note.stackId]) {
+            stacks[note.stackId].activeNoteId = note.id;
+            if (typeof activeStackId !== "undefined") activeStackId = note.stackId;
+            if (typeof saveNotes === "function") saveNotes();
+        }
+        renderAllNotes();
+    });
+
+    return item;
+}
+
 function updateDeadlinePanel(deadlineKey) {
     const titleEl = document.getElementById("deadline-panel-title");
     const listEl = document.getElementById("deadline-list");
@@ -172,40 +375,103 @@ function updateDeadlinePanel(deadlineKey) {
         previousDeadlineItemsCount = 0;
     }
 
-    const items = getTasksByDeadlineKey(deadlineKey);
+    const todayKey = formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
+    const overdueTasks = getOverdueTasks();
+    const currentDayItems = getTasksByDeadlineKey(deadlineKey);
 
-    if (items.length > previousDeadlineItemsCount && items.length > DEADLINE_EXPAND_THRESHOLD) {
+    const overdueTaskSet = new Set(overdueTasks.map(item => item.task));
+    const nonOverdueCurrentItems = currentDayItems.filter(item => !overdueTaskSet.has(item.task));
+
+    const totalCount = overdueTasks.length + nonOverdueCurrentItems.length;
+
+    if (totalCount > previousDeadlineItemsCount && totalCount > DEADLINE_EXPAND_THRESHOLD) {
         isDeadlinePanelUserCollapsed = false;
     }
-    previousDeadlineItemsCount = items.length;
+    previousDeadlineItemsCount = totalCount;
 
-    const titleText = `ددلاین‌های ${formatPersianDeadlineTitle(deadlineKey)}`;
+    const isToday = (deadlineKey === todayKey);
+    const titleText = isToday 
+        ? `ددلاین‌های امروز (${formatPersianDeadlineTitle(deadlineKey)})`
+        : `ددلاین‌های ${formatPersianDeadlineTitle(deadlineKey)}`;
+
     titleEl.textContent = titleText;
     titleEl.title = titleText;
     listEl.innerHTML = "";
 
-    if (!items.length) {
+    if (totalCount === 0) {
         listEl.innerHTML = `<div class="deadline-empty">ددلاینی برای این روز وجود ندارد</div>`;
         applyDeadlinePanelState();
         return;
     }
 
-    items.forEach(({ note, task, noteIndex }) => {
-        const item = document.createElement("div");
-        item.className = `deadline-item ${task.checked ? "done" : ""}`;
+    // 1. Render Overdue Section (always shown at top if any exist)
+    if (overdueTasks.length > 0) {
+        const overdueHeader = document.createElement("div");
+        overdueHeader.className = "deadline-section-header overdue";
+        overdueHeader.id = "overdue-section-header";
+        overdueHeader.title = "کلیک برای باز یا جمع کردن کارهای عقب‌افتاده";
 
-        item.innerHTML = `
-            <div class="deadline-item-note">${escapeHTML(note.title?.trim() || "بدون عنوان")}</div>
-            <div class="deadline-item-text">${escapeHTML(task.text?.trim() || "(بدون متن)")}</div>
-        `;
+        const updateOverdueHeaderContent = () => {
+            const icon = isOverdueSectionCollapsed ? "◀" : "▼";
+            const btnText = isOverdueSectionCollapsed ? "+ باز کردن" : "− بستن";
+            overdueHeader.innerHTML = `
+                <div class="deadline-section-title">
+                    <span class="overdue-collapse-icon">${icon}</span>
+                    <span>⚠️ کارهای عقب‌افتاده (${toFarsiNumber(overdueTasks.length)})</span>
+                </div>
+                <button type="button" class="overdue-toggle-btn" title="تغییر وضعیت نمایش کارهای عقب‌افتاده">${btnText}</button>
+            `;
+        };
 
-        item.addEventListener("click", () => {
-            activeNoteIndex = noteIndex;
-            renderAllNotes();
+        updateOverdueHeaderContent();
+
+        const overdueContainer = document.createElement("div");
+        overdueContainer.className = `overdue-items-container ${isOverdueSectionCollapsed ? "collapsed" : ""}`;
+        overdueContainer.id = "overdue-items-container";
+
+        overdueHeader.addEventListener("click", (e) => {
+            isOverdueSectionCollapsed = !isOverdueSectionCollapsed;
+            localStorage.setItem("overdueSectionCollapsed", String(isOverdueSectionCollapsed));
+            overdueContainer.classList.toggle("collapsed", isOverdueSectionCollapsed);
+            updateOverdueHeaderContent();
+            applyDeadlinePanelState();
         });
 
-        listEl.appendChild(item);
-    });
+        overdueTasks.forEach(({ note, task, noteIndex, deadlineKey: taskKey }) => {
+            const info = getDeadlineInfo(taskKey, false);
+            const itemEl = createDeadlineItemElement({ note, task, noteIndex, info, isOverdue: true });
+            overdueContainer.appendChild(itemEl);
+        });
+
+        listEl.appendChild(overdueHeader);
+        listEl.appendChild(overdueContainer);
+    }
+
+    // 2. Render Current Day Section
+    if (nonOverdueCurrentItems.length > 0) {
+        if (overdueTasks.length > 0) {
+            const currentHeader = document.createElement("div");
+            currentHeader.className = "deadline-section-header current";
+            const sectionTitle = isToday ? "کارهای امروز" : `کارهای ${formatPersianDeadlineTitle(deadlineKey)}`;
+            currentHeader.innerHTML = `
+                <span>📅 ${sectionTitle} (${toFarsiNumber(nonOverdueCurrentItems.length)})</span>
+            `;
+            listEl.appendChild(currentHeader);
+        }
+
+        nonOverdueCurrentItems.forEach(({ note, task, noteIndex }) => {
+            const info = getDeadlineInfo(deadlineKey, task.checked);
+            const itemEl = createDeadlineItemElement({ note, task, noteIndex, info, isOverdue: false });
+            listEl.appendChild(itemEl);
+        });
+    } else if (overdueTasks.length > 0) {
+        const emptyCurrent = document.createElement("div");
+        emptyCurrent.className = "deadline-section-empty";
+        emptyCurrent.textContent = isToday
+            ? "برای امروز ددلاین جدیدی وجود ندارد."
+            : `برای ${formatPersianDeadlineTitle(deadlineKey)} ددلاین دیگری وجود ندارد.`;
+        listEl.appendChild(emptyCurrent);
+    }
 
     applyDeadlinePanelState();
 }
@@ -259,6 +525,10 @@ function renderCalendar(jy, jm) {
 
         if (deadlineKeys.has(dayKey)) {
             dayDiv.classList.add('has-deadline');
+            const dotColor = getDayUrgencyColor(dayKey);
+            if (dotColor) {
+                dayDiv.style.setProperty('--deadline-dot-color', dotColor);
+            }
         }
 
         if (selectedDeadlineKey === dayKey) {

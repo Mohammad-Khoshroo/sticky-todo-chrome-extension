@@ -46,8 +46,9 @@
 
 
     <!-- UI -->
-    <div id="trash-bin">
+    <div id="trash-bin" title="سطل بازیافت (مشاهده یادداشت‌های مچاله شده)">
         <img id="trash" src="images/trash-bin.ico" alt="trash-bin" width="70" height="70">
+        <span id="trash-count-badge" class="trash-badge hidden">0</span>
     </div>
 
     <div id="eraser" draggable="true" title="Drag over task to delete instantly">
@@ -77,6 +78,24 @@
         <button type="button" data-action="dissolve-stack" id="ctx-dissolve-stack-btn" class="hidden">📂 انحلال
             دسته</button>
         <button type="button" data-action="delete-note">🗑️ حذف</button>
+    </div>
+ 
+    <!-- TRASH MODAL -->
+    <div id="trash-modal" class="trash-modal hidden">
+        <div class="trash-modal-backdrop" id="trash-modal-backdrop"></div>
+        <div class="trash-modal-content">
+            <div class="trash-modal-header">
+                <div class="trash-header-info">
+                    <h2>🗑️ سطل زباله</h2>
+                    <span class="trash-header-sub">یادداشت‌های مچاله شده تا ۲۴ ساعت در اینجا نگهداری می‌شوند</span>
+                </div>
+                <div class="trash-header-actions">
+                    <button id="empty-trash-btn" class="empty-trash-btn" type="button">خالی کردن سطل</button>
+                    <button id="close-trash-modal" class="close-trash-modal" type="button" title="بستن">✕</button>
+                </div>
+            </div>
+            <div id="trash-modal-list" class="trash-modal-list"></div>
+        </div>
     </div>
 
     <!-- <script src="script.js"></script> -->

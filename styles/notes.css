@@ -197,6 +197,24 @@ textarea {
     opacity: 0.6;
 }
 
+/* Pop-in animation for new notes */
+@keyframes note-stick {
+    0% {
+        opacity: 0;
+        transform: scale(1.12) translateY(-20px) rotate(-3deg);
+    }
+    60% {
+        transform: scale(0.98) translateY(2px) rotate(1deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+    }
+}
+
+.note-wrapper.new-note-anim {
+    animation: note-stick 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
 /* Settings for the wrapper of connected papers */
 .note-wrapper {
@@ -210,10 +228,27 @@ textarea {
     cursor: grab;
     width: 270px;
     box-sizing: border-box;
+    transition: transform 0.2s ease;
+}
+
+.note-wrapper:hover {
+    z-index: 25;
+}
+
+.note-wrapper:hover .note-paper {
+    transform: translateY(-4px);
+    box-shadow: 0px 14px 20px -4px rgba(0, 0, 0, 0.35) !important;
 }
 
 .note-wrapper:active {
     cursor: grabbing;
+}
+
+.note-wrapper.dragging-note {
+    opacity: 0.88;
+    transform: scale(1.05) rotate(3deg) !important;
+    cursor: grabbing;
+    z-index: 999;
 }
 
 /* Maintain the original appearance and fixed size of each paper */
@@ -444,4 +479,167 @@ body {
     white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     font-family: inherit;
+}
+
+/* ============================================================
+   CRUMPLED PAPER (یادداشت‌های مچاله شده در سطل زباله)
+   ============================================================ */
+
+.crumpled-note-card {
+    position: relative;
+    width: 220px;
+    min-height: 215px;
+    padding: 22px 16px 14px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: default;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, filter 0.3s ease;
+    
+    /* Realistic jagged crumpled paper outline */
+    clip-path: polygon(
+        2% 4%, 14% 1%, 28% 5%, 44% 1%, 60% 4%, 78% 1%, 95% 6%,
+        99% 19%, 95% 36%, 100% 54%, 96% 72%, 99% 89%, 94% 97%,
+        79% 95%, 62% 99%, 45% 96%, 29% 100%, 13% 95%, 4% 98%,
+        1% 83%, 5% 66%, 2% 49%, 5% 32%, 1% 16%
+    );
+
+    /* 3D crinkle fold highlights and shadows */
+    background-image: 
+        linear-gradient(135deg, rgba(0,0,0,0.18) 0%, transparent 22%, rgba(255,255,255,0.3) 26%, transparent 38%),
+        linear-gradient(225deg, rgba(0,0,0,0.14) 0%, transparent 20%, rgba(255,255,255,0.25) 24%, transparent 40%),
+        linear-gradient(45deg, rgba(0,0,0,0.12) 0%, transparent 28%, rgba(0,0,0,0.15) 55%, transparent 75%),
+        linear-gradient(315deg, rgba(255,255,255,0.2) 0%, transparent 30%, rgba(0,0,0,0.1) 60%, transparent 85%),
+        radial-gradient(circle at 45% 45%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.18) 100%);
+
+    box-shadow: 
+        inset 3px 3px 12px rgba(0, 0, 0, 0.22),
+        inset -3px -3px 10px rgba(255, 255, 255, 0.35),
+        inset 8px 8px 16px rgba(0, 0, 0, 0.1),
+        0 8px 20px rgba(0, 0, 0, 0.35);
+
+    border: none;
+    filter: contrast(1.08) brightness(0.96);
+}
+
+.crumpled-note-card:hover {
+    transform: scale(1.06) translateY(-6px) !important;
+    box-shadow: 
+        inset 3px 3px 12px rgba(0, 0, 0, 0.2),
+        inset -3px -3px 10px rgba(255, 255, 255, 0.4),
+        0 16px 30px rgba(0, 0, 0, 0.42);
+    filter: contrast(1.12) brightness(1.02);
+    z-index: 10;
+}
+
+.crumpled-tape {
+    position: absolute;
+    width: 65px;
+    height: 20px;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(8deg);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(1px);
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.2);
+    clip-path: polygon(3% 10%, 15% 0%, 30% 12%, 50% 2%, 75% 14%, 97% 5%, 90% 90%, 75% 100%, 50% 88%, 25% 98%, 5% 85%);
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.crumpled-card-top {
+    flex: 1;
+}
+
+.crumpled-title {
+    font-size: 1.15em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: inherit;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+    padding-bottom: 4px;
+    word-break: break-word;
+    opacity: 0.85;
+}
+
+.crumpled-task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.crumpled-task-item {
+    font-size: 0.85rem;
+    color: inherit;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: line-through;
+    text-decoration-color: rgba(0, 0, 0, 0.4);
+    word-break: break-word;
+}
+
+.crumpled-card-bottom {
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.crumpled-timer {
+    font-size: 0.72rem;
+    opacity: 0.7;
+    font-weight: 500;
+}
+
+.crumpled-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.restore-note-btn {
+    background: rgba(255, 255, 255, 0.8);
+    color: #166534;
+    border: 1px solid rgba(22, 101, 52, 0.35);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(2px);
+}
+
+.restore-note-btn:hover {
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
+    transform: scale(1.05);
+}
+
+.perm-delete-btn {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.perm-delete-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    transform: scale(1.05);
 }

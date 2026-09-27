@@ -238,33 +238,167 @@
 .deadline-item {
     background-color: #f9fafb;
     border: 1px solid #e5e7eb;
+    border-right: 4px solid var(--deadline-item-color, #e5e7eb);
     border-radius: 10px;
-    padding: 10px 12px;
+    padding: 9px 12px;
     text-align: right;
     color: #374151;
     font-size: 0.9rem;
-    line-height: 1.7;
-    transition: background-color 0.2s, transform 0.2s;
+    line-height: 1.6;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .deadline-item:hover {
-    background-color: #eef2ff;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+}
+
+.deadline-item.overdue {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca;
+    border-right-color: #ef4444 !important;
 }
 
 .deadline-item.done {
-    opacity: 0.65;
+    opacity: 0.55;
+    background-color: #f3f4f6 !important;
+    border-right-color: #9ca3af !important;
+}
+
+.deadline-item.done .deadline-item-text {
+    text-decoration: line-through;
+    color: #6b7280;
+}
+
+.deadline-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .deadline-item-note {
     font-size: 0.78rem;
-    color: #6b7280;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: #4b5563;
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.deadline-item-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 12px;
+    border: 1px solid currentColor;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    line-height: 1.3;
 }
 
 .deadline-item-text {
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     color: #111827;
     word-break: break-word;
+}
+
+.deadline-section-header {
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 6px 8px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px dashed #e5e7eb;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.deadline-section-header:first-child {
+    margin-top: 0;
+}
+
+.deadline-section-header.overdue {
+    color: #dc2626;
+    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    background-color: rgba(239, 68, 68, 0.06);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.deadline-section-header.overdue:hover {
+    background-color: rgba(239, 68, 68, 0.12);
+}
+
+.deadline-section-header.overdue:active {
+    transform: scale(0.99);
+}
+
+.deadline-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.overdue-collapse-icon {
+    font-size: 0.65rem;
+    color: #dc2626;
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+.overdue-toggle-btn {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.overdue-toggle-btn:hover {
+    background-color: #fecaca;
+    color: #991b1b;
+}
+
+.overdue-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.overdue-items-container.collapsed {
+    display: none;
+}
+
+.deadline-section-header.current {
+    color: #4b5563;
+    border-bottom-color: #d1d5db;
+}
+
+.deadline-section-empty {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    text-align: center;
+    padding: 6px;
+    font-style: italic;
 }
 
 .deadline-empty {
@@ -291,7 +425,8 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: #ef4444;
+    background-color: var(--deadline-dot-color, #ef4444);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .day.selected-deadline-day {

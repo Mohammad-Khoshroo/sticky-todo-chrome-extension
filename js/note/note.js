@@ -248,6 +248,10 @@ function renderAllNotes() {
 
             const wrapper = document.createElement('div');
             wrapper.className = 'note-wrapper';
+            if (note.isNew) {
+                wrapper.classList.add('new-note-anim');
+                delete note.isNew;
+            }
             wrapper.dataset.noteId = note.id;
             wrapper.draggable = true;
 
@@ -375,7 +379,8 @@ addNoteBtn.addEventListener('click', () => {
         id: 'note_' + Date.now(),
         title: '',
         colorClass: getRandomColorClass(),
-        tasks: [{ text: '', checked: false, scribbled: false }]
+        tasks: [{ text: '', checked: false, scribbled: false }],
+        isNew: true
     };
 
     newNote.layout = createRandomNoteLayout(newNote);
@@ -427,6 +432,12 @@ fridgeContainer.addEventListener('change', (e) => {
         const taskIndex = Number(taskEl.dataset.taskIndex);
         notes[noteIndex].tasks[taskIndex].checked = e.target.checked;
         saveNotes();
+        if (typeof updateDeadlinePanel === 'function') {
+            updateDeadlinePanel(selectedDeadlineKey);
+        }
+        if (typeof renderCalendar === 'function') {
+            renderCalendar(currentJy, currentJm);
+        }
     }
 });
 
