@@ -376,13 +376,13 @@ function updateDeadlinePanel(deadlineKey) {
     }
 
     const todayKey = formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
-    const overdueTasks = getOverdueTasks();
+    const allOverdueTasks = getOverdueTasks();
     const currentDayItems = getTasksByDeadlineKey(deadlineKey);
 
-    const overdueTaskSet = new Set(overdueTasks.map(item => item.task));
-    const nonOverdueCurrentItems = currentDayItems.filter(item => !overdueTaskSet.has(item.task));
+    // Overdue tasks that belong to OTHER days (not deadlineKey)
+    const otherOverdueTasks = allOverdueTasks.filter(item => item.deadlineKey !== deadlineKey);
 
-    const totalCount = overdueTasks.length + nonOverdueCurrentItems.length;
+    const totalCount = currentDayItems.length + otherOverdueTasks.length;
 
     if (totalCount > previousDeadlineItemsCount && totalCount > DEADLINE_EXPAND_THRESHOLD) {
         isDeadlinePanelUserCollapsed = false;
@@ -404,8 +404,9 @@ function updateDeadlinePanel(deadlineKey) {
         return;
     }
 
-    // 1. Render Overdue Section (always shown at top if any exist)
-    if (overdueTasks.length > 0) {
+    function renderOtherOverdueSection(container, tasks, sectionTitle) {
+        if (!tasks.length) return;
+
         const overdueHeader = document.createElement("div");
         overdueHeader.className = "deadline-section-header overdue";
         overdueHeader.id = "overdue-section-header";
@@ -417,7 +418,7 @@ function updateDeadlinePanel(deadlineKey) {
             overdueHeader.innerHTML = `
                 <div class="deadline-section-title">
                     <span class="overdue-collapse-icon">${icon}</span>
-                    <span>⚠️ کارهای عقب‌افتاده (${toFarsiNumber(overdueTasks.length)})</span>
+                    <span>⚠️ ${sectionTitle} (${toFarsiNumber(tasks.length)})</span>
                 </div>
                 <button type="button" class="overdue-toggle-btn" title="تغییر وضعیت نمایش کارهای عقب‌افتاده">${btnText}</button>
             `;
@@ -430,6 +431,7 @@ function updateDeadlinePanel(deadlineKey) {
         overdueContainer.id = "overdue-items-container";
 
         overdueHeader.addEventListener("click", (e) => {
+            e.stopPropagation();
             isOverdueSectionCollapsed = !isOverdueSectionCollapsed;
             localStorage.setItem("overdueSectionCollapsed", String(isOverdueSectionCollapsed));
             overdueContainer.classList.toggle("collapsed", isOverdueSectionCollapsed);
@@ -437,40 +439,57 @@ function updateDeadlinePanel(deadlineKey) {
             applyDeadlinePanelState();
         });
 
-        overdueTasks.forEach(({ note, task, noteIndex, deadlineKey: taskKey }) => {
+        tasks.forEach(({ note, task, noteIndex, deadlineKey: taskKey }) => {
             const info = getDeadlineInfo(taskKey, false);
             const itemEl = createDeadlineItemElement({ note, task, noteIndex, info, isOverdue: true });
             overdueContainer.appendChild(itemEl);
         });
 
-        listEl.appendChild(overdueHeader);
-        listEl.appendChild(overdueContainer);
+        container.appendChild(overdueHeader);
+        container.appendChild(overdueContainer);
     }
 
-    // 2. Render Current Day Section
-    if (nonOverdueCurrentItems.length > 0) {
-        if (overdueTasks.length > 0) {
+    function renderCurrentDaySection(container, items, showHeader, headerText) {
+        if (showHeader && items.length > 0) {
             const currentHeader = document.createElement("div");
             currentHeader.className = "deadline-section-header current";
-            const sectionTitle = isToday ? "کارهای امروز" : `کارهای ${formatPersianDeadlineTitle(deadlineKey)}`;
             currentHeader.innerHTML = `
-                <span>📅 ${sectionTitle} (${toFarsiNumber(nonOverdueCurrentItems.length)})</span>
+                <span>📅 ${headerText} (${toFarsiNumber(items.length)})</span>
             `;
-            listEl.appendChild(currentHeader);
+            container.appendChild(currentHeader);
         }
 
-        nonOverdueCurrentItems.forEach(({ note, task, noteIndex }) => {
-            const info = getDeadlineInfo(deadlineKey, task.checked);
-            const itemEl = createDeadlineItemElement({ note, task, noteIndex, info, isOverdue: false });
-            listEl.appendChild(itemEl);
-        });
-    } else if (overdueTasks.length > 0) {
-        const emptyCurrent = document.createElement("div");
-        emptyCurrent.className = "deadline-section-empty";
-        emptyCurrent.textContent = isToday
-            ? "برای امروز ددلاین جدیدی وجود ندارد."
-            : `برای ${formatPersianDeadlineTitle(deadlineKey)} ددلاین دیگری وجود ندارد.`;
-        listEl.appendChild(emptyCurrent);
+        if (items.length > 0) {
+            items.forEach(({ note, task, noteIndex }) => {
+                const info = getDeadlineInfo(deadlineKey, task.checked);
+                const itemEl = createDeadlineItemElement({
+                    note,
+                    task,
+                    noteIndex,
+                    info,
+                    isOverdue: info ? info.isOverdue : false
+                });
+                container.appendChild(itemEl);
+            });
+        } else if (otherOverdueTasks.length > 0) {
+            const emptyCurrent = document.createElement("div");
+            emptyCurrent.className = "deadline-section-empty";
+            emptyCurrent.textContent = isToday
+                ? "برای امروز ددلاین جدیدی وجود ندارد."
+                : `برای ${formatPersianDeadlineTitle(deadlineKey)} ددلاینی ثبت نشده است.`;
+            container.appendChild(emptyCurrent);
+        }
+    }
+
+    if (isToday) {
+        // When viewing today: show overdue tasks from previous days at top, then today's tasks
+        renderOtherOverdueSection(listEl, otherOverdueTasks, "کارهای عقب‌افتاده");
+        renderCurrentDaySection(listEl, currentDayItems, otherOverdueTasks.length > 0, "کارهای امروز");
+    } else {
+        // When viewing another day (e.g. a past day or future day):
+        // Show the selected day's tasks first (including overdue ones with warning), then other overdue tasks
+        renderCurrentDaySection(listEl, currentDayItems, otherOverdueTasks.length > 0, `کارهای ${formatPersianDeadlineTitle(deadlineKey)}`);
+        renderOtherOverdueSection(listEl, otherOverdueTasks, "سایر کارهای عقب‌افتاده");
     }
 
     applyDeadlinePanelState();
