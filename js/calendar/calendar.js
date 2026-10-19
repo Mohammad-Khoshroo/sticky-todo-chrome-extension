@@ -3,21 +3,7 @@
 //       CALENDAR
 // ----------------------
 
-const monthNames = [
-    "فروردین", "اردیبهشت", "خرداد",
-    "تیر", "مرداد", "شهریور",
-    "مهر", "آبان", "آذر",
-    "دی", "بهمن", "اسفند"
-];
-
-const monthNamesGregorianPersian = [
-    "ژانویه", "فوریه", "مارس",
-    "آوریل", "مه", "ژوئن",
-    "ژوئیه", "اوت", "سپتامبر",
-    "اکتبر", "نوامبر", "دسامبر"
-];
-
-let currentCalendarType = localStorage.getItem("calendarType") || "jalali"; // "jalali" | "gregorian"
+let currentCalendarType = localStorage.getItem("calendarType") || (currentLanguage === "ar" ? "hijri" : "jalali"); // "jalali" | "gregorian" | "hijri"
 
 let currentGregorianDate = new Date();
 let todayJalali = jalaali.toJalaali(currentGregorianDate);
@@ -26,6 +12,7 @@ let todayGregorian = {
     gm: currentGregorianDate.getMonth() + 1,
     gd: currentGregorianDate.getDate()
 };
+let todayHijri = getHijriParts(currentGregorianDate);
 
 let currentJy = todayJalali.jy;
 let currentJm = todayJalali.jm;
@@ -33,35 +20,143 @@ let currentJm = todayJalali.jm;
 let currentGy = todayGregorian.gy;
 let currentGm = todayGregorian.gm;
 
+let currentHy = todayHijri.hy;
+let currentHm = todayHijri.hm;
+
 let selectedDeadlineKey = formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
+
+// ----------------------
+//   HIJRI ENGINE (Umm al-Qura via Intl)
+// ----------------------
+function getHijriParts(date) {
+    try {
+        const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {
+            year: 'numeric', month: 'numeric', day: 'numeric'
+        });
+        const parts = fmt.formatToParts(date);
+        let hy = 1448, hm = 1, hd = 1;
+        for (const p of parts) {
+            if (p.type === 'year') hy = parseInt(p.value.replace(/[^0-9]/g, ''), 10) || 1448;
+            if (p.type === 'month') hm = parseInt(p.value.replace(/[^0-9]/g, ''), 10) || 1;
+            if (p.type === 'day') hd = parseInt(p.value.replace(/[^0-9]/g, ''), 10) || 1;
+        }
+        return { hy, hm, hd };
+    } catch(e) {
+        return { hy: 1448, hm: 5, hd: 9 };
+    }
+}
+
+function hijriToGregorianDate(hy, hm, hd = 1) {
+    // Reference epoch: 1448-05-01 is 2026-10-12
+    const refTime = Date.UTC(2026, 9, 12, 12, 0, 0);
+    const approxDays = (hy - 1448) * 354.36707 + (hm - 5) * 29.53058 + (hd - 1);
+    const approxTime = refTime + approxDays * 86400000;
+
+    for (let offset = -4; offset <= 4; offset++) {
+        const testD = new Date(approxTime + offset * 86400000);
+        const h = getHijriParts(testD);
+        if (h.hy === hy && h.hm === hm && h.hd === hd) {
+            return testD;
+        }
+    }
+    return new Date(approxTime);
+}
+
+function getHijriMonthInfo(hy, hm) {
+    const d1 = hijriToGregorianDate(hy, hm, 1);
+    const d30 = new Date(d1.getTime() + 29 * 86400000);
+    const h30 = getHijriParts(d30);
+    const totalDays = (h30.hy === hy && h30.hm === hm && h30.hd === 30) ? 30 : 29;
+    const jsDay = d1.getDay();
+    const firstDayIndex = (jsDay + 1) % 7; // Saturday = 0, Friday = 6
+    return { totalDays, firstDayIndex, startDate: d1 };
+}
+
+function formatHijriKey(hy, hm, hd) {
+    const mm = String(hm).padStart(2, "0");
+    const dd = String(hd).padStart(2, "0");
+    return `${hy}-${mm}-${dd}`;
+}
+
+// ----------------------
+//   TASK DEADLINE MAPPING
+// ----------------------
+function parseAnyDeadlineKey(key) {
+    if (!key) return null;
+    const parts = String(key).split("-").map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return null;
+    const [y, m, d] = parts;
+    if (y > 1800) {
+        // Gregorian key
+        const gDate = new Date(y, m - 1, d, 12, 0, 0);
+        const j = jalaali.toJalaali(y, m, d);
+        const h = getHijriParts(gDate);
+        return {
+            type: "gregorian",
+            g: { gy: y, gm: m, gd: d },
+            j,
+            h,
+            jKey: formatJalaliKey(j.jy, j.jm, j.jd),
+            gKey: key,
+            hKey: formatHijriKey(h.hy, h.hm, h.hd),
+            gDate
+        };
+    } else if (y >= 1430 && y < 1600) {
+        // Hijri key
+        const gDate = hijriToGregorianDate(y, m, d);
+        const gy = gDate.getFullYear(), gm = gDate.getMonth() + 1, gd = gDate.getDate();
+        const j = jalaali.toJalaali(gy, gm, gd);
+        return {
+            type: "hijri",
+            g: { gy, gm, gd },
+            j,
+            h: { hy: y, hm: m, hd: d },
+            jKey: formatJalaliKey(j.jy, j.jm, j.jd),
+            gKey: `${gy}-${String(gm).padStart(2, "0")}-${String(gd).padStart(2, "0")}`,
+            hKey: key,
+            gDate
+        };
+    } else {
+        // Jalali key
+        const g = jalaali.toGregorian(y, m, d);
+        const gDate = new Date(g.gy, g.gm - 1, g.gd, 12, 0, 0);
+        const h = getHijriParts(gDate);
+        return {
+            type: "jalali",
+            g,
+            j: { jy: y, jm: m, jd: d },
+            h,
+            jKey: key,
+            gKey: `${g.gy}-${String(g.gm).padStart(2, "0")}-${String(g.gd).padStart(2, "0")}`,
+            hKey: formatHijriKey(h.hy, h.hm, h.hd),
+            gDate
+        };
+    }
+}
 
 function getTaskDeadlineKey(task) {
     if (!task || !task.deadline) return null;
-
-    if (typeof task.deadline === "string") {
-        return task.deadline;
-    }
-
-    if (
-        typeof task.deadline === "object" &&
-        task.deadline.jy &&
-        task.deadline.jm &&
-        task.deadline.jd
-    ) {
+    if (typeof task.deadline === "string") return task.deadline;
+    if (typeof task.deadline === "object" && task.deadline.jy && task.deadline.jm && task.deadline.jd) {
         return formatJalaliKey(task.deadline.jy, task.deadline.jm, task.deadline.jd);
     }
-
     return null;
 }
 
-function getTasksByDeadlineKey(deadlineKey) {
-    const items = [];
+function getTasksMatchingDayKey(dayKey) {
+    const targetParsed = parseAnyDeadlineKey(dayKey);
+    if (!targetParsed) return [];
 
+    const items = [];
     notes.forEach((note, noteIndex) => {
         if (note.deletedAt) return;
-
         (note.tasks || []).forEach((task, taskIndex) => {
-            if (getTaskDeadlineKey(task) === deadlineKey) {
+            const rawKey = getTaskDeadlineKey(task);
+            if (!rawKey) return;
+            const taskParsed = parseAnyDeadlineKey(rawKey);
+            if (!taskParsed) return;
+
+            if (taskParsed.jKey === targetParsed.jKey) {
                 items.push({
                     noteIndex,
                     taskIndex,
@@ -75,43 +170,64 @@ function getTasksByDeadlineKey(deadlineKey) {
     return items;
 }
 
-function getAllDeadlineKeys() {
-    const keys = new Set();
+function getTasksByDeadlineKey(deadlineKey) {
+    return getTasksMatchingDayKey(deadlineKey);
+}
 
+function getAllDeadlineJalaliKeys() {
+    const keys = new Set();
     notes.forEach(note => {
         if (note.deletedAt) return;
-
         (note.tasks || []).forEach(task => {
-            const key = getTaskDeadlineKey(task);
-            if (key) keys.add(key);
+            const rawKey = getTaskDeadlineKey(task);
+            if (rawKey) {
+                const parsed = parseAnyDeadlineKey(rawKey);
+                if (parsed) keys.add(parsed.jKey);
+            }
         });
     });
-
     return keys;
 }
 
-function parseJalaliKey(key) {
-    const [jy, jm, jd] = String(key).split("-").map(Number);
-    return { jy, jm, jd };
-}
+function formatDayTitleForCurrentCalendar(key) {
+    const parsed = parseAnyDeadlineKey(key);
+    if (!parsed) return "";
 
-function formatPersianDeadlineTitle(key) {
-    const { jy, jm, jd } = parseJalaliKey(key);
-    if (!jy || !jm || !jd) return "";
-    const g = jalaali.toGregorian(jy, jm, jd);
-    if (currentCalendarType === "gregorian") {
-        return `${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]} ${toFarsiNumber(g.gy)}`;
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+
+    if (currentCalendarType === "hijri") {
+        const monthName = dict ? dict.months.hijri[parsed.h.hm - 1] : `ماه ${parsed.h.hm}`;
+        const dayStr = typeof formatDigits === "function" ? formatDigits(parsed.h.hd) : parsed.h.hd;
+        const yearStr = typeof formatDigits === "function" ? formatDigits(parsed.h.hy) : parsed.h.hy;
+        return `${dayStr} ${monthName} ${yearStr}`;
     }
-    return `${toFarsiNumber(jd)} ${monthNames[jm - 1]} ${toFarsiNumber(jy)}`;
+
+    if (currentCalendarType === "gregorian") {
+        const monthName = dict ? dict.months.gregorian[parsed.g.gm - 1] : `Month ${parsed.g.gm}`;
+        const dayStr = typeof formatDigits === "function" ? formatDigits(parsed.g.gd) : parsed.g.gd;
+        const yearStr = typeof formatDigits === "function" ? formatDigits(parsed.g.gy) : parsed.g.gy;
+        return `${dayStr} ${monthName} ${yearStr}`;
+    }
+
+    // Default: Jalali
+    const monthName = dict ? dict.months.jalali[parsed.j.jm - 1] : `ماه ${parsed.j.jm}`;
+    const dayStr = typeof formatDigits === "function" ? formatDigits(parsed.j.jd) : parsed.j.jd;
+    const yearStr = typeof formatDigits === "function" ? formatDigits(parsed.j.jy) : parsed.j.jy;
+    return `${dayStr} ${monthName} ${yearStr}`;
 }
 
-function getDualDateTooltip(key) {
-    const { jy, jm, jd } = parseJalaliKey(key);
-    if (!jy || !jm || !jd) return "";
-    const g = jalaali.toGregorian(jy, jm, jd);
-    const jalaliStr = `${toFarsiNumber(jd)} ${monthNames[jm - 1]} ${toFarsiNumber(jy)}`;
-    const gregorianStr = `${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]} ${toFarsiNumber(g.gy)}`;
-    return `${jalaliStr} ⇄ ${gregorianStr}`;
+function getMultiCalendarTooltip(key) {
+    const parsed = parseAnyDeadlineKey(key);
+    if (!parsed) return "";
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+
+    const jalaliStr = `${fd(parsed.j.jd)} / ${fd(parsed.j.jm)} / ${fd(parsed.j.jy)}`;
+    const gregStr = `${parsed.g.gy}-${String(parsed.g.gm).padStart(2, "0")}-${String(parsed.g.gd).padStart(2, "0")}`;
+    const hijriStr = `${fd(parsed.h.jd)} / ${fd(parsed.h.hm)} / ${fd(parsed.h.hy)}`;
+
+    return `شمسی: ${jalaliStr} | میلادی: ${gregStr} | قمری: ${hijriStr}`;
 }
 
 const DEADLINE_EXPAND_THRESHOLD = 2;
@@ -126,13 +242,16 @@ function getDeadlineInfo(deadlineKey, isChecked) {
     if (!deadlineKey) return null;
 
     try {
-        const { jy, jm, jd } = parseJalaliKey(deadlineKey);
-        if (!jy || !jm || !jd) return null;
-        const g = jalaali.toGregorian(jy, jm, jd);
+        const parsed = parseAnyDeadlineKey(deadlineKey);
+        if (!parsed) return null;
+
+        const g = parsed.g;
         const deadlineEnd = new Date(g.gy, g.gm - 1, g.gd, 23, 59, 59, 999).getTime();
         const now = Date.now();
         const diffMs = deadlineEnd - now;
         const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+        const dict = typeof TRANSLATIONS !== "undefined" ? TRANSLATIONS[currentLanguage] : null;
+        const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
 
         if (isChecked) {
             return {
@@ -141,7 +260,7 @@ function getDeadlineInfo(deadlineKey, isChecked) {
                 color: "#10b981",
                 bgColor: "rgba(16, 185, 129, 0.08)",
                 borderColor: "rgba(16, 185, 129, 0.35)",
-                badgeText: "✓ انجام شد",
+                badgeText: `✓ ${dict ? dict.doneLabel : "انجام شد"}`,
                 badgeClass: "badge-done",
                 diffMs,
                 deadlineEnd
@@ -150,12 +269,9 @@ function getDeadlineInfo(deadlineKey, isChecked) {
 
         if (diffMs < 0) {
             const overdueDays = Math.ceil(Math.abs(diffMs) / (24 * 60 * 60 * 1000));
-            let badgeText = "⚠️ عقب‌افتاده";
-            if (overdueDays === 1) {
-                badgeText = "⚠️ دیروز (عقب‌افتاده)";
-            } else if (overdueDays > 1) {
-                badgeText = `⚠️ ${toFarsiNumber(overdueDays)} روز عقب‌افتاده`;
-            }
+            const badgeText = dict && typeof dict.overdueDaysAgo === "function"
+                ? `⚠️ ${dict.overdueDaysAgo(fd(overdueDays))}`
+                : `⚠️ ${fd(overdueDays)} روز عقب‌افتاده`;
 
             return {
                 status: "overdue",
@@ -181,12 +297,12 @@ function getDeadlineInfo(deadlineKey, isChecked) {
             const oneDayMs = 24 * 60 * 60 * 1000;
             if (diffMs <= oneDayMs) {
                 const hoursLeft = Math.max(1, Math.ceil(diffMs / (60 * 60 * 1000)));
-                badgeText = `⏳ امروز (${toFarsiNumber(hoursLeft)} ساعت)`;
-            } else if (diffMs <= 2 * oneDayMs) {
-                badgeText = "⏳ فردا";
+                badgeText = dict && typeof dict.todayRemaining === "function"
+                    ? `⏳ ${dict.todayRemaining(fd(hoursLeft))}`
+                    : `⏳ امروز (${fd(hoursLeft)} ساعت)`;
             } else {
                 const daysLeft = Math.ceil(diffMs / oneDayMs);
-                badgeText = `⏳ ${toFarsiNumber(daysLeft)} روز مانده`;
+                badgeText = `⏳ ${fd(daysLeft)} روز`;
             }
 
             return {
@@ -211,7 +327,7 @@ function getDeadlineInfo(deadlineKey, isChecked) {
             color: "#6366f1",
             bgColor: "rgba(99, 102, 241, 0.06)",
             borderColor: "rgba(99, 102, 241, 0.25)",
-            badgeText: `📅 ${toFarsiNumber(daysLeft)} روز مانده`,
+            badgeText: `📅 ${fd(daysLeft)} روز`,
             badgeClass: "badge-normal",
             diffMs,
             deadlineEnd
@@ -235,9 +351,9 @@ function getOverdueTasks() {
             if (!key) return;
 
             try {
-                const { jy, jm, jd } = parseJalaliKey(key);
-                if (!jy || !jm || !jd) return;
-                const g = jalaali.toGregorian(jy, jm, jd);
+                const parsed = parseAnyDeadlineKey(key);
+                if (!parsed) return;
+                const g = parsed.g;
                 const deadlineEnd = new Date(g.gy, g.gm - 1, g.gd, 23, 59, 59, 999).getTime();
 
                 if (deadlineEnd < now) {
@@ -246,13 +362,11 @@ function getOverdueTasks() {
                         taskIndex,
                         note,
                         task,
-                        deadlineKey: key,
+                        deadlineKey: parsed.jKey,
                         deadlineEnd
                     });
                 }
-            } catch (e) {
-                // Ignore parsing errors
-            }
+            } catch (e) {}
         });
     });
 
@@ -281,7 +395,6 @@ function getAvailableDeadlineListHeight() {
 
     if (!deadlineList || !deadlinePanel) return STANDARD_DEADLINE_LIST_MAX_HEIGHT;
 
-    // Bottom barrier: top of eraser or pen
     let barrier = window.innerHeight - 110;
     if (eraser && pen) {
         const eraserTop = eraser.getBoundingClientRect().top;
@@ -301,9 +414,7 @@ function getAvailableDeadlineListHeight() {
         if (penTop > 0) barrier = penTop;
     }
 
-    // Leave a comfortable gap of 18px above eraser & pen
     const targetBottom = barrier - 18;
-
     const panelRect = deadlinePanel.getBoundingClientRect();
     let panelTop = panelRect.top;
     if (!panelTop || panelTop <= 0) {
@@ -343,12 +454,10 @@ function applyDeadlinePanelState() {
     const availableHeight = getAvailableDeadlineListHeight();
 
     if (isDeadlinePanelUserCollapsed) {
-        toggleBtn.innerText = "+ بزرگ کردن";
-        toggleBtn.title = "باز کردن و بزرگ‌نمایی پنجره برای مشاهده تمام ددلاین‌ها";
+        toggleBtn.innerText = "+";
         listEl.style.maxHeight = `${Math.min(STANDARD_DEADLINE_LIST_MAX_HEIGHT, availableHeight)}px`;
     } else {
-        toggleBtn.innerText = "− کوچک کردن";
-        toggleBtn.title = "بستن و کوچک کردن به اندازه استاندارد";
+        toggleBtn.innerText = "−";
         listEl.style.maxHeight = `${availableHeight}px`;
     }
 }
@@ -358,12 +467,16 @@ function createDeadlineItemElement({ note, task, noteIndex, info, isOverdue }) {
     item.className = `deadline-item ${task.checked ? "done" : ""} ${isOverdue ? "overdue" : ""}`;
     if (info) {
         item.style.setProperty("--deadline-item-color", info.color);
-        item.style.borderRightColor = info.color;
+        if (document.documentElement.getAttribute("dir") === "ltr") {
+            item.style.borderLeftColor = info.color;
+        } else {
+            item.style.borderRightColor = info.color;
+        }
         item.style.backgroundColor = info.bgColor || "#f9fafb";
     }
 
-    const noteTitleText = escapeHTML(note.title?.trim() || "بدون عنوان");
-    const taskContentText = escapeHTML(task.text?.trim() || "(بدون متن)");
+    const noteTitleText = escapeHTML(note.title?.trim() || "---");
+    const taskContentText = escapeHTML(task.text?.trim() || "(...)");
 
     let badgeHTML = "";
     if (info && info.badgeText) {
@@ -407,12 +520,13 @@ function updateDeadlinePanel(deadlineKey) {
         previousDeadlineItemsCount = 0;
     }
 
-    const todayKey = formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
+    const targetParsed = parseAnyDeadlineKey(deadlineKey);
+    const todayJalaliKey = formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
+    const isToday = targetParsed && targetParsed.jKey === todayJalaliKey;
+
     const allOverdueTasks = getOverdueTasks();
     const currentDayItems = getTasksByDeadlineKey(deadlineKey);
-
-    // Overdue tasks that belong to OTHER days (not deadlineKey)
-    const otherOverdueTasks = allOverdueTasks.filter(item => item.deadlineKey !== deadlineKey);
+    const otherOverdueTasks = allOverdueTasks.filter(item => item.deadlineKey !== (targetParsed ? targetParsed.jKey : ""));
 
     const totalCount = currentDayItems.length + otherOverdueTasks.length;
 
@@ -421,28 +535,27 @@ function updateDeadlinePanel(deadlineKey) {
     }
     previousDeadlineItemsCount = totalCount;
 
-    const isToday = (deadlineKey === todayKey);
-    let todaySuffix = "";
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+
+    let titleText = "";
     if (isToday) {
-        const { jy, jm, jd } = parseJalaliKey(deadlineKey);
-        if (currentCalendarType === "gregorian") {
-            const g = jalaali.toGregorian(jy, jm, jd);
-            todaySuffix = ` (${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]})`;
-        } else {
-            todaySuffix = ` (${toFarsiNumber(jd)} ${monthNames[jm - 1]})`;
-        }
+        const formattedToday = formatDayTitleForCurrentCalendar(todayJalaliKey);
+        titleText = dict ? `${dict.deadlineTitleToday} (${formattedToday})` : `ددلاین‌های امروز (${formattedToday})`;
+    } else {
+        const formattedDate = formatDayTitleForCurrentCalendar(deadlineKey);
+        titleText = dict && typeof dict.deadlineTitleFor === "function"
+            ? dict.deadlineTitleFor(formattedDate)
+            : `ددلاین‌های ${formattedDate}`;
     }
 
-    const titleText = isToday 
-        ? `ددلاین‌های امروز${todaySuffix}`
-        : `ددلاین‌های ${formatPersianDeadlineTitle(deadlineKey)}`;
-
     titleEl.textContent = titleText;
-    titleEl.title = `${titleText} — ${getDualDateTooltip(deadlineKey)}`;
+    titleEl.title = `${titleText} — ${getMultiCalendarTooltip(deadlineKey)}`;
     listEl.innerHTML = "";
 
     if (totalCount === 0) {
-        listEl.innerHTML = `<div class="deadline-empty">ددلاینی برای این روز وجود ندارد</div>`;
+        listEl.innerHTML = `<div class="deadline-empty">${dict ? dict.deadlineEmpty : "ددلاینی وجود ندارد"}</div>`;
         applyDeadlinePanelState();
         return;
     }
@@ -453,17 +566,18 @@ function updateDeadlinePanel(deadlineKey) {
         const overdueHeader = document.createElement("div");
         overdueHeader.className = "deadline-section-header overdue";
         overdueHeader.id = "overdue-section-header";
-        overdueHeader.title = "کلیک برای باز یا جمع کردن کارهای عقب‌افتاده";
+
+        const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
 
         const updateOverdueHeaderContent = () => {
             const icon = isOverdueSectionCollapsed ? "◀" : "▼";
-            const btnText = isOverdueSectionCollapsed ? "+ باز کردن" : "− بستن";
+            const btnText = isOverdueSectionCollapsed ? "+ " : "− ";
             overdueHeader.innerHTML = `
                 <div class="deadline-section-title">
                     <span class="overdue-collapse-icon">${icon}</span>
-                    <span>⚠️ ${sectionTitle} (${toFarsiNumber(tasks.length)})</span>
+                    <span>⚠️ ${sectionTitle} (${fd(tasks.length)})</span>
                 </div>
-                <button type="button" class="overdue-toggle-btn" title="تغییر وضعیت نمایش کارهای عقب‌افتاده">${btnText}</button>
+                <button type="button" class="overdue-toggle-btn">${btnText}</button>
             `;
         };
 
@@ -493,11 +607,12 @@ function updateDeadlinePanel(deadlineKey) {
     }
 
     function renderCurrentDaySection(container, items, showHeader, headerText) {
+        const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
         if (showHeader && items.length > 0) {
             const currentHeader = document.createElement("div");
             currentHeader.className = "deadline-section-header current";
             currentHeader.innerHTML = `
-                <span>📅 ${headerText} (${toFarsiNumber(items.length)})</span>
+                <span>📅 ${headerText} (${fd(items.length)})</span>
             `;
             container.appendChild(currentHeader);
         }
@@ -514,28 +629,38 @@ function updateDeadlinePanel(deadlineKey) {
                 });
                 container.appendChild(itemEl);
             });
-        } else if (otherOverdueTasks.length > 0) {
-            const emptyCurrent = document.createElement("div");
-            emptyCurrent.className = "deadline-section-empty";
-            emptyCurrent.textContent = isToday
-                ? "برای امروز ددلاین جدیدی وجود ندارد."
-                : `برای ${formatPersianDeadlineTitle(deadlineKey)} ددلاینی ثبت نشده است.`;
-            container.appendChild(emptyCurrent);
         }
     }
 
+    const overdueLabel = dict ? dict.overdueSectionTitle : "کارهای عقب‌افتاده";
+    const currentDayLabel = isToday
+        ? (dict ? dict.deadlineTitleToday : "کارهای امروز")
+        : formatDayTitleForCurrentCalendar(deadlineKey);
+
     if (isToday) {
-        // When viewing today: show overdue tasks from previous days at top, then today's tasks
-        renderOtherOverdueSection(listEl, otherOverdueTasks, "کارهای عقب‌افتاده");
-        renderCurrentDaySection(listEl, currentDayItems, otherOverdueTasks.length > 0, "کارهای امروز");
+        renderOtherOverdueSection(listEl, otherOverdueTasks, overdueLabel);
+        renderCurrentDaySection(listEl, currentDayItems, otherOverdueTasks.length > 0, currentDayLabel);
     } else {
-        // When viewing another day (e.g. a past day or future day):
-        // Show the selected day's tasks first (including overdue ones with warning), then other overdue tasks
-        renderCurrentDaySection(listEl, currentDayItems, otherOverdueTasks.length > 0, `کارهای ${formatPersianDeadlineTitle(deadlineKey)}`);
-        renderOtherOverdueSection(listEl, otherOverdueTasks, "سایر کارهای عقب‌افتاده");
+        renderCurrentDaySection(listEl, currentDayItems, otherOverdueTasks.length > 0, currentDayLabel);
+        renderOtherOverdueSection(listEl, otherOverdueTasks, overdueLabel);
     }
 
     applyDeadlinePanelState();
+}
+
+function updateWeekdaysHeader() {
+    const weekdaysContainer = document.querySelector('.weekdays');
+    if (!weekdaysContainer) return;
+
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+
+    const weekdays = dict && dict.weekdays && dict.weekdays[currentCalendarType]
+        ? dict.weekdays[currentCalendarType]
+        : ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+
+    weekdaysContainer.innerHTML = weekdays.map(w => `<div>${w}</div>`).join('');
 }
 
 function renderCalendar() {
@@ -543,12 +668,81 @@ function renderCalendar() {
     const monthYearDisplay = document.getElementById('monthYear');
     if (!daysContainer || !monthYearDisplay) return;
 
+    updateWeekdaysHeader();
     daysContainer.innerHTML = '';
-    const deadlineKeys = getAllDeadlineKeys();
+    const deadlineJalaliKeys = getAllDeadlineJalaliKeys();
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
 
-    if (currentCalendarType === "gregorian") {
-        // GREGORIAN CALENDAR (WITH PERSIAN LABELS)
-        monthYearDisplay.textContent = `${monthNamesGregorianPersian[currentGm - 1]} ${toFarsiNumber(currentGy)}`;
+    updateCalendarTypeButton();
+
+    if (currentCalendarType === "hijri") {
+        // -------------------------
+        //     HIJRI CALENDAR
+        // -------------------------
+        const monthName = dict ? dict.months.hijri[currentHm - 1] : `Month ${currentHm}`;
+        monthYearDisplay.textContent = `${monthName} ${fd(currentHy)}`;
+
+        const { totalDays, firstDayIndex, startDate } = getHijriMonthInfo(currentHy, currentHm);
+
+        for (let i = 0; i < firstDayIndex; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('day', 'empty');
+            daysContainer.appendChild(emptyDiv);
+        }
+
+        for (let i = 1; i <= totalDays; i++) {
+            const dayDiv = document.createElement('div');
+            const dayGDate = new Date(startDate.getTime() + (i - 1) * 86400000);
+            const gy = dayGDate.getFullYear(), gm = dayGDate.getMonth() + 1, gd = dayGDate.getDate();
+            const j = jalaali.toJalaali(gy, gm, gd);
+            const dayJalaliKey = formatJalaliKey(j.jy, j.jm, j.jd);
+
+            dayDiv.classList.add('day');
+            dayDiv.textContent = fd(i);
+            dayDiv.dataset.dateKey = dayJalaliKey;
+            dayDiv.title = `شمسی: ${fd(j.jd)}/${fd(j.jm)}/${fd(j.jy)} | میلادی: ${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
+
+            if ((firstDayIndex + i - 1) % 7 === 6) {
+                dayDiv.classList.add('friday');
+            }
+
+            if (
+                currentHy === todayHijri.hy &&
+                currentHm === todayHijri.hm &&
+                i === todayHijri.hd
+            ) {
+                dayDiv.classList.add('today');
+            }
+
+            if (deadlineJalaliKeys.has(dayJalaliKey)) {
+                dayDiv.classList.add('has-deadline');
+                const dotColor = getDayUrgencyColor(dayJalaliKey);
+                if (dotColor) {
+                    dayDiv.style.setProperty('--deadline-dot-color', dotColor);
+                }
+            }
+
+            if (selectedDeadlineKey === dayJalaliKey) {
+                dayDiv.classList.add('selected-deadline-day');
+            }
+
+            dayDiv.addEventListener("click", () => {
+                selectedDeadlineKey = dayJalaliKey;
+                renderCalendar();
+                updateDeadlinePanel(dayJalaliKey);
+            });
+
+            daysContainer.appendChild(dayDiv);
+        }
+    } else if (currentCalendarType === "gregorian") {
+        // -------------------------
+        //    GREGORIAN CALENDAR
+        // -------------------------
+        const monthName = dict ? dict.months.gregorian[currentGm - 1] : `Month ${currentGm}`;
+        monthYearDisplay.textContent = `${monthName} ${fd(currentGy)}`;
 
         const dateObj = new Date(currentGy, currentGm - 1, 1);
         let firstDayOfWeek = (dateObj.getDay() + 1) % 7; // Saturday = 0, Friday = 6
@@ -563,12 +757,12 @@ function renderCalendar() {
         for (let i = 1; i <= monthLength; i++) {
             const dayDiv = document.createElement('div');
             const j = jalaali.toJalaali(currentGy, currentGm, i);
-            const dayKey = formatJalaliKey(j.jy, j.jm, j.jd);
+            const dayJalaliKey = formatJalaliKey(j.jy, j.jm, j.jd);
 
             dayDiv.classList.add('day');
-            dayDiv.textContent = toFarsiNumber(i);
-            dayDiv.dataset.dateKey = dayKey;
-            dayDiv.title = `معادل شمسی: ${toFarsiNumber(j.jd)} ${monthNames[j.jm - 1]} ${toFarsiNumber(j.jy)}`;
+            dayDiv.textContent = fd(i);
+            dayDiv.dataset.dateKey = dayJalaliKey;
+            dayDiv.title = `شمسی: ${fd(j.jd)}/${fd(j.jm)}/${fd(j.jy)}`;
 
             if ((firstDayOfWeek + i - 1) % 7 === 6) {
                 dayDiv.classList.add('friday');
@@ -582,29 +776,32 @@ function renderCalendar() {
                 dayDiv.classList.add('today');
             }
 
-            if (deadlineKeys.has(dayKey)) {
+            if (deadlineJalaliKeys.has(dayJalaliKey)) {
                 dayDiv.classList.add('has-deadline');
-                const dotColor = getDayUrgencyColor(dayKey);
+                const dotColor = getDayUrgencyColor(dayJalaliKey);
                 if (dotColor) {
                     dayDiv.style.setProperty('--deadline-dot-color', dotColor);
                 }
             }
 
-            if (selectedDeadlineKey === dayKey) {
+            if (selectedDeadlineKey === dayJalaliKey) {
                 dayDiv.classList.add('selected-deadline-day');
             }
 
             dayDiv.addEventListener("click", () => {
-                selectedDeadlineKey = dayKey;
+                selectedDeadlineKey = dayJalaliKey;
                 renderCalendar();
-                updateDeadlinePanel(dayKey);
+                updateDeadlinePanel(dayJalaliKey);
             });
 
             daysContainer.appendChild(dayDiv);
         }
     } else {
-        // JALALI (SHAMSI) CALENDAR
-        monthYearDisplay.textContent = `${monthNames[currentJm - 1]} ${toFarsiNumber(currentJy)}`;
+        // -------------------------
+        //     JALALI CALENDAR
+        // -------------------------
+        const monthName = dict ? dict.months.jalali[currentJm - 1] : `ماه ${currentJm}`;
+        monthYearDisplay.textContent = `${monthName} ${fd(currentJy)}`;
 
         const firstDayGregorian = jalaali.toGregorian(currentJy, currentJm, 1);
         const dateObj = new Date(
@@ -624,13 +821,13 @@ function renderCalendar() {
 
         for (let i = 1; i <= monthLength; i++) {
             const dayDiv = document.createElement('div');
-            const dayKey = formatJalaliKey(currentJy, currentJm, i);
+            const dayJalaliKey = formatJalaliKey(currentJy, currentJm, i);
             const g = jalaali.toGregorian(currentJy, currentJm, i);
 
             dayDiv.classList.add('day');
-            dayDiv.textContent = toFarsiNumber(i);
-            dayDiv.dataset.dateKey = dayKey;
-            dayDiv.title = `معادل میلادی: ${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]} ${toFarsiNumber(g.gy)}`;
+            dayDiv.textContent = fd(i);
+            dayDiv.dataset.dateKey = dayJalaliKey;
+            dayDiv.title = `میلادی: ${g.gy}-${String(g.gm).padStart(2, '0')}-${String(g.gd).padStart(2, '0')}`;
 
             if ((firstDayOfWeek + i - 1) % 7 === 6) {
                 dayDiv.classList.add('friday');
@@ -644,22 +841,22 @@ function renderCalendar() {
                 dayDiv.classList.add('today');
             }
 
-            if (deadlineKeys.has(dayKey)) {
+            if (deadlineJalaliKeys.has(dayJalaliKey)) {
                 dayDiv.classList.add('has-deadline');
-                const dotColor = getDayUrgencyColor(dayKey);
+                const dotColor = getDayUrgencyColor(dayJalaliKey);
                 if (dotColor) {
                     dayDiv.style.setProperty('--deadline-dot-color', dotColor);
                 }
             }
 
-            if (selectedDeadlineKey === dayKey) {
+            if (selectedDeadlineKey === dayJalaliKey) {
                 dayDiv.classList.add('selected-deadline-day');
             }
 
             dayDiv.addEventListener("click", () => {
-                selectedDeadlineKey = dayKey;
+                selectedDeadlineKey = dayJalaliKey;
                 renderCalendar();
-                updateDeadlinePanel(dayKey);
+                updateDeadlinePanel(dayJalaliKey);
             });
 
             daysContainer.appendChild(dayDiv);
@@ -668,7 +865,13 @@ function renderCalendar() {
 }
 
 document.getElementById('prevBtn').addEventListener('click', () => {
-    if (currentCalendarType === "gregorian") {
+    if (currentCalendarType === "hijri") {
+        currentHm--;
+        if (currentHm < 1) {
+            currentHm = 12;
+            currentHy--;
+        }
+    } else if (currentCalendarType === "gregorian") {
         currentGm--;
         if (currentGm < 1) {
             currentGm = 12;
@@ -685,7 +888,13 @@ document.getElementById('prevBtn').addEventListener('click', () => {
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
-    if (currentCalendarType === "gregorian") {
+    if (currentCalendarType === "hijri") {
+        currentHm++;
+        if (currentHm > 12) {
+            currentHm = 1;
+            currentHy++;
+        }
+    } else if (currentCalendarType === "gregorian") {
         currentGm++;
         if (currentGm > 12) {
             currentGm = 1;
@@ -711,34 +920,37 @@ function toggleCalendarType(e) {
         setTimeout(() => btn.classList.remove("switching"), 450);
     }
 
-    if (currentCalendarType === "jalali") {
-        currentCalendarType = "gregorian";
-        const sel = parseJalaliKey(selectedDeadlineKey);
-        if (sel && sel.jy && sel.jm && sel.jd) {
-            const g = jalaali.toGregorian(sel.jy, sel.jm, sel.jd);
-            currentGy = g.gy;
-            currentGm = g.gm;
-        } else {
-            const g = jalaali.toGregorian(currentJy, currentJm, 1);
-            currentGy = g.gy;
-            currentGm = g.gm;
-        }
+    // Determine next calendar type in cycle
+    let nextType = "jalali";
+    if (currentLanguage === "ar") {
+        // Arabic preference: hijri -> gregorian -> jalali -> hijri
+        if (currentCalendarType === "hijri") nextType = "gregorian";
+        else if (currentCalendarType === "gregorian") nextType = "jalali";
+        else nextType = "hijri";
+    } else if (currentLanguage === "en" || currentLanguage === "ko") {
+        // English/Korean preference: gregorian -> hijri -> jalali -> gregorian
+        if (currentCalendarType === "gregorian") nextType = "hijri";
+        else if (currentCalendarType === "hijri") nextType = "jalali";
+        else nextType = "gregorian";
     } else {
-        currentCalendarType = "jalali";
-        const sel = parseJalaliKey(selectedDeadlineKey);
-        if (sel && sel.jy && sel.jm) {
-            currentJy = sel.jy;
-            currentJm = sel.jm;
-        } else {
-            const j = jalaali.toJalaali(currentGy, currentGm, 1);
-            currentJy = j.jy;
-            currentJm = j.jm;
-        }
+        // Persian preference: jalali -> gregorian -> hijri -> jalali
+        if (currentCalendarType === "jalali") nextType = "gregorian";
+        else if (currentCalendarType === "gregorian") nextType = "hijri";
+        else nextType = "jalali";
     }
 
-    localStorage.setItem("calendarType", currentCalendarType);
-    if (typeof isExtension !== "undefined" && isExtension) {
-        chrome.storage.local.set({ calendarType: currentCalendarType });
+    currentCalendarType = nextType;
+    saveCalendarType(currentCalendarType);
+
+    // Sync active year/month to match selected date or today
+    const sel = parseAnyDeadlineKey(selectedDeadlineKey);
+    if (sel) {
+        currentJy = sel.j.jy;
+        currentJm = sel.j.jm;
+        currentGy = sel.g.gy;
+        currentGm = sel.g.gm;
+        currentHy = sel.h.hy;
+        currentHm = sel.h.hm;
     }
 
     updateCalendarTypeButton();
@@ -746,12 +958,30 @@ function toggleCalendarType(e) {
     updateDeadlinePanel(selectedDeadlineKey);
 }
 
+function saveCalendarType(type) {
+    localStorage.setItem("calendarType", type);
+    if (typeof isExtension !== "undefined" && isExtension) {
+        chrome.storage.local.set({ calendarType: type });
+    }
+}
+
 function updateCalendarTypeButton() {
     const btn = document.getElementById("calendar-type-btn");
+    const badge = document.getElementById("calendar-type-badge");
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+
+    const calName = dict && dict.calendarNames && dict.calendarNames[currentCalendarType]
+        ? dict.calendarNames[currentCalendarType]
+        : currentCalendarType;
+
+    if (badge) {
+        badge.textContent = calName;
+    }
+
     if (btn) {
-        btn.title = currentCalendarType === "jalali"
-            ? "تقویم فعلی: شمسی (کلیک برای تبدیل به تقویم میلادی)"
-            : "تقویم فعلی: میلادی (کلیک برای تبدیل به تقویم شمسی)";
+        btn.title = dict ? `${dict.calendarTypeTitle}: ${calName}` : `تقویم: ${calName}`;
         btn.setAttribute("aria-label", btn.title);
     }
 }
@@ -774,7 +1004,6 @@ function getSavedCalendarState() {
 
 function saveCalendarState(isMinimized) {
     localStorage.setItem("calendarMinimized", String(isMinimized));
-
     if (isExtension) {
         chrome.storage.local.set({ calendarMinimized: isMinimized });
     }
@@ -784,9 +1013,13 @@ function applyCalendarState(isMinimized) {
     calendar.classList.toggle('minimized', isMinimized);
     document.body.classList.toggle('calendar-closed', isMinimized);
 
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+
     toggleBtn.innerText = isMinimized
-        ? '+ نمایش تقویم'
-        : '− بستن تقویم';
+        ? (dict ? dict.calendarOpen : '+ نمایش تقویم')
+        : (dict ? dict.calendarClose : '− بستن تقویم');
 
     setTimeout(() => {
         applyDeadlinePanelState();
@@ -806,7 +1039,6 @@ document.body.addEventListener('transitionend', (e) => {
 
 if (toggleBtn && calendar) {
     const savedMinimized = getSavedCalendarState();
-
     applyCalendarState(savedMinimized);
 
     requestAnimationFrame(() => {

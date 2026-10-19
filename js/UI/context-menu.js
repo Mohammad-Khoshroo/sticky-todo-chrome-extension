@@ -113,18 +113,23 @@ taskContextMenu.addEventListener("click", (e) => {
         const baseKey = currentKey || formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
         let defaultPromptVal = baseKey;
 
-        if (typeof currentCalendarType !== "undefined" && currentCalendarType === "gregorian") {
-            const { jy: kjy, jm: kjm, jd: kjd } = parseJalaliKey(baseKey);
-            if (kjy && kjm && kjd) {
-                const g = jalaali.toGregorian(kjy, kjm, kjd);
-                defaultPromptVal = `${g.gy}-${String(g.gm).padStart(2, "0")}-${String(g.gd).padStart(2, "0")}`;
+        const parsedBase = typeof parseAnyDeadlineKey === "function" ? parseAnyDeadlineKey(baseKey) : null;
+        if (parsedBase) {
+            if (typeof currentCalendarType !== "undefined" && currentCalendarType === "gregorian") {
+                defaultPromptVal = parsedBase.gKey;
+            } else if (typeof currentCalendarType !== "undefined" && currentCalendarType === "hijri") {
+                defaultPromptVal = parsedBase.hKey;
+            } else {
+                defaultPromptVal = parsedBase.jKey;
             }
         }
 
-        const input = prompt(
-            "تاریخ ددلاین را به فرمت YYYY-MM-DD وارد کنید (شمسی یا میلادی).\nمثال شمسی: 1405-07-28 | مثال میلادی: 2026-10-20",
-            defaultPromptVal
-        );
+        const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+            ? TRANSLATIONS[currentLanguage]
+            : null;
+        const promptMsg = dict && dict.prompts ? dict.prompts.setDeadline : "تاریخ ددلاین را وارد کنید (شمسی، میلادی یا قمری):";
+
+        const input = prompt(promptMsg, defaultPromptVal);
 
         if (input === null) return;
 
@@ -132,7 +137,7 @@ taskContextMenu.addEventListener("click", (e) => {
         const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
 
         if (!match) {
-            alert("فرمت تاریخ درست نیست. مثال: 1405-07-28 یا 2026-10-20");
+            alert(dict && dict.prompts ? dict.prompts.invalidDate : "فرمت تاریخ نامعتبر است!");
             return;
         }
 
@@ -148,10 +153,18 @@ taskContextMenu.addEventListener("click", (e) => {
                 testD.getMonth() + 1 !== month ||
                 testD.getDate() !== day
             ) {
-                alert("تاریخ میلادی وارد شده معتبر نیست.");
+                alert("Invalid Gregorian date!");
                 return;
             }
             const j = jalaali.toJalaali(year, month, day);
+            jy = j.jy;
+            jm = j.jm;
+            jd = j.jd;
+        } else if (year >= 1430 && year < 1600) {
+            const gDate = typeof hijriToGregorianDate === "function"
+                ? hijriToGregorianDate(year, month, day)
+                : new Date();
+            const j = jalaali.toJalaali(gDate.getFullYear(), gDate.getMonth() + 1, gDate.getDate());
             jy = j.jy;
             jm = j.jm;
             jd = j.jd;
@@ -171,14 +184,17 @@ taskContextMenu.addEventListener("click", (e) => {
         saveNotes();
         renderAllNotes();
 
-        if (currentJy !== jy || currentJm !== jm) {
-            currentJy = jy;
-            currentJm = jm;
-        }
-        if (typeof currentCalendarType !== "undefined" && currentCalendarType === "gregorian") {
-            const g = jalaali.toGregorian(jy, jm, jd);
-            currentGy = g.gy;
-            currentGm = g.gm;
+        currentJy = jy;
+        currentJm = jm;
+
+        const g = jalaali.toGregorian(jy, jm, jd);
+        currentGy = g.gy;
+        currentGm = g.gm;
+
+        if (typeof getHijriParts === "function") {
+            const h = getHijriParts(new Date(g.gy, g.gm - 1, g.gd, 12, 0, 0));
+            currentHy = h.hy;
+            currentHm = h.hm;
         }
 
         renderCalendar();

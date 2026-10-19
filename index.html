@@ -10,14 +10,19 @@
     <link href="vazirmatn/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="jalaali/dist/jalaali.min.js"></script>
     <script src="./js/masorny.js"></script>
+    <script src="js/i18n.js"></script>
     <script>
         (function() {
             try {
-                const saved = localStorage.getItem('theme');
-                const isDark = saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const savedTheme = localStorage.getItem('theme');
+                const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 if (isDark) {
                     document.documentElement.classList.add('dark-mode');
                 }
+                const savedLang = localStorage.getItem('appLanguage') || 'fa';
+                const isRtl = (savedLang === 'fa' || savedLang === 'ar');
+                document.documentElement.setAttribute('dir', isRtl ? 'rtl' : 'ltr');
+                document.documentElement.setAttribute('lang', savedLang);
             } catch (e) {}
         })();
     </script>
@@ -56,6 +61,7 @@
                         <circle cx="18.5" cy="17.5" r="0.8" fill="#94a3b8"/>
                       </g>
                     </svg>
+                    <span id="calendar-type-badge" class="calendar-type-badge">شمسی</span>
                 </button>
                 <button class="toggleCalendarBtn" id="calendar-btn">− بستن تقویم</button>
             </div>
@@ -100,6 +106,36 @@
     </div>
 
     <div class="bottom-actions">
+        <div class="lang-selector-wrapper" id="lang-selector-wrapper">
+            <button id="lang-toggle-btn" class="lang-toggle-btn" type="button" title="تغییر زبان (Change Language)">
+                <svg class="lang-icon" viewBox="0 0 24 24" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                    <ellipse cx="12" cy="12" rx="4.2" ry="9" stroke="currentColor" stroke-width="1.2"/>
+                    <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M4.5 7.5C7 9.5 17 9.5 19.5 7.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M4.5 16.5C7 14.5 17 14.5 19.5 16.5" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+                <span id="lang-current-flag" class="lang-current-flag">🇮🇷</span>
+            </button>
+            <div id="lang-dropdown" class="lang-dropdown hidden">
+                <button type="button" class="lang-option" data-lang="fa">
+                    <span class="lang-flag">🇮🇷</span>
+                    <span class="lang-name">فارسی</span>
+                </button>
+                <button type="button" class="lang-option" data-lang="en">
+                    <span class="lang-flag">🇬🇧</span>
+                    <span class="lang-name">English</span>
+                </button>
+                <button type="button" class="lang-option" data-lang="ko">
+                    <span class="lang-flag">🇰🇷</span>
+                    <span class="lang-name">한국어</span>
+                </button>
+                <button type="button" class="lang-option" data-lang="ar">
+                    <span class="lang-flag">🇸🇦</span>
+                    <span class="lang-name">العربية</span>
+                </button>
+            </div>
+        </div>
         <button id="theme-toggle-btn" class="theme-toggle-btn" type="button" title="تغییر حالت شب و روز (روشن / تاریک)">
             <svg class="theme-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -182,6 +218,7 @@
     <script src="js/UI/window-controls.js"></script>
     <script src="js/UI/context-menu.js"></script>
     <script src="js/UI/theme.js"></script>
+    <script src="js/UI/language.js"></script>
     <script src="js/note/note.js"></script>
     <script src="js/note/task.js"></script>
 

@@ -194,21 +194,23 @@ function renderStackWrapper(stackId, stackNotes) {
 
         let tasksHTML = pageTasks.map((task, tIndex) => {
             const absoluteIndex = taskOffset + tIndex;
+            const taskPlh = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].taskPlaceholder : "کار جدید...";
             return `
                 <li class="note-task ${task.scribbled ? 'scribbled' : ''}" 
                     data-task-index="${absoluteIndex}" 
                     draggable="true">
                     <input type="checkbox" class="task-checkbox" draggable="false" ${task.checked ? "checked" : ""}>
                     <textarea class="note-task-text ${task.text.trim() ? 'locked-task' : 'editing-task'}" 
-                        rows="1" draggable="false" placeholder="کار جدید..." ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
+                        rows="1" draggable="false" placeholder="${taskPlh}" ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
                 </li>
             `;
         }).join('');
 
         let innerHTML = '';
         if (pageIndex === 0) {
+            const notePlh = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].noteTitlePlaceholder : "عنوان یادداشت...";
             innerHTML += `<div class="tape"></div>`;
-            innerHTML += `<textarea class="note-title" rows="1" draggable="false" placeholder="عنوان یادداشت...">${escapeHTML(currentNote.title)}</textarea>`;
+            innerHTML += `<textarea class="note-title" rows="1" draggable="false" placeholder="${notePlh}">${escapeHTML(currentNote.title)}</textarea>`;
         } else {
             innerHTML += `<div class="tape link-tape"></div>`;
             noteDiv.classList.add('chained-note');
@@ -309,7 +311,7 @@ function renderAllNotes() {
                                 class="note-task-text ${task.text.trim() ? 'locked-task' : 'editing-task'}" 
                                 rows="1" 
                                 draggable="false"
-                                placeholder="کار جدید..."
+                                placeholder="${(typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].taskPlaceholder : 'کار جدید...'}"
                                 ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
                         </li>
                     `;
@@ -324,7 +326,7 @@ function renderAllNotes() {
                             class="note-title" 
                             rows="1" 
                             draggable="false"
-                            placeholder="عنوان یادداشت...">${escapeHTML(note.title)}</textarea>
+                            placeholder="${(typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].noteTitlePlaceholder : 'عنوان یادداشت...'}">${escapeHTML(note.title)}</textarea>
                     `;
                 } else {
                     innerHTML += `<div class="tape link-tape"></div>`;
