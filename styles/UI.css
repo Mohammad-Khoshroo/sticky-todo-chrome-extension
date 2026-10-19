@@ -9,6 +9,7 @@
 }
 
 #add-note-btn {
+    font-family: 'Vazirmatn', 'MyCustomPersianFont', 'MyCustomEnglishFont', sans-serif;
     height: 50px;
     padding: 0 24px;
     box-sizing: border-box;
@@ -419,7 +420,7 @@
     border-radius: 8px;
     cursor: pointer;
     text-align: right;
-    font-family: 'Vazirmatn', 'sans-serif';
+    font-family: 'Vazirmatn', 'MyCustomPersianFont', 'MyCustomEnglishFont', sans-serif;
 }
 
 .task-context-menu button:hover {

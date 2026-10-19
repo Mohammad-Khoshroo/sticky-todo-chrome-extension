@@ -10,11 +10,29 @@ const monthNames = [
     "دی", "بهمن", "اسفند"
 ];
 
+const monthNamesGregorianPersian = [
+    "ژانویه", "فوریه", "مارس",
+    "آوریل", "مه", "ژوئن",
+    "ژوئیه", "اوت", "سپتامبر",
+    "اکتبر", "نوامبر", "دسامبر"
+];
+
+let currentCalendarType = localStorage.getItem("calendarType") || "jalali"; // "jalali" | "gregorian"
+
 let currentGregorianDate = new Date();
 let todayJalali = jalaali.toJalaali(currentGregorianDate);
+let todayGregorian = {
+    gy: currentGregorianDate.getFullYear(),
+    gm: currentGregorianDate.getMonth() + 1,
+    gd: currentGregorianDate.getDate()
+};
 
 let currentJy = todayJalali.jy;
 let currentJm = todayJalali.jm;
+
+let currentGy = todayGregorian.gy;
+let currentGm = todayGregorian.gm;
+
 let selectedDeadlineKey = formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
 
 function getTaskDeadlineKey(task) {
@@ -79,7 +97,21 @@ function parseJalaliKey(key) {
 
 function formatPersianDeadlineTitle(key) {
     const { jy, jm, jd } = parseJalaliKey(key);
+    if (!jy || !jm || !jd) return "";
+    const g = jalaali.toGregorian(jy, jm, jd);
+    if (currentCalendarType === "gregorian") {
+        return `${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]} ${toFarsiNumber(g.gy)}`;
+    }
     return `${toFarsiNumber(jd)} ${monthNames[jm - 1]} ${toFarsiNumber(jy)}`;
+}
+
+function getDualDateTooltip(key) {
+    const { jy, jm, jd } = parseJalaliKey(key);
+    if (!jy || !jm || !jd) return "";
+    const g = jalaali.toGregorian(jy, jm, jd);
+    const jalaliStr = `${toFarsiNumber(jd)} ${monthNames[jm - 1]} ${toFarsiNumber(jy)}`;
+    const gregorianStr = `${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]} ${toFarsiNumber(g.gy)}`;
+    return `${jalaliStr} ⇄ ${gregorianStr}`;
 }
 
 const DEADLINE_EXPAND_THRESHOLD = 2;
@@ -390,12 +422,23 @@ function updateDeadlinePanel(deadlineKey) {
     previousDeadlineItemsCount = totalCount;
 
     const isToday = (deadlineKey === todayKey);
+    let todaySuffix = "";
+    if (isToday) {
+        const { jy, jm, jd } = parseJalaliKey(deadlineKey);
+        if (currentCalendarType === "gregorian") {
+            const g = jalaali.toGregorian(jy, jm, jd);
+            todaySuffix = ` (${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]})`;
+        } else {
+            todaySuffix = ` (${toFarsiNumber(jd)} ${monthNames[jm - 1]})`;
+        }
+    }
+
     const titleText = isToday 
-        ? `ددلاین‌های امروز (${formatPersianDeadlineTitle(deadlineKey)})`
+        ? `ددلاین‌های امروز${todaySuffix}`
         : `ددلاین‌های ${formatPersianDeadlineTitle(deadlineKey)}`;
 
     titleEl.textContent = titleText;
-    titleEl.title = titleText;
+    titleEl.title = `${titleText} — ${getDualDateTooltip(deadlineKey)}`;
     listEl.innerHTML = "";
 
     if (totalCount === 0) {
@@ -495,96 +538,229 @@ function updateDeadlinePanel(deadlineKey) {
     applyDeadlinePanelState();
 }
 
-function renderCalendar(jy, jm) {
+function renderCalendar() {
     const daysContainer = document.getElementById('daysContainer');
     const monthYearDisplay = document.getElementById('monthYear');
+    if (!daysContainer || !monthYearDisplay) return;
 
     daysContainer.innerHTML = '';
-    monthYearDisplay.textContent = `${monthNames[jm - 1]} ${toFarsiNumber(jy)}`;
-
     const deadlineKeys = getAllDeadlineKeys();
 
-    const firstDayGregorian = jalaali.toGregorian(jy, jm, 1);
-    const dateObj = new Date(
-        firstDayGregorian.gy,
-        firstDayGregorian.gm - 1,
-        firstDayGregorian.gd
-    );
+    if (currentCalendarType === "gregorian") {
+        // GREGORIAN CALENDAR (WITH PERSIAN LABELS)
+        monthYearDisplay.textContent = `${monthNamesGregorianPersian[currentGm - 1]} ${toFarsiNumber(currentGy)}`;
 
-    let firstDayOfWeek = dateObj.getDay() + 1;
-    if (firstDayOfWeek === 7) firstDayOfWeek = 0;
+        const dateObj = new Date(currentGy, currentGm - 1, 1);
+        let firstDayOfWeek = (dateObj.getDay() + 1) % 7; // Saturday = 0, Friday = 6
+        const monthLength = new Date(currentGy, currentGm, 0).getDate();
 
-    const monthLength = jalaali.jalaaliMonthLength(jy, jm);
-
-    for (let i = 0; i < firstDayOfWeek; i++) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.classList.add('day', 'empty');
-        daysContainer.appendChild(emptyDiv);
-    }
-
-    for (let i = 1; i <= monthLength; i++) {
-        const dayDiv = document.createElement('div');
-        const dayKey = formatJalaliKey(jy, jm, i);
-
-        dayDiv.classList.add('day');
-        dayDiv.textContent = toFarsiNumber(i);
-        dayDiv.dataset.dateKey = dayKey;
-
-        if ((firstDayOfWeek + i - 1) % 7 === 6) {
-            dayDiv.classList.add('friday');
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('day', 'empty');
+            daysContainer.appendChild(emptyDiv);
         }
 
-        if (
-            jy === todayJalali.jy &&
-            jm === todayJalali.jm &&
-            i === todayJalali.jd
-        ) {
-            dayDiv.classList.add('today');
-        }
+        for (let i = 1; i <= monthLength; i++) {
+            const dayDiv = document.createElement('div');
+            const j = jalaali.toJalaali(currentGy, currentGm, i);
+            const dayKey = formatJalaliKey(j.jy, j.jm, j.jd);
 
-        if (deadlineKeys.has(dayKey)) {
-            dayDiv.classList.add('has-deadline');
-            const dotColor = getDayUrgencyColor(dayKey);
-            if (dotColor) {
-                dayDiv.style.setProperty('--deadline-dot-color', dotColor);
+            dayDiv.classList.add('day');
+            dayDiv.textContent = toFarsiNumber(i);
+            dayDiv.dataset.dateKey = dayKey;
+            dayDiv.title = `معادل شمسی: ${toFarsiNumber(j.jd)} ${monthNames[j.jm - 1]} ${toFarsiNumber(j.jy)}`;
+
+            if ((firstDayOfWeek + i - 1) % 7 === 6) {
+                dayDiv.classList.add('friday');
             }
+
+            if (
+                currentGy === todayGregorian.gy &&
+                currentGm === todayGregorian.gm &&
+                i === todayGregorian.gd
+            ) {
+                dayDiv.classList.add('today');
+            }
+
+            if (deadlineKeys.has(dayKey)) {
+                dayDiv.classList.add('has-deadline');
+                const dotColor = getDayUrgencyColor(dayKey);
+                if (dotColor) {
+                    dayDiv.style.setProperty('--deadline-dot-color', dotColor);
+                }
+            }
+
+            if (selectedDeadlineKey === dayKey) {
+                dayDiv.classList.add('selected-deadline-day');
+            }
+
+            dayDiv.addEventListener("click", () => {
+                selectedDeadlineKey = dayKey;
+                renderCalendar();
+                updateDeadlinePanel(dayKey);
+            });
+
+            daysContainer.appendChild(dayDiv);
+        }
+    } else {
+        // JALALI (SHAMSI) CALENDAR
+        monthYearDisplay.textContent = `${monthNames[currentJm - 1]} ${toFarsiNumber(currentJy)}`;
+
+        const firstDayGregorian = jalaali.toGregorian(currentJy, currentJm, 1);
+        const dateObj = new Date(
+            firstDayGregorian.gy,
+            firstDayGregorian.gm - 1,
+            firstDayGregorian.gd
+        );
+
+        let firstDayOfWeek = (dateObj.getDay() + 1) % 7;
+        const monthLength = jalaali.jalaaliMonthLength(currentJy, currentJm);
+
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('day', 'empty');
+            daysContainer.appendChild(emptyDiv);
         }
 
-        if (selectedDeadlineKey === dayKey) {
-            dayDiv.classList.add('selected-deadline-day');
+        for (let i = 1; i <= monthLength; i++) {
+            const dayDiv = document.createElement('div');
+            const dayKey = formatJalaliKey(currentJy, currentJm, i);
+            const g = jalaali.toGregorian(currentJy, currentJm, i);
+
+            dayDiv.classList.add('day');
+            dayDiv.textContent = toFarsiNumber(i);
+            dayDiv.dataset.dateKey = dayKey;
+            dayDiv.title = `معادل میلادی: ${toFarsiNumber(g.gd)} ${monthNamesGregorianPersian[g.gm - 1]} ${toFarsiNumber(g.gy)}`;
+
+            if ((firstDayOfWeek + i - 1) % 7 === 6) {
+                dayDiv.classList.add('friday');
+            }
+
+            if (
+                currentJy === todayJalali.jy &&
+                currentJm === todayJalali.jm &&
+                i === todayJalali.jd
+            ) {
+                dayDiv.classList.add('today');
+            }
+
+            if (deadlineKeys.has(dayKey)) {
+                dayDiv.classList.add('has-deadline');
+                const dotColor = getDayUrgencyColor(dayKey);
+                if (dotColor) {
+                    dayDiv.style.setProperty('--deadline-dot-color', dotColor);
+                }
+            }
+
+            if (selectedDeadlineKey === dayKey) {
+                dayDiv.classList.add('selected-deadline-day');
+            }
+
+            dayDiv.addEventListener("click", () => {
+                selectedDeadlineKey = dayKey;
+                renderCalendar();
+                updateDeadlinePanel(dayKey);
+            });
+
+            daysContainer.appendChild(dayDiv);
         }
-
-        dayDiv.addEventListener("click", () => {
-            selectedDeadlineKey = dayKey;
-            renderCalendar(currentJy, currentJm);
-            updateDeadlinePanel(dayKey);
-        });
-
-        daysContainer.appendChild(dayDiv);
     }
 }
 
 document.getElementById('prevBtn').addEventListener('click', () => {
-    currentJm--;
-
-    if (currentJm < 1) {
-        currentJm = 12;
-        currentJy--;
+    if (currentCalendarType === "gregorian") {
+        currentGm--;
+        if (currentGm < 1) {
+            currentGm = 12;
+            currentGy--;
+        }
+    } else {
+        currentJm--;
+        if (currentJm < 1) {
+            currentJm = 12;
+            currentJy--;
+        }
     }
-
-    renderCalendar(currentJy, currentJm);
+    renderCalendar();
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
-    currentJm++;
+    if (currentCalendarType === "gregorian") {
+        currentGm++;
+        if (currentGm > 12) {
+            currentGm = 1;
+            currentGy++;
+        }
+    } else {
+        currentJm++;
+        if (currentJm > 12) {
+            currentJm = 1;
+            currentJy++;
+        }
+    }
+    renderCalendar();
+});
 
-    if (currentJm > 12) {
-        currentJm = 1;
-        currentJy++;
+function toggleCalendarType(e) {
+    if (e && e.stopPropagation) {
+        e.stopPropagation();
+    }
+    const btn = document.getElementById("calendar-type-btn");
+    if (btn) {
+        btn.classList.add("switching");
+        setTimeout(() => btn.classList.remove("switching"), 450);
     }
 
-    renderCalendar(currentJy, currentJm);
-});
+    if (currentCalendarType === "jalali") {
+        currentCalendarType = "gregorian";
+        const sel = parseJalaliKey(selectedDeadlineKey);
+        if (sel && sel.jy && sel.jm && sel.jd) {
+            const g = jalaali.toGregorian(sel.jy, sel.jm, sel.jd);
+            currentGy = g.gy;
+            currentGm = g.gm;
+        } else {
+            const g = jalaali.toGregorian(currentJy, currentJm, 1);
+            currentGy = g.gy;
+            currentGm = g.gm;
+        }
+    } else {
+        currentCalendarType = "jalali";
+        const sel = parseJalaliKey(selectedDeadlineKey);
+        if (sel && sel.jy && sel.jm) {
+            currentJy = sel.jy;
+            currentJm = sel.jm;
+        } else {
+            const j = jalaali.toJalaali(currentGy, currentGm, 1);
+            currentJy = j.jy;
+            currentJm = j.jm;
+        }
+    }
+
+    localStorage.setItem("calendarType", currentCalendarType);
+    if (typeof isExtension !== "undefined" && isExtension) {
+        chrome.storage.local.set({ calendarType: currentCalendarType });
+    }
+
+    updateCalendarTypeButton();
+    renderCalendar();
+    updateDeadlinePanel(selectedDeadlineKey);
+}
+
+function updateCalendarTypeButton() {
+    const btn = document.getElementById("calendar-type-btn");
+    if (btn) {
+        btn.title = currentCalendarType === "jalali"
+            ? "تقویم فعلی: شمسی (کلیک برای تبدیل به تقویم میلادی)"
+            : "تقویم فعلی: میلادی (کلیک برای تبدیل به تقویم شمسی)";
+        btn.setAttribute("aria-label", btn.title);
+    }
+}
+
+const calendarTypeBtn = document.getElementById("calendar-type-btn");
+if (calendarTypeBtn) {
+    calendarTypeBtn.addEventListener("click", toggleCalendarType);
+    updateCalendarTypeButton();
+}
 
 // ----------------------
 //     CALENDAR TOGGLE
@@ -639,12 +815,21 @@ if (toggleBtn && calendar) {
         });
     });
 
-    toggleBtn.addEventListener('click', function () {
-        const isMinimized = !calendar.classList.contains('minimized');
-
-        applyCalendarState(isMinimized);
-        saveCalendarState(isMinimized);
-    });
+    const calendarTopBar = document.querySelector('.calendar-top-bar');
+    if (calendarTopBar) {
+        calendarTopBar.addEventListener('click', function (e) {
+            if (e.target.closest('#calendar-type-btn')) return;
+            const isMinimized = !calendar.classList.contains('minimized');
+            applyCalendarState(isMinimized);
+            saveCalendarState(isMinimized);
+        });
+    } else {
+        toggleBtn.addEventListener('click', function () {
+            const isMinimized = !calendar.classList.contains('minimized');
+            applyCalendarState(isMinimized);
+            saveCalendarState(isMinimized);
+        });
+    }
 }
 
 const deadlineToggleBtn = document.getElementById('deadline-panel-toggle-btn');
@@ -667,5 +852,16 @@ if (calendar) {
     });
 }
 
-renderCalendar(currentJy, currentJm);
+if (typeof isExtension !== "undefined" && isExtension) {
+    chrome.storage.local.get(["calendarType"], (result) => {
+        if (result.calendarType && result.calendarType !== currentCalendarType) {
+            currentCalendarType = result.calendarType;
+            updateCalendarTypeButton();
+            renderCalendar();
+            updateDeadlinePanel(selectedDeadlineKey);
+        }
+    });
+}
+
+renderCalendar();
 updateDeadlinePanel(selectedDeadlineKey);

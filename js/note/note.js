@@ -200,7 +200,7 @@ function renderStackWrapper(stackId, stackNotes) {
                     draggable="true">
                     <input type="checkbox" class="task-checkbox" draggable="false" ${task.checked ? "checked" : ""}>
                     <textarea class="note-task-text ${task.text.trim() ? 'locked-task' : 'editing-task'}" 
-                        rows="1" draggable="false" placeholder="task. . ." ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
+                        rows="1" draggable="false" placeholder="کار جدید..." ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
                 </li>
             `;
         }).join('');
@@ -208,7 +208,7 @@ function renderStackWrapper(stackId, stackNotes) {
         let innerHTML = '';
         if (pageIndex === 0) {
             innerHTML += `<div class="tape"></div>`;
-            innerHTML += `<textarea class="note-title" rows="1" draggable="false" placeholder="Note Title. . .">${escapeHTML(currentNote.title)}</textarea>`;
+            innerHTML += `<textarea class="note-title" rows="1" draggable="false" placeholder="عنوان یادداشت...">${escapeHTML(currentNote.title)}</textarea>`;
         } else {
             innerHTML += `<div class="tape link-tape"></div>`;
             noteDiv.classList.add('chained-note');
@@ -309,7 +309,7 @@ function renderAllNotes() {
                                 class="note-task-text ${task.text.trim() ? 'locked-task' : 'editing-task'}" 
                                 rows="1" 
                                 draggable="false"
-                                placeholder="task. . ."
+                                placeholder="کار جدید..."
                                 ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
                         </li>
                     `;
@@ -324,7 +324,7 @@ function renderAllNotes() {
                             class="note-title" 
                             rows="1" 
                             draggable="false"
-                            placeholder="Note Title. . .">${escapeHTML(note.title)}</textarea>
+                            placeholder="عنوان یادداشت...">${escapeHTML(note.title)}</textarea>
                     `;
                 } else {
                     innerHTML += `<div class="tape link-tape"></div>`;

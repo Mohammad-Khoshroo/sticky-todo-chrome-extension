@@ -19,20 +19,36 @@ body.dark-mode {
     color: #f1f5f9;
 }
 
-.dark-mode .toggleCalendarBtn {
+.dark-mode .calendar-top-bar {
     background-color: #0f172a;
-    color: #94a3b8;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.dark-mode .calendar-top-bar:hover {
+    background-color: #162032;
+}
+
+.dark-mode .toggleCalendarBtn {
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+}
+
 .dark-mode .toggleCalendarBtn:hover {
-    background-color: #1e293b;
     color: #f8fafc;
 }
 
-.dark-mode .header {
-    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
-    color: #ffffff;
+.dark-mode .calendar-type-btn {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #94a3b8;
+}
+
+.dark-mode .calendar-type-btn:hover {
+    color: #f8fafc;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
 }
 
 .dark-mode .weekdays {
