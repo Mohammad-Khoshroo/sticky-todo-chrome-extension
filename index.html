@@ -10,6 +10,17 @@
     <link href="vazirmatn/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="jalaali/dist/jalaali.min.js"></script>
     <script src="./js/masorny.js"></script>
+    <script>
+        (function() {
+            try {
+                const saved = localStorage.getItem('theme');
+                const isDark = saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark-mode');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 
 <body class="no-calendar-transition">
@@ -59,7 +70,41 @@
         <img src="images/pencil.ico" alt="pen" width="45" height="45">
     </div>
 
-    <button id="add-note-btn">Add Note +</button>
+    <div class="bottom-actions">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" type="button" title="تغییر حالت شب و روز (Dark / Light)">
+            <svg class="theme-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fbbf24" />
+                  <stop offset="100%" stop-color="#f59e0b" />
+                </linearGradient>
+                <linearGradient id="moonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="100%" stop-color="#818cf8" />
+                </linearGradient>
+              </defs>
+              <!-- Sun Rays (left side) -->
+              <path d="M12 2V4" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M4 12H2" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M6.34 6.34L4.93 4.93" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M6.34 17.66L4.93 19.07" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M12 22V20" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
+              
+              <!-- Left Half: Sun disc -->
+              <path d="M12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20V4Z" fill="url(#sunGrad)"/>
+              
+              <!-- Right Half: Crescent Moon -->
+              <path d="M12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20C15.2 17.6 16.8 14.9 16.8 12C16.8 9.1 15.2 6.4 12 4Z" fill="url(#moonGrad)"/>
+              <path d="M12 4C15.2 6.4 16.8 9.1 16.8 12C16.8 14.9 15.2 17.6 12 20" stroke="#e0e7ff" stroke-width="1.2" stroke-linecap="round"/>
+              
+              <!-- Stars in the night sky (right side) -->
+              <circle cx="18.5" cy="6.5" r="1" fill="#f8fafc"/>
+              <path d="M19 12L19.4 12.8L20.2 13.2L19.4 13.6L19 14.4L18.6 13.6L17.8 13.2L18.6 12.8L19 12Z" fill="#f8fafc"/>
+              <circle cx="17.5" cy="17.5" r="0.9" fill="#f8fafc"/>
+            </svg>
+        </button>
+        <button id="add-note-btn">Add Note +</button>
+    </div>
 
     <div id="container"></div>
     <!-- END UI -->
@@ -107,6 +152,7 @@
     <script src="js/UI/eraser.js"></script>
     <script src="js/UI/window-controls.js"></script>
     <script src="js/UI/context-menu.js"></script>
+    <script src="js/UI/theme.js"></script>
     <script src="js/note/note.js"></script>
     <script src="js/note/task.js"></script>
 

@@ -1,0 +1,316 @@
+/* ===================================
+   DARK MODE STYLES
+   =================================== */
+
+html.dark-mode,
+body.dark-mode {
+    background-color: #0b1120;
+    background-image:
+        radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.7) 0%, transparent 70%),
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 255, 255, 0.015) 2px, rgba(255, 255, 255, 0.015) 4px);
+    color: #f1f5f9;
+}
+
+/* Calendar */
+.dark-mode .Calendar {
+    background-color: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.03);
+    color: #f1f5f9;
+}
+
+.dark-mode .toggleCalendarBtn {
+    background-color: #0f172a;
+    color: #94a3b8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .toggleCalendarBtn:hover {
+    background-color: #1e293b;
+    color: #f8fafc;
+}
+
+.dark-mode .header {
+    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+    color: #ffffff;
+}
+
+.dark-mode .weekdays {
+    background-color: #0f172a;
+    color: #94a3b8;
+}
+
+.dark-mode .day {
+    color: #cbd5e1;
+}
+
+.dark-mode .day:hover:not(.empty):not(.selected-deadline-day):not(.today) {
+    background-color: #334155;
+    color: #c7d2fe;
+}
+
+.dark-mode .day.friday {
+    color: #f87171;
+}
+
+.dark-mode .day.friday.today {
+    color: #ffffff;
+}
+
+.dark-mode .day.today {
+    background-color: #6366f1;
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.45);
+}
+
+.dark-mode .day.selected-deadline-day {
+    background-color: #7c3aed;
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.4);
+}
+
+.dark-mode .day.today.selected-deadline-day {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.5);
+}
+
+/* Deadline Panel */
+.dark-mode .deadline-panel {
+    background-color: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45), 0 0 15px rgba(255, 255, 255, 0.03);
+}
+
+.dark-mode .deadline-panel-header {
+    background-color: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .deadline-panel-title {
+    color: #f1f5f9;
+}
+
+.dark-mode .deadline-panel-toggle-btn {
+    background-color: #334155;
+    color: #cbd5e1;
+    border-color: #475569;
+}
+
+.dark-mode .deadline-panel-toggle-btn:hover {
+    background-color: #475569;
+    color: #ffffff;
+}
+
+.dark-mode .deadline-list::-webkit-scrollbar-thumb {
+    background-color: #475569;
+}
+
+.dark-mode .deadline-list::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
+}
+
+.dark-mode .deadline-item {
+    background-color: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+.dark-mode .deadline-item:hover {
+    background-color: #162032;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.dark-mode .deadline-item-note {
+    color: #94a3b8;
+}
+
+.dark-mode .deadline-item-text {
+    color: #f8fafc;
+}
+
+.dark-mode .deadline-item.overdue {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    border-color: rgba(239, 68, 68, 0.35);
+    border-right-color: #ef4444 !important;
+}
+
+.dark-mode .deadline-item.done {
+    background-color: #1e293b !important;
+    border-color: #334155;
+    opacity: 0.45;
+}
+
+.dark-mode .deadline-item.done .deadline-item-text {
+    color: #64748b;
+}
+
+.dark-mode .deadline-section-header {
+    border-bottom-color: #334155;
+}
+
+.dark-mode .deadline-section-header.current {
+    color: #94a3b8;
+    border-bottom-color: #334155;
+}
+
+.dark-mode .deadline-section-header.overdue {
+    color: #f87171;
+    border-bottom-color: rgba(239, 68, 68, 0.3);
+    background-color: rgba(239, 68, 68, 0.12);
+}
+
+.dark-mode .overdue-toggle-btn {
+    background-color: rgba(239, 68, 68, 0.22);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark-mode .overdue-toggle-btn:hover {
+    background-color: rgba(239, 68, 68, 0.35);
+    color: #fee2e2;
+}
+
+.dark-mode .deadline-empty,
+.dark-mode .deadline-section-empty {
+    color: #64748b;
+}
+
+/* Context Menus */
+.dark-mode .task-context-menu {
+    background: #1e293b;
+    border: 1px solid #475569;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    color: #f1f5f9;
+}
+
+.dark-mode .task-context-menu button {
+    color: #e2e8f0;
+}
+
+.dark-mode .task-context-menu button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+/* Trash Modal */
+.dark-mode .trash-modal-content {
+    background: #1e293b;
+    border: 1px solid #334155;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    color: #f1f5f9;
+}
+
+.dark-mode .trash-modal-header {
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+}
+
+.dark-mode .trash-header-info h2 {
+    color: #f1f5f9;
+}
+
+.dark-mode .trash-header-sub {
+    color: #94a3b8;
+}
+
+.dark-mode .close-trash-modal {
+    color: #94a3b8;
+}
+
+.dark-mode .close-trash-modal:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
+.dark-mode .trash-modal-list {
+    background: #0b1120;
+}
+
+.dark-mode .trash-empty-state h3 {
+    color: #cbd5e1;
+}
+
+.dark-mode .trash-empty-state p {
+    color: #64748b;
+}
+
+/* ===================================
+   PASTEL NOTE COLORS (DARK MODE)
+   =================================== */
+
+.dark-mode .color-0 {
+    --note-color: #fef08a; /* Pastel warm butter / cream yellow */
+    background-color: var(--note-color);
+}
+
+.dark-mode .color-1 {
+    --note-color: #bbf7d0; /* Pastel mint / soft sage green */
+    background-color: var(--note-color);
+}
+
+.dark-mode .color-2 {
+    --note-color: #bae6fd; /* Pastel ice / soft sky cyan-blue */
+    background-color: var(--note-color);
+}
+
+.dark-mode .color-3 {
+    --note-color: #fecdd3; /* Pastel blush / soft rose pink */
+    background-color: var(--note-color);
+}
+
+/* Ensure text on notes in dark mode stays crisp ink */
+.dark-mode .note-paper {
+    box-shadow: 0px 10px 24px -5px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.08);
+    color: #0f172a;
+}
+
+.dark-mode .note-paper .note-title,
+.dark-mode .note-paper .note-task-text {
+    color: #0f172a !important;
+}
+
+.dark-mode .note-paper .note-title {
+    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.dark-mode .note-paper .note-task-text::placeholder {
+    color: rgba(15, 23, 42, 0.45);
+}
+
+.dark-mode .tape {
+    opacity: 0.7;
+}
+
+/* ===================================
+   FLOATING TOOLS LIGHTING (DARK MODE)
+   =================================== */
+
+.dark-mode #trash-bin {
+    opacity: 0.95;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.28)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.65));
+    transition: opacity 0.25s, transform 0.25s, filter 0.25s;
+}
+
+.dark-mode #trash-bin:hover {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.45)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.75));
+}
+
+.dark-mode #eraser {
+    filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.3)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    transition: transform 0.2s, filter 0.2s;
+}
+
+.dark-mode #eraser:hover {
+    filter: drop-shadow(0 0 11px rgba(255, 255, 255, 0.5)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+}
+
+.dark-mode #pen {
+    filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.3)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+    transition: transform 0.2s, filter 0.2s;
+}
+
+.dark-mode #pen:hover {
+    filter: drop-shadow(0 0 11px rgba(255, 255, 255, 0.5)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}

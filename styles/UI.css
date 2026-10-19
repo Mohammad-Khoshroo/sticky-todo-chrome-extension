@@ -1,23 +1,90 @@
-#add-note-btn {
+.bottom-actions {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+}
+
+#add-note-btn {
+    height: 50px;
+    padding: 0 24px;
+    box-sizing: border-box;
     background-color: #ff9800;
     color: white;
     border: none;
     border-radius: 50px;
     font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     user-select: none;
     -webkit-user-select: none;
-    transition: 0.3s;
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 #add-note-btn:hover {
     background-color: #ffb648;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+#add-note-btn:active {
+    transform: translateY(1px);
+}
+
+.theme-toggle-btn {
+    width: 50px;
+    height: 50px;
+    box-sizing: border-box;
+    padding: 0;
+    border-radius: 50px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    user-select: none;
+    -webkit-user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background-color 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+
+.theme-toggle-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle-btn:active {
+    transform: translateY(1px) scale(0.96);
+}
+
+.theme-toggle-btn .theme-icon {
+    display: block;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.theme-toggle-btn.rotate .theme-icon {
+    transform: rotate(360deg);
+}
+
+.dark-mode .theme-toggle-btn {
+    background-color: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 12px rgba(251, 191, 36, 0.15);
+}
+
+.dark-mode .theme-toggle-btn:hover {
+    background-color: #283548;
+    border-color: #475569;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 16px rgba(251, 191, 36, 0.25);
 }
 
 #container {

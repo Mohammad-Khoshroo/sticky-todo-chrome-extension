@@ -1,6 +1,7 @@
 @import "./styles/calendar.css";
 @import "./styles/notes.css";
 @import "./styles/UI.css";
+@import "./styles/dark-mode.css";
 
 @font-face {
     font-family: 'MyCustomEnglishFont';
