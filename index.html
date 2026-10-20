@@ -81,12 +81,33 @@
             </div>
             <div class="days" id="daysContainer"></div>
         </div>
-        <div id="deadline-panel" class="deadline-panel">
-            <div class="deadline-panel-header">
-                <div id="deadline-panel-title" class="deadline-panel-title">ددلاین‌های امروز</div>
-                <button type="button" id="deadline-panel-toggle-btn" class="deadline-panel-toggle-btn hidden" title="تغییر اندازه پنجره">− کوچک کردن</button>
+        <!-- UNIFIED SIDE PANEL WITH DELICATE TOGGLE -->
+        <div id="side-panel" class="side-panel deadline-panel">
+            <div class="side-panel-header" id="side-panel-header">
+                <div class="side-panel-title-wrap">
+                    <span id="side-panel-icon" class="side-panel-icon">📅</span>
+                    <span id="side-panel-title-text" class="side-panel-title-text">ددلاین‌های امروز</span>
+                    <span id="side-panel-count-badge" class="side-panel-count-badge">0</span>
+                </div>
+                <div class="side-panel-actions">
+                    <button type="button" id="btn-open-add-routine" class="btn-add-routine-chip hidden" title="تعریف کار روزمره جدید">+ کار جدید</button>
+                    <button type="button" id="panel-mode-toggle-btn" class="panel-mode-toggle-btn" title="سوئیچ به کارهای روزمره"></button>
+                    <button type="button" id="side-panel-collapse-btn" class="panel-collapse-btn hidden" title="کوچک / بزرگ کردن پنل">−</button>
+                </div>
             </div>
-            <div id="deadline-list" class="deadline-list"></div>
+
+            <div id="side-panel-body" class="side-panel-body">
+                <!-- VIEW 1: DEADLINES -->
+                <div id="deadline-view" class="side-panel-view">
+                    <div id="deadline-list" class="deadline-list"></div>
+                </div>
+
+                <!-- VIEW 2: DAILY ROUTINES / کارهای روزمره -->
+                <div id="routine-view" class="side-panel-view hidden">
+                    <div id="daily-progress-container" class="daily-progress-container"></div>
+                    <div id="routine-list" class="routine-list"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -211,6 +232,7 @@
     <!-- <script src="script.js"></script> -->
 
     <script src="js/main.js"></script>
+    <script src="js/routine/routine.js"></script>
     <script src="js/calendar/calendar.js"></script>
     <script src="js/UI/trash-bin.js"></script>
     <script src="js/UI/pencil.js"></script>

@@ -367,3 +367,26 @@ body.dark-mode {
     background-color: #1e3a8a;
     color: #bfdbfe;
 }
+
+
+/* ===================================
+   ADD NOTE BUTTON (DARK MODE)
+   =================================== */
+
+.dark-mode #add-note-btn {
+    background-color: #ffaa2b;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 170, 43, 0.3);
+    color: #ffffff;
+}
+
+.dark-mode #add-note-btn:hover {
+    background-color: #ffb84d;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 184, 77, 0.45);
+    transform: translateY(-2px);
+}
+
+.dark-mode #add-note-btn:active {
+    background-color: #f59e0b;
+    transform: translateY(1px);
+}

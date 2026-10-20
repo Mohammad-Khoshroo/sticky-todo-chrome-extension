@@ -4,7 +4,7 @@
     top: 30px;
     right: 30px;
     z-index: 900;
-    width: 320px;
+    width: 350px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -15,7 +15,7 @@
     direction: rtl;
     position: relative;
     background-color: #ffffff;
-    width: 320px;
+    width: 350px;
     height: 445px;
     border-radius: 15px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -223,7 +223,7 @@ html[dir="ltr"] .calendar-type-badge {
 
 
 .deadline-panel {
-    width: 320px;
+    width: 350px;
     background-color: #ffffff;
     border-radius: 15px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16);
@@ -288,13 +288,11 @@ html[dir="ltr"] .calendar-type-badge {
 }
 
 .deadline-list {
-    max-height: 220px;
-    overflow-y: auto;
-    padding: 10px;
+    overflow-y: visible;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    transition: max-height 0.25s ease-in-out;
 }
 
 .deadline-list::-webkit-scrollbar {
@@ -487,8 +485,18 @@ html[dir="ltr"] .calendar-type-badge {
     padding: 12px 6px;
 }
 
-.Calendar.minimized+.deadline-panel {
-    display: none;
+.Calendar.minimized ~ .side-panel,
+.Calendar.minimized ~ .deadline-panel {
+    display: none !important;
+}
+
+.side-panel.collapsed .side-panel-body,
+.deadline-panel.collapsed .deadline-list {
+    display: none !important;
+}
+
+.deadline-panel.collapsed .deadline-list {
+    display: none !important;
 }
 
 .day.has-deadline {

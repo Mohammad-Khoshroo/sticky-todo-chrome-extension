@@ -189,33 +189,46 @@ function getAllDeadlineJalaliKeys() {
     return keys;
 }
 
-function formatDayTitleForCurrentCalendar(key) {
+function formatDayTitleForCurrentCalendar(key, includeYear = false) {
     const parsed = parseAnyDeadlineKey(key);
     if (!parsed) return "";
 
     const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
         ? TRANSLATIONS[currentLanguage]
         : null;
+    const isEn = (currentLanguage === "en");
+    const isKo = (currentLanguage === "ko");
+
+    let monthName = "";
+    let day = 1;
+    let year = 1400;
 
     if (currentCalendarType === "hijri") {
-        const monthName = dict ? dict.months.hijri[parsed.h.hm - 1] : `ماه ${parsed.h.hm}`;
-        const dayStr = typeof formatDigits === "function" ? formatDigits(parsed.h.hd) : parsed.h.hd;
-        const yearStr = typeof formatDigits === "function" ? formatDigits(parsed.h.hy) : parsed.h.hy;
+        monthName = dict ? dict.months.hijri[parsed.h.hm - 1] : `ماه ${parsed.h.hm}`;
+        day = parsed.h.hd;
+        year = parsed.h.hy;
+    } else if (currentCalendarType === "gregorian") {
+        monthName = dict ? dict.months.gregorian[parsed.g.gm - 1] : `Month ${parsed.g.gm}`;
+        day = parsed.g.gd;
+        year = parsed.g.gy;
+    } else {
+        monthName = dict ? dict.months.jalali[parsed.j.jm - 1] : `ماه ${parsed.j.jm}`;
+        day = parsed.j.jd;
+        year = parsed.j.jy;
+    }
+
+    const dayStr = typeof formatDigits === "function" ? formatDigits(day) : day;
+    const yearStr = typeof formatDigits === "function" ? formatDigits(year) : year;
+
+    if (includeYear) {
+        if (isKo) return `${yearStr}년 ${monthName} ${dayStr}일`;
+        if (isEn) return `${monthName} ${dayStr}, ${yearStr}`;
         return `${dayStr} ${monthName} ${yearStr}`;
     }
 
-    if (currentCalendarType === "gregorian") {
-        const monthName = dict ? dict.months.gregorian[parsed.g.gm - 1] : `Month ${parsed.g.gm}`;
-        const dayStr = typeof formatDigits === "function" ? formatDigits(parsed.g.gd) : parsed.g.gd;
-        const yearStr = typeof formatDigits === "function" ? formatDigits(parsed.g.gy) : parsed.g.gy;
-        return `${dayStr} ${monthName} ${yearStr}`;
-    }
-
-    // Default: Jalali
-    const monthName = dict ? dict.months.jalali[parsed.j.jm - 1] : `ماه ${parsed.j.jm}`;
-    const dayStr = typeof formatDigits === "function" ? formatDigits(parsed.j.jd) : parsed.j.jd;
-    const yearStr = typeof formatDigits === "function" ? formatDigits(parsed.j.jy) : parsed.j.jy;
-    return `${dayStr} ${monthName} ${yearStr}`;
+    if (isKo) return `${monthName} ${dayStr}일`;
+    if (isEn) return `${monthName} ${dayStr}`;
+    return `${dayStr} ${monthName}`;
 }
 
 function getMultiCalendarTooltip(key) {
@@ -429,36 +442,8 @@ function getAvailableDeadlineListHeight() {
 }
 
 function applyDeadlinePanelState() {
-    const toggleBtn = document.getElementById("deadline-panel-toggle-btn");
-    const listEl = document.getElementById("deadline-list");
-
-    if (!toggleBtn || !listEl) return;
-
-    const allItems = listEl.querySelectorAll('.deadline-item');
-    let visibleCount = 0;
-    allItems.forEach(item => {
-        if (!item.closest('.overdue-items-container.collapsed')) {
-            visibleCount++;
-        }
-    });
-
-    const hasManyItems = visibleCount > DEADLINE_EXPAND_THRESHOLD;
-
-    if (!hasManyItems) {
-        toggleBtn.classList.add("hidden");
-        listEl.style.maxHeight = `${STANDARD_DEADLINE_LIST_MAX_HEIGHT}px`;
-        return;
-    }
-
-    toggleBtn.classList.remove("hidden");
-    const availableHeight = getAvailableDeadlineListHeight();
-
-    if (isDeadlinePanelUserCollapsed) {
-        toggleBtn.innerText = "+";
-        listEl.style.maxHeight = `${Math.min(STANDARD_DEADLINE_LIST_MAX_HEIGHT, availableHeight)}px`;
-    } else {
-        toggleBtn.innerText = "−";
-        listEl.style.maxHeight = `${availableHeight}px`;
+    if (typeof updateSidePanelHeightAndCollapse === "function") {
+        updateSidePanelHeightAndCollapse();
     }
 }
 
@@ -509,10 +494,12 @@ function createDeadlineItemElement({ note, task, noteIndex, info, isOverdue }) {
 }
 
 function updateDeadlinePanel(deadlineKey) {
-    const titleEl = document.getElementById("deadline-panel-title");
+    const titleTextEl = document.getElementById("deadline-panel-title-text");
+    const countBadge = document.getElementById("deadline-count-badge");
+    const tabBadge = document.getElementById("tab-badge-deadlines");
     const listEl = document.getElementById("deadline-list");
 
-    if (!titleEl || !listEl) return;
+    if (!listEl) return;
 
     if (currentPanelDeadlineKey !== deadlineKey) {
         currentPanelDeadlineKey = deadlineKey;
@@ -530,14 +517,10 @@ function updateDeadlinePanel(deadlineKey) {
 
     const totalCount = currentDayItems.length + otherOverdueTasks.length;
 
-    if (totalCount > previousDeadlineItemsCount && totalCount > DEADLINE_EXPAND_THRESHOLD) {
-        isDeadlinePanelUserCollapsed = false;
-    }
-    previousDeadlineItemsCount = totalCount;
-
     const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
         ? TRANSLATIONS[currentLanguage]
         : null;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
 
     let titleText = "";
     if (isToday) {
@@ -550,15 +533,14 @@ function updateDeadlinePanel(deadlineKey) {
             : `ددلاین‌های ${formattedDate}`;
     }
 
-    titleEl.textContent = titleText;
-    titleEl.title = `${titleText} — ${getMultiCalendarTooltip(deadlineKey)}`;
-    listEl.innerHTML = "";
-
-    if (totalCount === 0) {
-        listEl.innerHTML = `<div class="deadline-empty">${dict ? dict.deadlineEmpty : "ددلاینی وجود ندارد"}</div>`;
-        applyDeadlinePanelState();
-        return;
+    if (titleTextEl) {
+        titleTextEl.textContent = titleText;
+        titleTextEl.parentElement.title = `${titleText} — ${getMultiCalendarTooltip(deadlineKey)}`;
     }
+    if (countBadge) countBadge.textContent = fd(totalCount);
+    if (tabBadge) tabBadge.textContent = fd(totalCount);
+
+    listEl.innerHTML = "";
 
     function renderOtherOverdueSection(container, tasks, sectionTitle) {
         if (!tasks.length) return;
@@ -566,8 +548,6 @@ function updateDeadlinePanel(deadlineKey) {
         const overdueHeader = document.createElement("div");
         overdueHeader.className = "deadline-section-header overdue";
         overdueHeader.id = "overdue-section-header";
-
-        const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
 
         const updateOverdueHeaderContent = () => {
             const icon = isOverdueSectionCollapsed ? "◀" : "▼";
@@ -593,7 +573,9 @@ function updateDeadlinePanel(deadlineKey) {
             localStorage.setItem("overdueSectionCollapsed", String(isOverdueSectionCollapsed));
             overdueContainer.classList.toggle("collapsed", isOverdueSectionCollapsed);
             updateOverdueHeaderContent();
-            applyDeadlinePanelState();
+            if (typeof updateSidePanelHeightAndCollapse === "function") {
+                updateSidePanelHeightAndCollapse();
+            }
         });
 
         tasks.forEach(({ note, task, noteIndex, deadlineKey: taskKey }) => {
@@ -607,7 +589,6 @@ function updateDeadlinePanel(deadlineKey) {
     }
 
     function renderCurrentDaySection(container, items, showHeader, headerText) {
-        const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
         if (showHeader && items.length > 0) {
             const currentHeader = document.createElement("div");
             currentHeader.className = "deadline-section-header current";
@@ -645,8 +626,39 @@ function updateDeadlinePanel(deadlineKey) {
         renderOtherOverdueSection(listEl, otherOverdueTasks, overdueLabel);
     }
 
-    applyDeadlinePanelState();
+    if (totalCount === 0) {
+        listEl.innerHTML = `<div class="deadline-empty">${dict ? dict.deadlineEmpty : "هیچ ددلاینی برای این روز ثبت نشده است."}</div>`;
+    }
+
+    // Also update the separate routines panel and unified side panel header
+    if (typeof updateRoutinePanel === "function") {
+        updateRoutinePanel(deadlineKey);
+    }
+    if (typeof updateSidePanelHeader === "function") {
+        updateSidePanelHeader(deadlineKey);
+    }
+    if (typeof updateSidePanelHeightAndCollapse === "function") {
+        updateSidePanelHeightAndCollapse();
+    }
 }
+
+// Deadline panel collapse listener
+document.addEventListener("DOMContentLoaded", () => {
+    const dCollapseBtn = document.getElementById("deadline-panel-collapse-btn");
+    const dPanel = document.getElementById("deadline-panel");
+    if (dCollapseBtn && dPanel) {
+        const isCollapsed = localStorage.getItem("deadlinePanelCollapsed") === "true";
+        dPanel.classList.toggle("collapsed", isCollapsed);
+        dCollapseBtn.textContent = isCollapsed ? "+" : "−";
+
+        dCollapseBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const nowCollapsed = dPanel.classList.toggle("collapsed");
+            dCollapseBtn.textContent = nowCollapsed ? "+" : "−";
+            localStorage.setItem("deadlinePanelCollapsed", String(nowCollapsed));
+        });
+    }
+});
 
 function updateWeekdaysHeader() {
     const weekdaysContainer = document.querySelector('.weekdays');
@@ -939,10 +951,14 @@ function toggleCalendarType(e) {
         else nextType = "jalali";
     }
 
-    currentCalendarType = nextType;
+    switchCalendarTo(nextType);
+}
+
+function switchCalendarTo(type) {
+    if (!["jalali", "gregorian", "hijri"].includes(type)) return;
+    currentCalendarType = type;
     saveCalendarType(currentCalendarType);
 
-    // Sync active year/month to match selected date or today
     const sel = parseAnyDeadlineKey(selectedDeadlineKey);
     if (sel) {
         currentJy = sel.j.jy;

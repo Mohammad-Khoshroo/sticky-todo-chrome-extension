@@ -71,6 +71,40 @@ const TRANSLATIONS = {
             restore: 'بازگردانی',
             deletePermanently: 'حذف دائم'
         },
+        routines: {
+            title: 'کارهای روزمره',
+            addNew: '+ کار جدید',
+            empty: 'کاری برای روزمره‌های این روز ثبت نشده است.',
+            progressTitle: 'پیشرفت کارهای روزمره',
+            progressAllDone: 'همه کارهای روزمره انجام شد! 🎉',
+            progressNoTasks: 'بدون برنامه روزمره برای این روز',
+            progressSubtitle: (done, total) => `${done} از ${total} کار روزمره انجام شده`,
+            progressQuietDay: 'روز آرامی در پیش دارید ✨',
+            patternDaily: 'هر روز',
+            patternInterval: (n) => `هر ${n} روز`,
+            patternWeekly: 'هفتگی',
+            patternMonthly: (d) => `روز ${d} ماه`,
+            deleteConfirm: 'آیا از حذف این مورد از کارهای روزمره اطمینان دارید؟',
+            modalTitle: 'تعریف کار روزمره و عادت جدید',
+            modalTitleLabel: 'عنوان کار یا عادت:',
+            modalTitlePlaceholder: 'مثلاً: ورزش صبحگاهی، مطالعه، تمرین...',
+            modalPatternLabel: 'الگوی تکرار:',
+            patternOptionDaily: 'هر روز',
+            patternOptionInterval: 'روزهای درمیون / بازه‌ای',
+            patternOptionWeekly: 'روزهای خاص هفته',
+            patternOptionMonthly: 'روز مشخص ماه',
+            modalIntervalLabel: 'تکرار هر چند روز یک‌بار؟',
+            modalIntervalPrefix: 'هر',
+            modalIntervalSuffix: 'روز یک‌بار (مثلاً ۲ = یک روز درمیون)',
+            modalWeeklyLabel: 'در چه روزهایی از هفته؟',
+            modalMonthlyLabel: 'روز مشخص در ماه:',
+            modalMonthlyPrefix: 'روز',
+            modalMonthlySuffix: 'هر ماه (مثلاً ۱ = اول ماه)',
+            modalCancel: 'انصراف',
+            modalSave: 'ذخیره برنامه',
+            toggleToDeadlines: 'مشاهده ددلاین‌ها',
+            toggleToRoutines: 'مشاهده کارهای روزمره'
+        },
         prompts: {
             setDeadline: 'تاریخ ددلاین را وارد کنید:\n• شمسی: 1405-07-28\n• میلادی: 2026-10-20\n• قمری: 1448-05-09',
             invalidDate: 'فرمت تاریخ نامعتبر است!'
@@ -132,6 +166,40 @@ const TRANSLATIONS = {
             emptyMsg: 'Trash bin is empty',
             restore: 'Restore',
             deletePermanently: 'Delete permanently'
+        },
+        routines: {
+            title: 'Daily Tasks & Habits',
+            addNew: '+ New Task',
+            empty: 'No daily tasks scheduled for this day.',
+            progressTitle: 'Daily Progress',
+            progressAllDone: 'All daily tasks completed! 🎉',
+            progressNoTasks: 'No daily tasks for this day',
+            progressSubtitle: (done, total) => `${done} of ${total} tasks completed`,
+            progressQuietDay: 'A quiet day ahead ✨',
+            patternDaily: 'Every day',
+            patternInterval: (n) => `Every ${n} days`,
+            patternWeekly: 'Weekly',
+            patternMonthly: (d) => `Day ${d} of month`,
+            deleteConfirm: 'Are you sure you want to delete this daily task?',
+            modalTitle: 'New Daily Task & Habit',
+            modalTitleLabel: 'Task or Habit Title:',
+            modalTitlePlaceholder: 'e.g., Morning workout, reading, study...',
+            modalPatternLabel: 'Recurrence Pattern:',
+            patternOptionDaily: 'Every day',
+            patternOptionInterval: 'Interval / Every N days',
+            patternOptionWeekly: 'Specific days of week',
+            patternOptionMonthly: 'Specific day of month',
+            modalIntervalLabel: 'Repeat interval:',
+            modalIntervalPrefix: 'Every',
+            modalIntervalSuffix: 'days (e.g. 2 = every other day)',
+            modalWeeklyLabel: 'On which days of the week?',
+            modalMonthlyLabel: 'Specific day of month:',
+            modalMonthlyPrefix: 'Day',
+            modalMonthlySuffix: 'of each month (e.g. 1 = 1st)',
+            modalCancel: 'Cancel',
+            modalSave: 'Save Task',
+            toggleToDeadlines: 'Switch to Deadlines',
+            toggleToRoutines: 'Switch to Daily Tasks'
         },
         prompts: {
             setDeadline: 'Enter deadline date:\n• Gregorian: 2026-10-20\n• Solar Hijri: 1405-07-28\n• Lunar Hijri: 1448-05-09',
@@ -195,6 +263,40 @@ const TRANSLATIONS = {
             restore: '복원',
             deletePermanently: '영구 삭제'
         },
+        routines: {
+            title: '일일 작업 및 습관',
+            addNew: '+ 새 작업',
+            empty: '이 날짜에 예정된 일일 작업이 없습니다.',
+            progressTitle: '오늘의 진행률',
+            progressAllDone: '오늘의 모든 작업을 마쳤습니다! 🎉',
+            progressNoTasks: '이 날에는 작업이 없습니다',
+            progressSubtitle: (done, total) => `${total}개 중 ${done}개 완료`,
+            progressQuietDay: '여유로운 하루를 보내세요 ✨',
+            patternDaily: '매일',
+            patternInterval: (n) => `${n}일마다`,
+            patternWeekly: '매주',
+            patternMonthly: (d) => `매월 ${d}일`,
+            deleteConfirm: '이 항목을 삭제하시겠습니까?',
+            modalTitle: '새 일일 작업 및 습관 만들기',
+            modalTitleLabel: '작업 또는 습관 이름:',
+            modalTitlePlaceholder: '예: 아침 운동, 독서 30분...',
+            modalPatternLabel: '반복 패턴:',
+            patternOptionDaily: '매일',
+            patternOptionInterval: '간격 반복 (N일마다)',
+            patternOptionWeekly: '특정 요일',
+            patternOptionMonthly: '매월 특정일',
+            modalIntervalLabel: '반복 주기:',
+            modalIntervalPrefix: '매',
+            modalIntervalSuffix: '일마다 (예: 2 = 이틀마다)',
+            modalWeeklyLabel: '반복할 요일 선택:',
+            modalMonthlyLabel: '매월 특정 날짜:',
+            modalMonthlyPrefix: '매월',
+            modalMonthlySuffix: '일',
+            modalCancel: '취소',
+            modalSave: '저장',
+            toggleToDeadlines: '마감일로 전환',
+            toggleToRoutines: '일일 작업으로 전환'
+        },
         prompts: {
             setDeadline: '마감 날짜를 입력하세요:\n• 양력 (그레고리력): 2026-10-20\n• 태양력 (페르시아): 1405-07-28\n• 이슬람력: 1448-05-09',
             invalidDate: '잘못된 날짜 형식입니다!'
@@ -256,6 +358,40 @@ const TRANSLATIONS = {
             emptyMsg: 'سلة المهملات فارغة',
             restore: 'استعادة',
             deletePermanently: 'حذف نهائي'
+        },
+        routines: {
+            title: 'المهام اليومية والعادات',
+            addNew: '+ مهمة جديدة',
+            empty: 'لا توجد مهام يومية مجدولة لهذا اليوم.',
+            progressTitle: 'التقدم اليومي',
+            progressAllDone: 'تم إنجاز جميع المهام اليومية! 🎉',
+            progressNoTasks: 'لا توجد مهام لهذا اليوم',
+            progressSubtitle: (done, total) => `تم إنجاز ${done} من ${total} مهمة`,
+            progressQuietDay: 'يوم هادئ بانتظارك ✨',
+            patternDaily: 'يومياً',
+            patternInterval: (n) => `كل ${n} أيام`,
+            patternWeekly: 'أسبوعياً',
+            patternMonthly: (d) => `يوم ${d} من الشهر`,
+            deleteConfirm: 'هل أنت متأكد من حذف هذه المهمة اليومية؟',
+            modalTitle: 'إضافة مهمة يومية أو عادة جديدة',
+            modalTitleLabel: 'عنوان المهمة أو العادة:',
+            modalTitlePlaceholder: 'مثال: رياضة صباحية، قراءة، تمرين...',
+            modalPatternLabel: 'نمط التكرار:',
+            patternOptionDaily: 'كل يوم',
+            patternOptionInterval: 'كل عدد معين من الأيام',
+            patternOptionWeekly: 'أيام محددة من الأسبوع',
+            patternOptionMonthly: 'يوم محدد من الشهر',
+            modalIntervalLabel: 'التكرار كل كم يوم؟',
+            modalIntervalPrefix: 'كل',
+            modalIntervalSuffix: 'أيام (مثلاً ۲ = يوم بعد يوم)',
+            modalWeeklyLabel: 'في أي أيام الأسبوع؟',
+            modalMonthlyLabel: 'يوم محدد في الشهر:',
+            modalMonthlyPrefix: 'يوم',
+            modalMonthlySuffix: 'من كل شهر',
+            modalCancel: 'إلغاء',
+            modalSave: 'حفظ',
+            toggleToDeadlines: 'التبديل إلى المواعيد',
+            toggleToRoutines: 'التبديل إلى المهام اليومية'
         },
         prompts: {
             setDeadline: 'أدخل تاريخ الموعد النهائي:\n• هجري قمري: 1448-05-09\n• ميلادي: 2026-10-20\n• هجري شمسي: 1405-07-28',
@@ -321,16 +457,16 @@ function setLanguage(newLang, switchCalendar = true) {
     document.documentElement.setAttribute('lang', newLang);
 
     // Contextual calendar recommendation if requested
-    if (switchCalendar && typeof calendarType !== 'undefined') {
-        if (newLang === 'ar' && calendarType === 'jalali') {
-            calendarType = 'hijri';
-            saveCalendarType('hijri');
-        } else if ((newLang === 'en' || newLang === 'ko') && (calendarType === 'jalali' || calendarType === 'hijri')) {
-            calendarType = 'gregorian';
-            saveCalendarType('gregorian');
-        } else if (newLang === 'fa' && calendarType === 'hijri') {
-            calendarType = 'jalali';
-            saveCalendarType('jalali');
+    if (switchCalendar) {
+        const cal = typeof currentCalendarType !== 'undefined' ? currentCalendarType : 'jalali';
+        if (typeof switchCalendarTo === 'function') {
+            if (newLang === 'ar' && cal === 'jalali') {
+                switchCalendarTo('hijri');
+            } else if ((newLang === 'en' || newLang === 'ko') && (cal === 'jalali' || cal === 'hijri')) {
+                switchCalendarTo('gregorian');
+            } else if (newLang === 'fa' && cal === 'hijri') {
+                switchCalendarTo('jalali');
+            }
         }
     }
 
@@ -430,6 +566,15 @@ function applyI18nToUI() {
 
     const emptyTrashBtn = document.getElementById('empty-trash-btn');
     if (emptyTrashBtn) emptyTrashBtn.innerText = dict.trash.emptyBtn;
+
+    // Update side panel labels & toggle button
+    const addRoutineBtn = document.getElementById("btn-open-add-routine");
+    if (addRoutineBtn && dict.routines) {
+        addRoutineBtn.textContent = dict.routines.addNew;
+    }
+    if (typeof updateSidePanelHeader === "function" && typeof selectedDeadlineKey !== "undefined") {
+        updateSidePanelHeader(selectedDeadlineKey);
+    }
 
     // Re-render notes placeholders and texts
     if (typeof renderAllNotes === 'function') {
