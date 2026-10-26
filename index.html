@@ -35,18 +35,36 @@
 
         <div class="Calendar" id="calendar">
             <div class="calendar-top-bar">
-                <button id="calendar-type-btn" class="calendar-type-btn" type="button" title="تغییر نوع تقویم (شمسی / میلادی)">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div class="calendar-top-actions">
+                    <button class="calendar-top-action-btn toggleCalendarBtn" id="calendar-btn" type="button" title="بستن تقویم">
+                        <svg class="minimize-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                    </button>
+                    <button id="btn-expand-calendar" class="calendar-top-action-btn btn-expand-calendar" type="button" title="بزرگ‌نمایی تقویم">
+                        <svg class="expand-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 3 21 3 21 9"/>
+                            <polyline points="9 21 3 21 3 15"/>
+                            <line x1="21" y1="3" x2="14" y2="10"/>
+                            <line x1="3" y1="21" x2="10" y2="14"/>
+                        </svg>
+                    </button>
+                </div>
+                <button type="button" id="calendar-type-btn" class="calendar-type-btn" title="تغییر نوع تقویم">
+                    <svg class="calendar-globe-icon" viewBox="0 0 24 24" width="22" height="22">
                       <defs>
-                        <filter id="calShadow" x="-20%" y="-20%" width="140%" height="140%">
-                          <feDropShadow dx="0" dy="1.2" stdDeviation="0.8" flood-opacity="0.35"/>
+                        <filter id="calShadow" x="-20%" y="-20%" width="150%" height="150%">
+                          <feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#0f172a" flood-opacity="0.35"/>
                         </filter>
                       </defs>
                       <!-- Globe in background -->
-                      <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M3 10C3 10 5.8 13.5 10 13.5C14.2 13.5 17 10 17 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-                      <path d="M3 10C3 10 5.8 6.5 10 6.5C14.2 6.5 17 10 17 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-                      <ellipse cx="10" cy="10" rx="3.2" ry="7.5" stroke="currentColor" stroke-width="1.1"/>
+                      <g opacity="0.65" stroke="currentColor" fill="none">
+                        <circle cx="10" cy="11" r="7.5" stroke-width="1.2"/>
+                        <ellipse cx="10" cy="11" rx="3.2" ry="7.5" stroke-width="1"/>
+                        <line x1="2.5" y1="11" x2="17.5" y2="11" stroke-width="1"/>
+                        <path d="M4 7c2 1.5 10 1.5 12 0" stroke-width="0.9"/>
+                        <path d="M4 15c2-1.5 10-1.5 12 0" stroke-width="0.9"/>
+                      </g>
                       <!-- Calendar sheet in foreground -->
                       <g filter="url(#calShadow)">
                         <rect x="9" y="8" width="12.5" height="13" rx="2.2" fill="#ffffff" stroke="#334155" stroke-width="1.1"/>
@@ -63,17 +81,6 @@
                     </svg>
                     <span id="calendar-type-badge" class="calendar-type-badge">شمسی</span>
                 </button>
-                <div class="calendar-top-actions">
-                    <button id="btn-expand-calendar" class="calendar-top-action-btn btn-expand-calendar" type="button" title="بزرگ‌نمایی تقویم">
-                        <svg class="expand-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 3 21 3 21 9"/>
-                            <polyline points="9 21 3 21 3 15"/>
-                            <line x1="21" y1="3" x2="14" y2="10"/>
-                            <line x1="3" y1="21" x2="10" y2="14"/>
-                        </svg>
-                    </button>
-                    <button class="toggleCalendarBtn" id="calendar-btn">− بستن تقویم</button>
-                </div>
             </div>
             <div class="header">
                 <button id="prevBtn" type="button" title="ماه قبل">❮</button>

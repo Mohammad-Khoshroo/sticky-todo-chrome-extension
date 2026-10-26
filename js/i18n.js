@@ -25,8 +25,8 @@ const TRANSLATIONS = {
         eraserTitle: 'برای حذف تسک، پاک‌کن را روی آن بکشید',
         themeToggleTitle: 'تغییر حالت شب و روز (روشن / تاریک)',
         langToggleTitle: 'تغییر زبان (Change Language)',
-        calendarClose: '− بستن تقویم',
-        calendarOpen: '+ نمایش تقویم',
+        calendarClose: 'بستن تقویم',
+        calendarOpen: 'نمایش تقویم',
         calendarTypeTitle: 'تغییر نوع تقویم (شمسی / میلادی / قمری)',
         prevMonthTitle: 'ماه قبل',
         nextMonthTitle: 'ماه بعد',
@@ -241,8 +241,8 @@ const TRANSLATIONS = {
         eraserTitle: 'Drag eraser over task to delete instantly',
         themeToggleTitle: 'Toggle Dark / Light Theme',
         langToggleTitle: 'Change Language',
-        calendarClose: '− Close Calendar',
-        calendarOpen: '+ Open Calendar',
+        calendarClose: 'Collapse Calendar',
+        calendarOpen: 'Expand Calendar',
         calendarTypeTitle: 'Switch Calendar Type (Gregorian / Solar Hijri / Lunar Hijri)',
         prevMonthTitle: 'Previous Month',
         nextMonthTitle: 'Next Month',
@@ -458,7 +458,7 @@ const TRANSLATIONS = {
         themeToggleTitle: '다크 / 라이트 모드 전환',
         langToggleTitle: '언어 변경',
         calendarClose: '− 달력 닫기',
-        calendarOpen: '+ 달력 열기',
+        calendarOpen: '달력 펼치기',
         calendarTypeTitle: '달력 유형 전환 (양력 / 태양력 / 이슬람력)',
         prevMonthTitle: '이전 달',
         nextMonthTitle: '다음 달',
@@ -673,8 +673,8 @@ const TRANSLATIONS = {
         eraserTitle: 'اسحب الممحاة لحذف المهمة مباشرة',
         themeToggleTitle: 'تبديل الوضع الليلي / النهاري',
         langToggleTitle: 'تغيير اللغة',
-        calendarClose: '− إغلاق التقويم',
-        calendarOpen: '+ فتح التقويم',
+        calendarClose: 'إغلاق التقويم',
+        calendarOpen: 'فتح التقويم',
         calendarTypeTitle: 'تغيير نوع التقويم (هجري قمري / ميلادي / هجري شمسي)',
         prevMonthTitle: 'الشهر السابق',
         nextMonthTitle: 'الشهر القادم',
@@ -994,7 +994,15 @@ function applyI18nToUI() {
     const calendarEl = document.getElementById('calendar');
     if (calToggleBtn && calendarEl) {
         const isMin = calendarEl.classList.contains('minimized');
-        calToggleBtn.innerText = isMin ? dict.calendarOpen : dict.calendarClose;
+        calToggleBtn.title = isMin ? dict.calendarOpen : dict.calendarClose;
+        calToggleBtn.innerHTML = isMin
+            ? `<svg class="maximize-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+               </svg>`
+            : `<svg class="minimize-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+               </svg>`;
     }
 
     const calTypeBtn = document.getElementById('calendar-type-btn');

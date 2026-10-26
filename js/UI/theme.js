@@ -26,6 +26,10 @@ function applyTheme(theme) {
         toggleBtn.title = isDark ? "تغییر به حالت روز (روشن)" : "تغییر به حالت شب (تاریک)";
         toggleBtn.setAttribute("aria-label", toggleBtn.title);
     }
+
+    if (typeof updateTrashIcon === "function") {
+        updateTrashIcon();
+    }
 }
 
 function toggleTheme() {

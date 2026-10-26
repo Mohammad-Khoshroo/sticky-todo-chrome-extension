@@ -1033,9 +1033,18 @@ function applyCalendarState(isMinimized) {
         ? TRANSLATIONS[currentLanguage]
         : null;
 
-    toggleBtn.innerText = isMinimized
-        ? (dict ? dict.calendarOpen : '+ نمایش تقویم')
-        : (dict ? dict.calendarClose : '− بستن تقویم');
+    toggleBtn.title = isMinimized
+        ? (dict ? dict.calendarOpen : 'نمایش تقویم')
+        : (dict ? dict.calendarClose : 'بستن تقویم');
+
+    toggleBtn.innerHTML = isMinimized
+        ? `<svg class="maximize-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+           </svg>`
+        : `<svg class="minimize-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+           </svg>`;
 
     setTimeout(() => {
         applyDeadlinePanelState();

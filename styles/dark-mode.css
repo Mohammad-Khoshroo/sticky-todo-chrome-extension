@@ -302,15 +302,23 @@ body.dark-mode {
    FLOATING TOOLS LIGHTING (DARK MODE)
    =================================== */
 
+.dark-mode #trash[src*="trash-bin"] {
+    content: url('../images/trash-bin-dark.png');
+}
+
+.dark-mode #trash[src*="waste"] {
+    content: url('../images/waste-dark.png');
+}
+
 .dark-mode #trash-bin {
     opacity: 0.95;
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.28)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.65));
     transition: opacity 0.25s, transform 0.25s, filter 0.25s;
 }
 
 .dark-mode #trash-bin:hover {
     opacity: 1;
-    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.45)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.75));
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.25)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.75));
 }
 
 .dark-mode #eraser {

@@ -572,7 +572,7 @@ loadRoutines();
 // ----------------------
 const SVG_ROUTINES_MODE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14.93-4"/><polyline points="19 4 19 8 15 8"/><path d="M20 12a8 8 0 0 1-14.93 4"/><polyline points="5 20 5 16 9 16"/><path d="M9 12l2 2 4-4"/></svg>`;
 
-const SVG_DEADLINES_MODE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="16" y1="2" x2="16" y2="5"/><circle cx="13" cy="15" r="3.2" fill="#f59e0b" stroke="none"/><polyline points="13 13.2 13 15 14.8 15" stroke="#ffffff" stroke-width="1.3"/></svg>`;
+const SVG_DEADLINES_MODE = SVG_ROUTINES_MODE;
 
 let currentSidePanelMode = localStorage.getItem("sidePanelMode") || "deadlines"; // "deadlines" | "routines"
 

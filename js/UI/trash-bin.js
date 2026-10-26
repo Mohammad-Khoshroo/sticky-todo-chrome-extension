@@ -17,20 +17,29 @@ function updateTrashIcon() {
     const now = Date.now();
     const deletedNotes = notes.filter(n => n.deletedAt && (now - n.deletedAt < ONE_DAY));
     const count = deletedNotes.length;
+    const isDark = document.body.classList.contains("dark-mode") || document.documentElement.classList.contains("dark-mode");
 
     if (count > 0) {
-        trashIcon.src = "images/waste.ico";
+        if (trashIcon) {
+            trashIcon.src = isDark ? "images/waste-dark.png" : "images/waste.ico";
+        }
         if (badge) {
             badge.classList.remove("hidden");
             badge.textContent = toFarsiNumber(count);
         }
-        trashBin.title = `سطل زباله (${toFarsiNumber(count)} یادداشت مچاله شده - کلیک برای مشاهده)`;
+        if (trashBin) {
+            trashBin.title = `سطل زباله (${toFarsiNumber(count)} یادداشت مچاله شده - کلیک برای مشاهده)`;
+        }
     } else {
-        trashIcon.src = "images/trash-bin.ico";
+        if (trashIcon) {
+            trashIcon.src = isDark ? "images/trash-bin-dark.png" : "images/trash-bin.ico";
+        }
         if (badge) {
             badge.classList.add("hidden");
         }
-        trashBin.title = "سطل زباله (خالی)";
+        if (trashBin) {
+            trashBin.title = "سطل زباله (خالی)";
+        }
     }
 }
 
