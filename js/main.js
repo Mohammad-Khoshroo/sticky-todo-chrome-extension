@@ -75,6 +75,9 @@ function saveNotes() {
         localStorage.setItem("fridgeNotes", JSON.stringify(notes));
         localStorage.setItem("fridgeStacks", JSON.stringify(stacks));
     }
+    if (typeof updateReminderBell === "function") {
+        updateReminderBell();
+    }
 }
 
 // ----------------------

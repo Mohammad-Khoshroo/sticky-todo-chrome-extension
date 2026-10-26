@@ -63,7 +63,17 @@
                     </svg>
                     <span id="calendar-type-badge" class="calendar-type-badge">شمسی</span>
                 </button>
-                <button class="toggleCalendarBtn" id="calendar-btn">− بستن تقویم</button>
+                <div class="calendar-top-actions">
+                    <button id="btn-expand-calendar" class="calendar-top-action-btn btn-expand-calendar" type="button" title="بزرگ‌نمایی تقویم">
+                        <svg class="expand-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 3 21 3 21 9"/>
+                            <polyline points="9 21 3 21 3 15"/>
+                            <line x1="21" y1="3" x2="14" y2="10"/>
+                            <line x1="3" y1="21" x2="10" y2="14"/>
+                        </svg>
+                    </button>
+                    <button class="toggleCalendarBtn" id="calendar-btn">− بستن تقویم</button>
+                </div>
             </div>
             <div class="header">
                 <button id="prevBtn" type="button" title="ماه قبل">❮</button>
@@ -131,6 +141,22 @@
     <div id="eraser" draggable="true" title="برای حذف تسک، پاک‌کن را روی آن بکشید">
         <img src="images/eraser.ico" alt="eraser" width="45" height="45">
     </div>
+
+    <!-- Reminder Bell Magnet (یادآور ددلاین‌ها ۳ هفته‌ای) -->
+    <button id="reminder-bell-btn" class="reminder-bell-magnet" type="button" title="یادآور ددلاین‌ها (۳ هفته)">
+        <svg class="bell-magnet-svg" viewBox="0 0 100 100" width="94" height="94" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g class="bell-clapper-group">
+                <circle cx="50" cy="70.1" r="7.1" fill="#fef6aa" stroke="#1f212b" stroke-width="1.8"/>
+            </g>
+            <g class="bell-body-group">
+                <path fill="#eddc67" d="M71.181,62.063l-1.981-17.568c0-10.106-8.269-18.375-18.375-18.375h-1.75c-10.106,0-18.375,8.269-18.375,18.375l-1.981,17.568c-2.078,0-3.779,1.701-3.779,3.779c0,2.078,1.7,3.779,3.779,3.779h42.462c2.078,0,3.779-1.701,3.779-3.779C74.959,63.763,73.259,62.063,71.181,62.063z" />
+                <path fill="#fef6aa" d="M53.481 25.637c-.279-1.701-1.752-3-3.532-3-1.78 0-3.253 1.299-3.532 3H53.481z" />
+                <path fill="#1f212b" d="M75.388,63.342c-0.729-1.009-1.813-1.693-3.01-1.924l-1.907-16.913c-0.029-9.845-7.365-17.982-16.855-19.316c-0.682-1.329-2.049-2.213-3.617-2.213s-2.934,0.884-3.616,2.213c-9.489,1.333-16.826,9.471-16.855,19.316l-1.907,16.913c-1.196,0.231-2.281,0.915-3.01,1.924c-0.919,1.274-1.154,2.881-0.646,4.409c0.643,1.929,2.503,3.226,4.629,3.226h42.812c2.126,0,3.986-1.296,4.629-3.226C76.542,66.223,76.307,64.617,75.388,63.342z M50,23.976c0.928,0,1.763,0.413,2.33,1.073c-0.479-0.035-0.957-0.073-1.444-0.073h-1.771c-0.488,0-0.966,0.038-1.444,0.073C48.237,24.389,49.071,23.976,50,23.976z M74.136,67.119c-0.363,1.094-1.486,1.857-2.73,1.857H28.594c-1.244,0-2.367-0.764-2.73-1.857c-0.303-0.911-0.168-1.861,0.37-2.607c0.533-0.739,1.39-1.18,2.291-1.18c0.3,0,0.561-0.143,0.745-0.355h27.167c0.276,0,0.5-0.224,0.5-0.5s-0.224-0.5-0.5-0.5H29.572l1.951-17.302c0.004-0.038,0.006-0.075,0.006-0.112c0-9.697,7.889-17.586,17.586-17.586h1.771c9.697,0,17.586,7.889,17.586,17.586c0,0.038,0.002,0.075,0.006,0.112l2.004,17.77c0.058,0.505,0.485,0.888,0.994,0.888c0.901,0,1.758,0.441,2.291,1.18C74.304,65.259,74.439,66.209,74.136,67.119z" />
+                <path fill="#1f212b" d="M64.437 61.976h-3c-.276 0-.5.224-.5.5s.224.5.5.5h3c.276 0 .5-.224.5-.5S64.713 61.976 64.437 61.976zM59.437 61.976h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5S59.713 61.976 59.437 61.976z" />
+            </g>
+        </svg>
+        <span id="reminder-bell-badge" class="reminder-bell-badge hidden">0</span>
+    </button>
 
     <div id="pen" class="pen" draggable="true" title="برای خط‌زدن تسک، مداد را روی آن بکشید">
         <img src="images/pencil.ico" alt="pen" width="45" height="45">
@@ -246,6 +272,8 @@
     <script src="js/routine/sleep.js"></script>
     <script src="js/routine/dashboard.js"></script>
     <script src="js/calendar/calendar.js"></script>
+    <script src="js/calendar/reminder.js"></script>
+    <script src="js/calendar/expanded-calendar.js"></script>
     <script src="js/UI/trash-bin.js"></script>
     <script src="js/UI/pencil.js"></script>
     <script src="js/UI/eraser.js"></script>

@@ -188,6 +188,43 @@ const TRANSLATIONS = {
             toggleToDeadlines: 'مشاهده ددلاین‌ها',
             toggleToRoutines: 'مشاهده کارهای روزمره'
         },
+
+        reminder: {
+            bellTitle: 'یادآور ددلاین‌ها (۳ هفته)',
+            modalTitle: 'یادآور ددلاین‌ها (۳ هفته)',
+            close: 'بستن',
+            kpiOverdue: 'معوقه',
+            kpiToday: 'امروز',
+            kpiThisWeek: 'این هفته',
+            kpiNextWeek: 'هفته آینده',
+            tabAll: 'همه موارد',
+            tabUrgent: 'فوری (معوقه و امروز)',
+            tabThisWeek: 'کل این هفته',
+            tabNextWeek: 'هفته آینده',
+            tabLastWeek: 'هفته گذشته',
+            secOverdue: '⚠️ ددلاین‌های گذشته (اقدام فوری)',
+            secToday: '⏰ ددلاین‌های امروز',
+            secThisWeek: '📅 روزهای آینده این هفته',
+            secNextWeek: '🚀 ددلاین‌های هفته آینده',
+            secLastWeek: '📋 کارهای هفته گذشته',
+            jumpToNote: 'مشاهده روی برگه',
+            emptyTitle: 'هیچ ددلاینی در این بازه یافت نشد!',
+            emptyDesc: 'همه کارهای شما به موقع انجام شده‌اند یا ددلاینی برای این بازه تعریف نشده است.',
+            untitledNote: 'یادداشت بدون عنوان',
+            emptyTask: 'تسک بدون عنوان',
+            relToday: 'امروز',
+            relTomorrow: 'فردا',
+            relDayAfter: 'پس‌فردا',
+            relYesterday: 'دیروز',
+            relInDays: (d) => `${d} روز دیگر`,
+            relDaysAgo: (d) => `${d} روز پیش`
+        },
+        expandedCal: {
+            expandBtnTitle: 'بزرگ‌نمایی تقویم و مشاهده ددلاین‌ها',
+            modalTitle: 'نمای بزرگ تقویم',
+            today: 'امروز',
+            close: 'بستن'
+        },
         prompts: {
             setDeadline: 'تاریخ ددلاین را وارد کنید:\n• شمسی: 1405-07-28\n• میلادی: 2026-10-20\n• قمری: 1448-05-09',
             invalidDate: 'فرمت تاریخ نامعتبر است!'
@@ -366,6 +403,43 @@ const TRANSLATIONS = {
             noTasksBadge: 'No Tasks',
             toggleToDeadlines: 'Switch to Deadlines',
             toggleToRoutines: 'Switch to Daily Tasks'
+        },
+
+        reminder: {
+            bellTitle: 'Deadline Reminders (3 Weeks)',
+            modalTitle: 'Deadline Reminders (3 Weeks)',
+            close: 'Close',
+            kpiOverdue: 'Overdue',
+            kpiToday: 'Today',
+            kpiThisWeek: 'This Week',
+            kpiNextWeek: 'Next Week',
+            tabAll: 'All Items',
+            tabUrgent: 'Urgent (Overdue & Today)',
+            tabThisWeek: 'This Week',
+            tabNextWeek: 'Next Week',
+            tabLastWeek: 'Last Week',
+            secOverdue: '⚠️ Overdue Deadlines (Immediate Action)',
+            secToday: '⏰ Due Today',
+            secThisWeek: '📅 Upcoming This Week',
+            secNextWeek: '🚀 Next Week Deadlines',
+            secLastWeek: '📋 Last Week Deadlines',
+            jumpToNote: 'Jump to Note',
+            emptyTitle: 'No Deadlines in this Window!',
+            emptyDesc: 'All your tasks are up to date or no deadlines are scheduled for this 3-week period.',
+            untitledNote: 'Untitled Note',
+            emptyTask: 'Untitled Task',
+            relToday: 'Today',
+            relTomorrow: 'Tomorrow',
+            relDayAfter: 'In 2 days',
+            relYesterday: 'Yesterday',
+            relInDays: (d) => `In ${d} days`,
+            relDaysAgo: (d) => `${d} days ago`
+        },
+        expandedCal: {
+            expandBtnTitle: 'Expand Calendar & View Deadlines',
+            modalTitle: 'Expanded Calendar',
+            today: 'Today',
+            close: 'Close'
         },
         prompts: {
             setDeadline: 'Enter deadline date:\n• Gregorian: 2026-10-20\n• Solar Hijri: 1405-07-28\n• Lunar Hijri: 1448-05-09',
@@ -546,6 +620,43 @@ const TRANSLATIONS = {
             toggleToDeadlines: '마감일로 전환',
             toggleToRoutines: '일일 작업으로 전환'
         },
+
+        reminder: {
+            bellTitle: '마감일 알림 (3주간)',
+            modalTitle: '마감일 알림 (3주간)',
+            close: '닫기',
+            kpiOverdue: '기한 초과',
+            kpiToday: '오늘',
+            kpiThisWeek: '이번 주',
+            kpiNextWeek: '다음 주',
+            tabAll: '전체',
+            tabUrgent: '긴급 (기한 초과 및 오늘)',
+            tabThisWeek: '이번 주 전체',
+            tabNextWeek: '다음 주',
+            tabLastWeek: '지난 주',
+            secOverdue: '⚠️ 기한 초과 마감일 (즉시 조치)',
+            secToday: '⏰ 오늘 마감',
+            secThisWeek: '📅 이번 주 예정',
+            secNextWeek: '🚀 다음 주 마감일',
+            secLastWeek: '📋 지난 주 작업',
+            jumpToNote: '메모로 이동',
+            emptyTitle: '이 기간에 예정된 마감일이 없습니다!',
+            emptyDesc: '모든 작업이 제때 완료되었거나 예약된 마감일이 없습니다.',
+            untitledNote: '제목 없는 메모',
+            emptyTask: '제목 없는 작업',
+            relToday: '오늘',
+            relTomorrow: '내일',
+            relDayAfter: '모레',
+            relYesterday: '어제',
+            relInDays: (d) => `${d}일 후`,
+            relDaysAgo: (d) => `${d}일 전`
+        },
+        expandedCal: {
+            expandBtnTitle: '달력 확대 및 마감일 보기',
+            modalTitle: '확대된 달력',
+            today: '오늘',
+            close: '닫기'
+        },
         prompts: {
             setDeadline: '마감 날짜를 입력하세요:\n• 양력 (그레고리력): 2026-10-20\n• 태양력 (페르시아): 1405-07-28\n• 이슬람력: 1448-05-09',
             invalidDate: '잘못된 날짜 형식입니다!'
@@ -725,6 +836,43 @@ const TRANSLATIONS = {
             toggleToDeadlines: 'التبديل إلى المواعيد',
             toggleToRoutines: 'التبديل إلى المهام اليومية'
         },
+
+        reminder: {
+            bellTitle: 'تذكير بالمواعيد النهائية (٣ أسابيع)',
+            modalTitle: 'تذكير بالمواعيد النهائية (٣ أسابيع)',
+            close: 'إغلاق',
+            kpiOverdue: 'متأخر',
+            kpiToday: 'اليوم',
+            kpiThisWeek: 'هذا الأسبوع',
+            kpiNextWeek: 'الأسبوع القادم',
+            tabAll: 'الكل',
+            tabUrgent: 'عاجل (المتأخر واليوم)',
+            tabThisWeek: 'كامل هذا الأسبوع',
+            tabNextWeek: 'الأسبوع القادم',
+            tabLastWeek: 'الأسبوع الماضي',
+            secOverdue: '⚠️ مواعيد متأخرة (إجراء فوري)',
+            secToday: '⏰ مواعيد اليوم',
+            secThisWeek: '📅 الأيام القادمة هذا الأسبوع',
+            secNextWeek: '🚀 مواعيد الأسبوع القادم',
+            secLastWeek: '📋 مهام الأسبوع الماضي',
+            jumpToNote: 'الانتقال إلى الملاحظة',
+            emptyTitle: 'لا توجد مواعيد نهائية في هذه الفترة!',
+            emptyDesc: 'جميع مهامك منجزة في موعدها أو لا توجد مواعيد محددة لهذه الأسابيع الثلاثة.',
+            untitledNote: 'ملاحظة بدون عنوان',
+            emptyTask: 'مهمة بدون عنوان',
+            relToday: 'اليوم',
+            relTomorrow: 'غداً',
+            relDayAfter: 'بعد غد',
+            relYesterday: 'أمس',
+            relInDays: (d) => `بعد ${d} أيام`,
+            relDaysAgo: (d) => `منذ ${d} أيام`
+        },
+        expandedCal: {
+            expandBtnTitle: 'تكبير التقويم وعرض المواعيد النهائية',
+            modalTitle: 'التقويم الموسع',
+            today: 'اليوم',
+            close: 'إغلاق'
+        },
         prompts: {
             setDeadline: 'أدخل تاريخ الموعد النهائي:\n• هجري قمري: 1448-05-09\n• ميلادي: 2026-10-20\n• هجري شمسي: 1405-07-28',
             invalidDate: 'صيغة التاريخ غير صالحة!'
@@ -862,6 +1010,20 @@ function applyI18nToUI() {
     const nextBtn = document.getElementById('nextBtn');
     if (nextBtn) {
         nextBtn.setAttribute('title', dict.nextMonthTitle);
+    }
+
+    const bellBtn = document.getElementById('reminder-bell-btn');
+    if (bellBtn && dict.reminder) {
+        bellBtn.setAttribute('title', dict.reminder.bellTitle);
+    }
+
+    const expandBtn = document.getElementById('btn-expand-calendar');
+    if (expandBtn && dict.expandedCal) {
+        expandBtn.setAttribute('title', dict.expandedCal.expandBtnTitle);
+    }
+
+    if (typeof updateReminderBell === 'function') {
+        updateReminderBell();
     }
 
     // Context menus

@@ -1066,7 +1066,7 @@ if (toggleBtn && calendar) {
     const calendarTopBar = document.querySelector('.calendar-top-bar');
     if (calendarTopBar) {
         calendarTopBar.addEventListener('click', function (e) {
-            if (e.target.closest('#calendar-type-btn')) return;
+            if (e.target.closest('#calendar-type-btn, #reminder-bell-btn, #btn-expand-calendar')) return;
             const isMinimized = !calendar.classList.contains('minimized');
             applyCalendarState(isMinimized);
             saveCalendarState(isMinimized);
