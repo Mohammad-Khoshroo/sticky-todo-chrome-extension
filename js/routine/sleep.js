@@ -438,73 +438,41 @@ function updateSleepTrackerWidget(deadlineKey) {
 
                         <!-- Wake Action (Sleepy Coffee Emoji icon button) -->
                         <button type="button" class="btn-circadian-action wake-act" id="btn-quick-wake" title="${wakeNowText}" aria-label="${wakeNowText}">
-                            <svg class="sleepy-coffee-icon" viewBox="0 0 38 34" width="22" height="20" style="overflow: visible; display: inline-block; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <radialGradient id="wakeFaceGrad" cx="35%" cy="30%" r="70%">
-                                        <stop offset="0%" stop-color="#fff176" />
-                                        <stop offset="35%" stop-color="#fbc02d" />
-                                        <stop offset="75%" stop-color="#f57f17" />
-                                        <stop offset="100%" stop-color="#e65100" />
-                                    </radialGradient>
-                                    <linearGradient id="wakeLidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#fbc02d" />
-                                        <stop offset="60%" stop-color="#f57f17" />
-                                        <stop offset="100%" stop-color="#d84315" />
-                                    </linearGradient>
-                                    <linearGradient id="wakeMugGrad" x1="0%" y1="0%" x2="100%" y2="10%">
-                                        <stop offset="0%" stop-color="#bae6fd" />
-                                        <stop offset="35%" stop-color="#38bdf8" />
-                                        <stop offset="100%" stop-color="#0284c7" />
-                                    </linearGradient>
-                                </defs>
-                                <g class="emoji-face">
-                                    <!-- Round Head -->
-                                    <circle cx="15.5" cy="18" r="13.5" fill="url(#wakeFaceGrad)" stroke="#bf360c" stroke-width="0.8" />
-                                    <!-- Soft Blush Cheeks -->
-                                    <circle cx="7" cy="22" r="3.2" fill="#ff7043" opacity="0.35" />
-                                    <circle cx="21" cy="22" r="3" fill="#ff7043" opacity="0.28" />
-                                    <!-- Exhausted Eyebrows -->
-                                    <path d="M 7.5 9.8 C 9 7.2 12.6 7.4 14.2 9.4" fill="none" stroke="#5d4037" stroke-width="1.3" stroke-linecap="round" />
-                                    <path d="M 16.5 9.4 C 18.2 7.4 21.8 7.2 23.3 9.8" fill="none" stroke="#5d4037" stroke-width="1.3" stroke-linecap="round" />
-                                    <!-- Bags Under Eyes -->
-                                    <path d="M 6.6 21.5 C 7.8 24.2 12.4 24.4 14.2 21.5" fill="none" stroke="#bf360c" stroke-width="0.85" stroke-linecap="round" opacity="0.85" />
-                                    <path d="M 16 21.5 C 17.2 24.2 21.8 24.4 23.6 21.5" fill="none" stroke="#bf360c" stroke-width="0.85" stroke-linecap="round" opacity="0.85" />
-                                    <!-- Left Eye -->
-                                    <g class="eye-left">
-                                        <ellipse cx="10.4" cy="18" rx="3.8" ry="4.8" fill="#ffffff" stroke="#bf360c" stroke-width="0.45" />
-                                        <circle cx="10.5" cy="18.8" r="1.85" fill="#1e293b" />
-                                        <circle cx="11.2" cy="18.2" r="0.6" fill="#ffffff" />
-                                        <path d="M 6.4 16.8 C 8 19.6 12.8 19.6 14.4 16.8 C 14.5 14 13.5 12.5 10.4 12.5 C 7.3 12.5 6.3 14 6.4 16.8 Z" fill="url(#wakeLidGrad)" stroke="#bf360c" stroke-width="0.75" stroke-linejoin="round" />
-                                        <path d="M 7.5 14.8 C 9 16 11.8 16 13.3 14.8" fill="none" stroke="#8d2800" stroke-width="0.5" stroke-linecap="round" opacity="0.7" />
-                                    </g>
-                                    <!-- Right Eye -->
-                                    <g class="eye-right">
-                                        <ellipse cx="19.8" cy="18" rx="3.8" ry="4.8" fill="#ffffff" stroke="#bf360c" stroke-width="0.45" />
-                                        <circle cx="19.9" cy="18.8" r="1.85" fill="#1e293b" />
-                                        <circle cx="20.6" cy="18.2" r="0.6" fill="#ffffff" />
-                                        <path d="M 15.8 16.8 C 17.4 19.6 22.2 19.6 23.8 16.8 C 23.9 14 22.9 12.5 19.8 12.5 C 16.7 12.5 15.7 14 15.8 16.8 Z" fill="url(#wakeLidGrad)" stroke="#bf360c" stroke-width="0.75" stroke-linejoin="round" />
-                                        <path d="M 16.9 14.8 C 18.4 16 21.2 16 22.7 14.8" fill="none" stroke="#8d2800" stroke-width="0.5" stroke-linecap="round" opacity="0.7" />
-                                    </g>
-                                    <!-- Sleepy Resigned Mouth -->
-                                    <path d="M 12.2 26 C 13.8 25.2 15.8 27.2 17.5 25.8" fill="none" stroke="#5d4037" stroke-width="1.25" stroke-linecap="round" />
+                            <svg class="sleepy-coffee-icon" viewBox="0 0 38 34" width="24" height="22" style="overflow: visible; display: inline-block; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="15.5" cy="18" r="13" fill="#eddc67" stroke="#1f212b" stroke-width="1.4" />
+                                <path d="M 7 12 C 9 8 15 7 19 8" fill="none" stroke="#fef6aa" stroke-width="1.2" stroke-linecap="round" />
+                                <ellipse cx="7.2" cy="22.2" rx="2.4" ry="1.4" fill="#f87171" opacity="0.4" />
+                                <ellipse cx="20.8" cy="22.2" rx="2.4" ry="1.4" fill="#f87171" opacity="0.4" />
+                                <path d="M 7.5 10.5 C 9 8.5 12.5 8.5 14 10.2" fill="none" stroke="#1f212b" stroke-width="1.3" stroke-linecap="round" />
+                                <path d="M 16.5 10.2 C 18 8.5 21.5 8.5 23 10.5" fill="none" stroke="#1f212b" stroke-width="1.3" stroke-linecap="round" />
+                                <path d="M 7 21.5 C 8.5 23.5 12 23.5 13.5 21.5" fill="none" stroke="#1f212b" stroke-width="0.8" stroke-linecap="round" opacity="0.5" />
+                                <path d="M 16.5 21.5 C 18 23.5 21.5 23.5 23 21.5" fill="none" stroke="#1f212b" stroke-width="0.8" stroke-linecap="round" opacity="0.5" />
+                                <g class="eye-left">
+                                    <ellipse cx="10.4" cy="18" rx="3.5" ry="4.2" fill="#ffffff" stroke="#1f212b" stroke-width="0.8" />
+                                    <circle cx="10.5" cy="18.8" r="1.8" fill="#1f212b" />
+                                    <circle cx="11.2" cy="18.2" r="0.6" fill="#ffffff" />
+                                    <path d="M 6.8 17.5 C 8 19.8 12.8 19.8 14 17.5 C 14 13.5 6.8 13.5 6.8 17.5 Z" fill="#eddc67" stroke="#1f212b" stroke-width="1" stroke-linejoin="round" />
+                                    <path d="M 7.8 15.5 C 9.2 16.6 11.6 16.6 13 15.5" fill="none" stroke="#1f212b" stroke-width="0.6" stroke-linecap="round" opacity="0.5" />
                                 </g>
-                                <!-- Coffee Mug and Hand (Fingers on the RIGHT side of the coffee cup) -->
+                                <g class="eye-right">
+                                    <ellipse cx="19.8" cy="18" rx="3.5" ry="4.2" fill="#ffffff" stroke="#1f212b" stroke-width="0.8" />
+                                    <circle cx="19.9" cy="18.8" r="1.8" fill="#1f212b" />
+                                    <circle cx="20.6" cy="18.2" r="0.6" fill="#ffffff" />
+                                    <path d="M 16.2 17.5 C 17.4 19.8 22.2 19.8 23.4 17.5 C 23.4 13.5 16.2 13.5 16.2 17.5 Z" fill="#eddc67" stroke="#1f212b" stroke-width="1" stroke-linejoin="round" />
+                                    <path d="M 17.2 15.5 C 18.6 16.6 21 16.6 22.4 15.5" fill="none" stroke="#1f212b" stroke-width="0.6" stroke-linecap="round" opacity="0.5" />
+                                </g>
+                                <path d="M 12 25.8 C 13.8 24.8 15.8 26.8 17.5 25.4" fill="none" stroke="#1f212b" stroke-width="1.3" stroke-linecap="round" />
                                 <g class="coffee-group">
-                                    <!-- Steam Wisps (Static by default, animated on hover) -->
-                                    <path class="steam-line steam-1" d="M 27.5 13 C 26 10.2 28.2 8 26.8 5 C 25.6 3.2 26.6 1.8 26.2 0.8" fill="none" stroke="#94a3b8" stroke-width="0.95" stroke-linecap="round" />
-                                    <path class="steam-line steam-2" d="M 30.5 12.5 C 32 9.8 30 7.8 31.4 5.2 C 32.2 3.8 31.5 2.5 31 1.5" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-linecap="round" />
-                                    <!-- Mug Cylinder Body -->
-                                    <rect x="24" y="15" width="8" height="10.5" rx="1.8" fill="url(#wakeMugGrad)" stroke="#0369a1" stroke-width="0.7" />
-                                    <!-- Coffee Surface Rim -->
-                                    <ellipse cx="28" cy="15.2" rx="3.8" ry="1.3" fill="#3e2723" stroke="#0284c7" stroke-width="0.45" />
-                                    <ellipse cx="28" cy="15.2" rx="2.6" ry="0.8" fill="#5d4037" opacity="0.8" />
-                                    <!-- Handle on the RIGHT side -->
-                                    <path d="M 31.8 17 C 34.8 17 35 23 31.8 23.5" fill="none" stroke="#0284c7" stroke-width="1.4" stroke-linecap="round" />
-                                    <!-- 3 Fingers wrapping around the RIGHT side of the coffee cup / handle -->
+                                    <path class="steam-line steam-1" d="M 27.5 12.5 C 26 10 28.2 8 26.8 5 C 25.6 3.5 26.6 2 26.2 1" fill="none" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round" />
+                                    <path class="steam-line steam-2" d="M 30.5 12 C 32 9.5 30 7.5 31.4 5 C 32.2 3.8 31.5 2.5 31 1.5" fill="none" stroke="#94a3b8" stroke-width="0.9" stroke-linecap="round" />
+                                    <rect x="23.5" y="14.5" width="8.5" height="11.5" rx="2.2" fill="#38bdf8" stroke="#1f212b" stroke-width="1.3" />
+                                    <path d="M 25 16 L 25 24" stroke="#bae6fd" stroke-width="1" stroke-linecap="round" />
+                                    <ellipse cx="27.75" cy="14.8" rx="4" ry="1.3" fill="#3e2723" stroke="#1f212b" stroke-width="0.9" />
+                                    <path d="M 32 17 C 35 17 35.2 22.5 32 23" fill="none" stroke="#1f212b" stroke-width="1.4" stroke-linecap="round" />
                                     <g class="hand-fingers-right">
-                                        <rect x="31" y="17.2" width="3.4" height="2.2" rx="1.1" fill="#fbc02d" stroke="#bf360c" stroke-width="0.55" />
-                                        <rect x="31.2" y="19.8" width="3.6" height="2.2" rx="1.1" fill="#fbc02d" stroke="#bf360c" stroke-width="0.55" />
-                                        <rect x="31" y="22.4" width="3.4" height="2.2" rx="1.1" fill="#fbc02d" stroke="#bf360c" stroke-width="0.55" />
+                                        <rect x="30.8" y="16.8" width="3.4" height="2.2" rx="1.1" fill="#eddc67" stroke="#1f212b" stroke-width="0.8" />
+                                        <rect x="31" y="19.4" width="3.6" height="2.2" rx="1.1" fill="#eddc67" stroke="#1f212b" stroke-width="0.8" />
+                                        <rect x="30.8" y="22" width="3.4" height="2.2" rx="1.1" fill="#eddc67" stroke="#1f212b" stroke-width="0.8" />
                                     </g>
                                 </g>
                             </svg>
