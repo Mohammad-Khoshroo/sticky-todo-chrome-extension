@@ -185,6 +185,10 @@ function updateReminderBell() {
 // ----------------------
 
 function openReminderModal() {
+    if (typeof openExpandedCalendar === "function") {
+        openExpandedCalendar();
+        return;
+    }
     let modal = document.getElementById("reminder-modal");
     if (!modal) {
         modal = document.createElement("div");
@@ -199,6 +203,9 @@ function openReminderModal() {
 }
 
 function closeReminderModal() {
+    if (typeof closeExpandedCalendar === "function") {
+        closeExpandedCalendar();
+    }
     const modal = document.getElementById("reminder-modal");
     if (modal) {
         modal.classList.add("hidden");
@@ -245,7 +252,7 @@ function renderReminderModalContent(modal) {
             <div class="reminder-kpi-bar">
                 <div class="reminder-kpi-chip overdue ${overdueCount > 0 ? 'active' : ''}">
                     <span class="kpi-dot">🔴</span>
-                    <span class="kpi-label">${remDict ? remDict.kpiOverdue : 'معوقه'}:</span>
+                    <span class="kpi-label">${remDict ? remDict.kpiOverdue : 'عقب افتاده'}:</span>
                     <span class="kpi-val">${fd(overdueCount)}</span>
                 </div>
                 <div class="reminder-kpi-chip today ${todayCount > 0 ? 'active' : ''}">
@@ -271,7 +278,7 @@ function renderReminderModalContent(modal) {
                     ${remDict ? remDict.tabAll : 'همه موارد'}
                 </button>
                 <button type="button" class="reminder-tab-btn ${activeReminderFilter === 'urgent' ? 'active' : ''}" data-filter="urgent">
-                    ${remDict ? remDict.tabUrgent : 'فوری (معوقه و امروز)'}
+                    ${remDict ? remDict.tabUrgent : 'فوری (عقب افتاده و امروز)'}
                     ${(overdueCount + todayCount) > 0 ? `<span class="tab-badge">${fd(overdueCount + todayCount)}</span>` : ''}
                 </button>
                 <button type="button" class="reminder-tab-btn ${activeReminderFilter === 'thisWeek' ? 'active' : ''}" data-filter="thisWeek">
@@ -452,7 +459,7 @@ function renderFilteredReminderTasks(data) {
                 if (notes[noteIndex] && notes[noteIndex].tasks[taskIndex]) {
                     notes[noteIndex].tasks[taskIndex].checked = checkbox.checked;
                     if (typeof saveNotes === "function") saveNotes();
-                    if (typeof renderAllNotes === "function") renderAllNotes();
+                    if (typeof syncFridgeTaskCheckbox === "function") syncFridgeTaskCheckbox(noteIndex, taskIndex, checkbox.checked);
                     if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
                         updateDeadlinePanel(selectedDeadlineKey);
                     }
@@ -511,27 +518,57 @@ function getRelativeDeadlineLabel(item) {
 }
 
 function jumpToNoteOnFridge(noteIndex, taskIndex) {
-    closeReminderModal();
+    const targetNote = (typeof notes !== "undefined" && notes[noteIndex]) ? notes[noteIndex] : null;
+    if (!targetNote || targetNote.deletedAt) return;
 
-    // Look for note paper element
-    const noteEl = document.querySelector(`.note-wrapper[data-note-id="${notes[noteIndex]?.id}"]`) ||
-                   document.querySelectorAll(`.note-wrapper`)[noteIndex];
-
-    if (noteEl) {
-        noteEl.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-
-        // Add vibrant pulse highlight
-        noteEl.classList.add("note-jump-highlight");
-        setTimeout(() => {
-            noteEl.classList.remove("note-jump-highlight");
-        }, 2200);
-
-        // Highlight specific task if found
-        const taskInputs = noteEl.querySelectorAll(".note-task-text");
-        if (taskInputs && taskInputs[taskIndex]) {
-            taskInputs[taskIndex].focus();
-        }
+    // 1. Smoothly close the expanded calendar or reminder modal
+    if (typeof closeExpandedCalendar === "function") {
+        closeExpandedCalendar();
     }
+    if (typeof closeReminderModal === "function") {
+        closeReminderModal();
+    }
+
+    // 2. If note is part of a stack, switch its active note in-place WITHOUT wiping/re-rendering all notes!
+    let targetEl = null;
+    if (targetNote.stackId && typeof switchStackActiveNote === "function") {
+        targetEl = switchStackActiveNote(targetNote.stackId, targetNote.id);
+    }
+
+    if (typeof activeNoteIndex !== "undefined") {
+        activeNoteIndex = noteIndex;
+        document.querySelectorAll('.note-paper').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll(`.note-paper[data-note-index="${activeNoteIndex}"]`).forEach(el => el.classList.add('active'));
+    }
+
+    // 3. Scroll to the note smoothly and pulse highlight
+    const performJump = () => {
+        const noteEl = targetEl ||
+                       document.querySelector(`.note-wrapper[data-note-id="${targetNote.id}"]`) ||
+                       (targetNote.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${targetNote.stackId}"]`) : null) ||
+                       document.querySelectorAll(`.note-wrapper`)[noteIndex];
+
+        if (noteEl) {
+            noteEl.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+
+            noteEl.classList.remove("note-jump-highlight");
+            void noteEl.offsetWidth; // Force reflow to restart animation smoothly
+            noteEl.classList.add("note-jump-highlight");
+            setTimeout(() => {
+                noteEl.classList.remove("note-jump-highlight");
+            }, 2200);
+
+            if (taskIndex !== undefined) {
+                const taskInputs = noteEl.querySelectorAll(".note-task-text");
+                if (taskInputs && taskInputs[taskIndex]) {
+                    taskInputs[taskIndex].focus();
+                }
+            }
+        }
+    };
+
+    // Give 80ms for modal to begin smooth fadeout, then smoothly scroll
+    setTimeout(performJump, 80);
 }
 
 // ----------------------
@@ -543,7 +580,11 @@ function initReminderBellUI() {
     if (bellBtn) {
         bellBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            openReminderModal();
+            if (typeof openExpandedCalendar === "function") {
+                openExpandedCalendar();
+            } else {
+                openReminderModal();
+            }
         });
     }
 

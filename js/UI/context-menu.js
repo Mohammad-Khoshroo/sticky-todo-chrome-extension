@@ -99,9 +99,11 @@ taskContextMenu.addEventListener("click", (e) => {
     if (action === "toggle-scribble") {
         task.scribbled = !task.scribbled;
         task.scribbledAt = task.scribbled ? Date.now() : null;
+        if (activeTaskElement) {
+            activeTaskElement.classList.toggle("scribbled", task.scribbled);
+        }
 
         saveNotes();
-        renderAllNotes();
         closeTaskContextMenu();
         return;
     }
@@ -182,7 +184,7 @@ taskContextMenu.addEventListener("click", (e) => {
         selectedDeadlineKey = task.deadline;
 
         saveNotes();
-        renderAllNotes();
+        if (typeof updateReminderBell === "function") updateReminderBell();
 
         currentJy = jy;
         currentJm = jm;
@@ -206,7 +208,7 @@ taskContextMenu.addEventListener("click", (e) => {
         task.deadline = null;
 
         saveNotes();
-        renderAllNotes();
+        if (typeof updateReminderBell === "function") updateReminderBell();
         renderCalendar();
         updateDeadlinePanel(selectedDeadlineKey);
         closeTaskContextMenu();

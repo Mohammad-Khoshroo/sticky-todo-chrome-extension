@@ -317,9 +317,9 @@ fridgeContainer.addEventListener("drop", (e) => {
 
         task.scribbled = !task.scribbled;
         task.scribbledAt = task.scribbled ? Date.now() : null;
+        targetTaskEl.classList.toggle("scribbled", task.scribbled);
 
         saveNotes();
-        renderAllNotes();
         return;
     }
 

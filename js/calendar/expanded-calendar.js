@@ -11,6 +11,7 @@ let expGy = null;
 let expGm = null;
 let expHy = null;
 let expHm = null;
+let isOverdueDrawerOpen = false;
 
 function initExpandedCalendarState() {
     const today = new Date();
@@ -41,17 +42,59 @@ function openExpandedCalendar() {
 
     isExpandedCalendarOpen = true;
     renderExpandedCalendarContent(modal);
-    modal.classList.remove("hidden");
+    modal.classList.remove("hidden", "is-closing");
     document.body.classList.add("modal-open");
 }
 
-function closeExpandedCalendar() {
+function closeExpandedCalendar(immediate = false) {
     const modal = document.getElementById("expanded-calendar-modal");
-    if (modal) {
+    if (!modal) return;
+
+    if (immediate) {
         modal.classList.add("hidden");
+        modal.classList.remove("is-closing");
+        isExpandedCalendarOpen = false;
+        document.body.classList.remove("modal-open");
+        return;
     }
-    isExpandedCalendarOpen = false;
-    document.body.classList.remove("modal-open");
+
+    modal.classList.add("is-closing");
+    setTimeout(() => {
+        if (modal.classList.contains("is-closing")) {
+            modal.classList.add("hidden");
+            modal.classList.remove("is-closing");
+            isExpandedCalendarOpen = false;
+            document.body.classList.remove("modal-open");
+        }
+    }, 220);
+}
+
+function renderOverdueTasksCards(list, fd, remDict) {
+    if (!list || list.length === 0) return '';
+    return list.map(item => {
+        const colorClass = item.note.colorClass || 'color-0';
+        const noteTitle = item.note.title || (remDict ? remDict.untitledNote : 'یادداشت');
+        const diffDays = Math.abs(item.diffDays || 1);
+        const daysAgoStr = (remDict && typeof remDict.relDaysAgo === "function")
+            ? remDict.relDaysAgo(fd(diffDays))
+            : `${fd(diffDays)} روز پیش`;
+
+        return `
+            <div class="exp-overdue-card ${colorClass}">
+                <div class="exp-overdue-top">
+                    <label class="exp-overdue-check-label">
+                        <input type="checkbox" class="exp-overdue-check" data-note="${item.noteIndex}" data-task="${item.taskIndex}">
+                        <span class="exp-overdue-text">${escapeHTML(item.task.text || 'تسک')}</span>
+                    </label>
+                    <button type="button" class="exp-overdue-jump-btn" data-note="${item.noteIndex}" data-task="${item.taskIndex}" title="${remDict ? remDict.jumpToNote : 'مشاهده روی برگه'}">🔍</button>
+                </div>
+                <div class="exp-overdue-bottom">
+                    <span class="exp-overdue-note-badge">${escapeHTML(noteTitle)}</span>
+                    <span class="exp-overdue-date-badge">${daysAgoStr}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderExpandedCalendarContent(modal) {
@@ -59,11 +102,20 @@ function renderExpandedCalendarContent(modal) {
         ? TRANSLATIONS[currentLanguage]
         : null;
     const expDict = dict && dict.expandedCal ? dict.expandedCal : null;
+    const remDict = dict && dict.reminder ? dict.reminder : null;
     const fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
         ? toFarsiNumber
         : (x => x);
 
     const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
+
+    const dlData = (typeof getThreeWeekDeadlines === "function") ? getThreeWeekDeadlines() : null;
+    const overdueList = dlData ? dlData.overdue.filter(x => !x.isChecked) : [];
+    const overdueCount = overdueList.length;
+    const todayCount = dlData ? dlData.today.filter(x => !x.isChecked).length : 0;
+    const thisWeekCount = dlData ? dlData.thisWeekRemaining.filter(x => !x.isChecked).length : 0;
+    const nextWeekCount = dlData ? dlData.nextWeek.filter(x => !x.isChecked).length : 0;
+    const totalCount = dlData ? dlData.totalActive : 0;
 
     let monthTitle = "";
     if (calType === "jalali") {
@@ -99,6 +151,25 @@ function renderExpandedCalendarContent(modal) {
                     <button type="button" class="close-expanded-cal-btn" id="btn-close-expanded-cal" title="بستن">✕</button>
                 </div>
             </div>
+
+            <!-- Overdue Tasks Accordion Banner -->
+            ${overdueCount > 0 ? `
+            <div class="expanded-overdue-banner ${isOverdueDrawerOpen ? 'is-open' : ''}">
+                <div class="expanded-overdue-header" id="exp-overdue-toggle">
+                    <div class="expanded-overdue-title">
+                        <span class="overdue-warning-icon">⚠️</span>
+                        <span>${fd(overdueCount)} ${remDict ? remDict.kpiOverdue : 'کار عقب افتاده'} نیاز به رسیدگی دارند</span>
+                    </div>
+                    <button type="button" class="expanded-overdue-toggle-btn">
+                        <span>${isOverdueDrawerOpen ? 'بستن' : 'مشاهده کارهای عقب افتاده'}</span>
+                        <span>${isOverdueDrawerOpen ? '▲' : '▼'}</span>
+                    </button>
+                </div>
+                <div class="expanded-overdue-body">
+                    ${renderOverdueTasksCards(overdueList, fd, remDict)}
+                </div>
+            </div>
+            ` : ''}
 
             <!-- Weekdays Row -->
             <div class="expanded-cal-weekdays">
@@ -151,6 +222,55 @@ function renderExpandedCalendarContent(modal) {
         }
         initExpandedCalendarState();
         renderExpandedCalendarContent(modal);
+    });
+
+    // Overdue toggle
+    const overdueToggle = modal.querySelector("#exp-overdue-toggle");
+    if (overdueToggle) {
+        overdueToggle.addEventListener("click", () => {
+            isOverdueDrawerOpen = !isOverdueDrawerOpen;
+            const banner = modal.querySelector(".expanded-overdue-banner");
+            if (banner) {
+                banner.classList.toggle("is-open", isOverdueDrawerOpen);
+                const btn = banner.querySelector(".expanded-overdue-toggle-btn");
+                if (btn) {
+                    btn.innerHTML = `<span>${isOverdueDrawerOpen ? 'بستن' : 'مشاهده کارهای عقب افتاده'}</span> <span>${isOverdueDrawerOpen ? '▲' : '▼'}</span>`;
+                }
+            }
+        });
+    }
+
+    // Overdue check events
+    modal.querySelectorAll(".exp-overdue-check").forEach(chk => {
+        chk.addEventListener("change", (e) => {
+            e.stopPropagation();
+            const nIdx = Number(e.target.dataset.note);
+            const tIdx = Number(e.target.dataset.task);
+            if (notes[nIdx] && notes[nIdx].tasks[tIdx]) {
+                notes[nIdx].tasks[tIdx].checked = e.target.checked;
+                if (typeof saveNotes === "function") saveNotes();
+                if (typeof syncFridgeTaskCheckbox === "function") syncFridgeTaskCheckbox(nIdx, tIdx, e.target.checked);
+                if (typeof renderCalendar === "function") renderCalendar();
+                if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
+                    updateDeadlinePanel(selectedDeadlineKey);
+                }
+                if (typeof updateReminderBell === "function") updateReminderBell();
+
+                renderExpandedCalendarContent(modal);
+            }
+        });
+    });
+
+    // Overdue jump events
+    modal.querySelectorAll(".exp-overdue-jump-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const nIdx = Number(btn.dataset.note);
+            const tIdx = Number(btn.dataset.task);
+            if (typeof jumpToNoteOnFridge === "function") {
+                jumpToNoteOnFridge(nIdx, tIdx);
+            }
+        });
     });
 
     renderExpandedGridDays(modal.querySelector("#expanded-cal-days-grid"), calType);
@@ -294,6 +414,11 @@ function renderExpandedGridDays(gridEl, calType) {
 }
 
 function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+    const remDict = dict && dict.reminder ? dict.reminder : null;
+
     const cell = document.createElement("div");
     cell.className = `expanded-day-cell ${isToday ? 'is-today' : ''}`;
     cell.dataset.dayKey = dayKey;
@@ -322,12 +447,20 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
         const pill = document.createElement("div");
         const colorClass = item.note.colorClass || "color-0";
         const isDone = !!item.task.checked;
+        const noteTitle = item.note.title || (remDict ? remDict.untitledNote : 'یادداشت');
         pill.className = `expanded-task-pill ${colorClass} ${isDone ? 'is-done' : ''}`;
-        pill.title = `${item.note.title ? item.note.title + ': ' : ''}${item.task.text}`;
+        pill.title = `${noteTitle}: ${item.task.text}`;
 
+        const jumpTitle = (remDict && remDict.jumpToNote) ? remDict.jumpToNote : 'مشاهده روی برگه';
         pill.innerHTML = `
-            <input type="checkbox" class="expanded-pill-check" ${isDone ? 'checked' : ''}>
-            <span class="expanded-pill-text">${escapeHTML(item.task.text || 'تسک')}</span>
+            <div class="expanded-pill-main">
+                <input type="checkbox" class="expanded-pill-check" ${isDone ? 'checked' : ''}>
+                <span class="expanded-pill-text">${escapeHTML(item.task.text || 'تسک')}</span>
+            </div>
+            <div class="expanded-pill-actions">
+                <span class="expanded-pill-note-badge" title="${escapeHTML(noteTitle)}">${escapeHTML(noteTitle)}</span>
+                <button type="button" class="expanded-pill-jump-btn" title="${jumpTitle}">🔍</button>
+            </div>
         `;
 
         const check = pill.querySelector(".expanded-pill-check");
@@ -336,7 +469,7 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
             if (notes[item.noteIndex] && notes[item.noteIndex].tasks[item.taskIndex]) {
                 notes[item.noteIndex].tasks[item.taskIndex].checked = check.checked;
                 if (typeof saveNotes === "function") saveNotes();
-                if (typeof renderAllNotes === "function") renderAllNotes();
+                if (typeof syncFridgeTaskCheckbox === "function") syncFridgeTaskCheckbox(item.noteIndex, item.taskIndex, check.checked);
                 if (typeof renderCalendar === "function") renderCalendar();
                 if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
                     updateDeadlinePanel(selectedDeadlineKey);
@@ -344,16 +477,41 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
                 if (typeof updateReminderBell === "function") updateReminderBell();
 
                 pill.classList.toggle("is-done", check.checked);
+                const modal = document.getElementById("expanded-calendar-modal");
+                if (modal) {
+                    renderExpandedCalendarContent(modal);
+                }
             }
         });
 
-        // Pill click triggers checkbox toggle
+        // Pill click triggers checkbox toggle (except when clicking actions)
         pill.addEventListener("click", (e) => {
-            if (e.target.tagName !== "INPUT") {
+            if (e.target.tagName !== "INPUT" && !e.target.closest(".expanded-pill-actions")) {
                 check.checked = !check.checked;
                 check.dispatchEvent(new Event("change"));
             }
         });
+
+        // Clicking jump button or note badge jumps directly to note on fridge
+        const jumpBtn = pill.querySelector(".expanded-pill-jump-btn");
+        if (jumpBtn) {
+            jumpBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (typeof jumpToNoteOnFridge === "function") {
+                    jumpToNoteOnFridge(item.noteIndex, item.taskIndex);
+                }
+            });
+        }
+
+        const noteBadge = pill.querySelector(".expanded-pill-note-badge");
+        if (noteBadge) {
+            noteBadge.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (typeof jumpToNoteOnFridge === "function") {
+                    jumpToNoteOnFridge(item.noteIndex, item.taskIndex);
+                }
+            });
+        }
 
         taskListWrap.appendChild(pill);
     });
@@ -385,6 +543,11 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
 }
 
 function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+    const remDict = dict && dict.reminder ? dict.reminder : null;
+
     const existing = document.querySelector(".expanded-cal-popover");
     if (existing) existing.remove();
 
@@ -402,10 +565,18 @@ function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
     tasks.forEach(item => {
         const isDone = !!item.task.checked;
         const colorClass = item.note.colorClass || "color-0";
+        const noteTitle = item.note.title || (remDict ? remDict.untitledNote : 'یادداشت');
+        const jumpTitle = (remDict && remDict.jumpToNote) ? remDict.jumpToNote : 'مشاهده روی برگه';
         html += `
-            <div class="popover-task-item ${colorClass} ${isDone ? 'is-done' : ''}">
-                <input type="checkbox" class="popover-check" ${isDone ? 'checked' : ''} data-note="${item.noteIndex}" data-task="${item.taskIndex}">
-                <span class="popover-text">${escapeHTML(item.task.text)}</span>
+            <div class="popover-task-item ${colorClass} ${isDone ? 'is-done' : ''}" title="${escapeHTML(noteTitle)}: ${escapeHTML(item.task.text)}">
+                <div class="popover-task-main">
+                    <input type="checkbox" class="popover-check" ${isDone ? 'checked' : ''} data-note="${item.noteIndex}" data-task="${item.taskIndex}">
+                    <span class="popover-text">${escapeHTML(item.task.text)}</span>
+                </div>
+                <div class="popover-actions">
+                    <span class="popover-note-badge" title="${escapeHTML(noteTitle)}">${escapeHTML(noteTitle)}</span>
+                    <button type="button" class="popover-jump-btn" title="${jumpTitle}">🔍</button>
+                </div>
             </div>
         `;
     });
@@ -415,6 +586,21 @@ function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
 
     popover.querySelector(".popover-close-btn").addEventListener("click", () => popover.remove());
 
+    popover.querySelectorAll(".popover-jump-btn, .popover-note-badge").forEach(el => {
+        el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const parent = el.closest(".popover-task-item");
+            const check = parent ? parent.querySelector(".popover-check") : null;
+            if (check) {
+                const nIdx = Number(check.dataset.note);
+                const tIdx = Number(check.dataset.task);
+                if (typeof jumpToNoteOnFridge === "function") {
+                    jumpToNoteOnFridge(nIdx, tIdx);
+                }
+            }
+        });
+    });
+
     popover.querySelectorAll(".popover-check").forEach(chk => {
         chk.addEventListener("change", (e) => {
             const nIdx = Number(e.target.dataset.note);
@@ -422,7 +608,7 @@ function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
             if (notes[nIdx] && notes[nIdx].tasks[tIdx]) {
                 notes[nIdx].tasks[tIdx].checked = e.target.checked;
                 if (typeof saveNotes === "function") saveNotes();
-                if (typeof renderAllNotes === "function") renderAllNotes();
+                if (typeof syncFridgeTaskCheckbox === "function") syncFridgeTaskCheckbox(nIdx, tIdx, e.target.checked);
                 if (typeof renderCalendar === "function") renderCalendar();
                 if (typeof updateDeadlinePanel === "function") updateDeadlinePanel(dayKey);
                 if (typeof updateReminderBell === "function") updateReminderBell();

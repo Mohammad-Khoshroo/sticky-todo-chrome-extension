@@ -447,7 +447,7 @@ function applyDeadlinePanelState() {
     }
 }
 
-function createDeadlineItemElement({ note, task, noteIndex, info, isOverdue }) {
+function createDeadlineItemElement({ note, task, noteIndex, taskIndex, info, isOverdue }) {
     const item = document.createElement("div");
     item.className = `deadline-item ${task.checked ? "done" : ""} ${isOverdue ? "overdue" : ""}`;
     if (info) {
@@ -472,22 +472,37 @@ function createDeadlineItemElement({ note, task, noteIndex, info, isOverdue }) {
         `;
     }
 
+    const jumpTitle = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]?.reminder?.jumpToNote)
+        ? TRANSLATIONS[currentLanguage].reminder.jumpToNote
+        : "مشاهده روی برگه";
+
     item.innerHTML = `
         <div class="deadline-item-header">
             <span class="deadline-item-note" title="${noteTitleText}">${noteTitleText}</span>
-            ${badgeHTML}
+            <div class="deadline-item-header-actions">
+                ${badgeHTML}
+                <button type="button" class="deadline-item-jump-btn" title="${jumpTitle}">🔍</button>
+            </div>
         </div>
         <div class="deadline-item-text">${taskContentText}</div>
     `;
 
+    const jumpBtn = item.querySelector(".deadline-item-jump-btn");
+    if (jumpBtn) {
+        jumpBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const tIdx = (taskIndex !== undefined) ? taskIndex : 0;
+            if (typeof jumpToNoteOnFridge === "function") {
+                jumpToNoteOnFridge(noteIndex, tIdx);
+            }
+        });
+    }
+
     item.addEventListener("click", () => {
-        activeNoteIndex = noteIndex;
-        if (note.stackId && typeof stacks !== "undefined" && stacks[note.stackId]) {
-            stacks[note.stackId].activeNoteId = note.id;
-            if (typeof activeStackId !== "undefined") activeStackId = note.stackId;
-            if (typeof saveNotes === "function") saveNotes();
+        const tIdx = (taskIndex !== undefined) ? taskIndex : 0;
+        if (typeof jumpToNoteOnFridge === "function") {
+            jumpToNoteOnFridge(noteIndex, tIdx);
         }
-        renderAllNotes();
     });
 
     return item;
@@ -578,9 +593,9 @@ function updateDeadlinePanel(deadlineKey) {
             }
         });
 
-        tasks.forEach(({ note, task, noteIndex, deadlineKey: taskKey }) => {
+        tasks.forEach(({ note, task, noteIndex, taskIndex, deadlineKey: taskKey }) => {
             const info = getDeadlineInfo(taskKey, false);
-            const itemEl = createDeadlineItemElement({ note, task, noteIndex, info, isOverdue: true });
+            const itemEl = createDeadlineItemElement({ note, task, noteIndex, taskIndex, info, isOverdue: true });
             overdueContainer.appendChild(itemEl);
         });
 
@@ -599,12 +614,13 @@ function updateDeadlinePanel(deadlineKey) {
         }
 
         if (items.length > 0) {
-            items.forEach(({ note, task, noteIndex }) => {
+            items.forEach(({ note, task, noteIndex, taskIndex }) => {
                 const info = getDeadlineInfo(deadlineKey, task.checked);
                 const itemEl = createDeadlineItemElement({
                     note,
                     task,
                     noteIndex,
+                    taskIndex,
                     info,
                     isOverdue: info ? info.isOverdue : false
                 });

@@ -190,15 +190,15 @@ const TRANSLATIONS = {
         },
 
         reminder: {
-            bellTitle: 'یادآور ددلاین‌ها (۳ هفته)',
-            modalTitle: 'یادآور ددلاین‌ها (۳ هفته)',
+            bellTitle: 'تقویم بزرگ و ددلاین‌ها',
+            modalTitle: 'تقویم بزرگ و ددلاین‌ها',
             close: 'بستن',
-            kpiOverdue: 'معوقه',
+            kpiOverdue: 'عقب افتاده',
             kpiToday: 'امروز',
             kpiThisWeek: 'این هفته',
             kpiNextWeek: 'هفته آینده',
             tabAll: 'همه موارد',
-            tabUrgent: 'فوری (معوقه و امروز)',
+            tabUrgent: 'فوری (عقب افتاده و امروز)',
             tabThisWeek: 'کل این هفته',
             tabNextWeek: 'هفته آینده',
             tabLastWeek: 'هفته گذشته',
@@ -406,8 +406,8 @@ const TRANSLATIONS = {
         },
 
         reminder: {
-            bellTitle: 'Deadline Reminders (3 Weeks)',
-            modalTitle: 'Deadline Reminders (3 Weeks)',
+            bellTitle: 'Expanded Calendar & Deadlines',
+            modalTitle: 'Expanded Calendar & Deadlines',
             close: 'Close',
             kpiOverdue: 'Overdue',
             kpiToday: 'Today',
@@ -622,8 +622,8 @@ const TRANSLATIONS = {
         },
 
         reminder: {
-            bellTitle: '마감일 알림 (3주간)',
-            modalTitle: '마감일 알림 (3주간)',
+            bellTitle: '확대 캘린더 및 마감일',
+            modalTitle: '확대 캘린더 및 마감일',
             close: '닫기',
             kpiOverdue: '기한 초과',
             kpiToday: '오늘',
@@ -838,8 +838,8 @@ const TRANSLATIONS = {
         },
 
         reminder: {
-            bellTitle: 'تذكير بالمواعيد النهائية (٣ أسابيع)',
-            modalTitle: 'تذكير بالمواعيد النهائية (٣ أسابيع)',
+            bellTitle: 'التقويم الموسع والمواعيد النهائية',
+            modalTitle: 'التقويم الموسع والمواعيد النهائية',
             close: 'إغلاق',
             kpiOverdue: 'متأخر',
             kpiToday: 'اليوم',

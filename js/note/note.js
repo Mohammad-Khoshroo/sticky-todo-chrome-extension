@@ -150,10 +150,8 @@ function renderStackWrapper(stackId, stackNotes) {
         layer2.title = stackNotes[nextNextIdx].title || 'نوت دیگر';
         layer2.addEventListener('click', (e) => {
             e.stopPropagation();
-            stack.activeNoteId = stackNotes[nextNextIdx].id;
             activeNoteIndex = notes.indexOf(stackNotes[nextNextIdx]);
-            saveNotes();
-            renderAllNotes();
+            switchStackActiveNote(stackId, stackNotes[nextNextIdx].id);
         });
         pileContainer.appendChild(layer2);
     }
@@ -166,10 +164,8 @@ function renderStackWrapper(stackId, stackNotes) {
         layer1.title = stackNotes[nextIdx].title || 'نوت بعدی';
         layer1.addEventListener('click', (e) => {
             e.stopPropagation();
-            stack.activeNoteId = stackNotes[nextIdx].id;
             activeNoteIndex = notes.indexOf(stackNotes[nextIdx]);
-            saveNotes();
-            renderAllNotes();
+            switchStackActiveNote(stackId, stackNotes[nextIdx].id);
         });
         pileContainer.appendChild(layer1);
     }
@@ -226,6 +222,57 @@ function renderStackWrapper(stackId, stackNotes) {
     wrapper.appendChild(pileContainer);
     return wrapper;
 }
+
+function switchStackActiveNote(stackId, targetNoteId) {
+    if (typeof stacks === "undefined" || !stacks[stackId]) return null;
+    const stack = stacks[stackId];
+    if (stack.activeNoteId === targetNoteId) {
+        return document.querySelector(`.note-wrapper[data-stack-id="${stackId}"]`);
+    }
+
+    stack.activeNoteId = targetNoteId;
+    if (typeof activeStackId !== "undefined") {
+        activeStackId = stackId;
+    }
+    if (typeof saveNotes === "function") {
+        saveNotes();
+    }
+
+    const oldWrapper = document.querySelector(`.note-wrapper[data-stack-id="${stackId}"]`);
+    if (oldWrapper && typeof getStackNotes === "function") {
+        const stackNotes = getStackNotes(stackId);
+        const newWrapper = renderStackWrapper(stackId, stackNotes);
+        oldWrapper.replaceWith(newWrapper);
+        if (typeof autoResizeTextareas === "function") {
+            autoResizeTextareas();
+        }
+        if (typeof msnry !== "undefined" && msnry && typeof msnry.reloadItems === "function") {
+            msnry.reloadItems();
+            msnry.layout();
+        }
+        return newWrapper;
+    }
+    return null;
+}
+window.switchStackActiveNote = switchStackActiveNote;
+
+function syncFridgeTaskCheckbox(noteIndex, taskIndex, isChecked) {
+    const note = (typeof notes !== "undefined" && notes[noteIndex]) ? notes[noteIndex] : null;
+    if (!note) return;
+    const wrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`) ||
+                    (note.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${note.stackId}"]`) : null) ||
+                    document.querySelectorAll('.note-wrapper')[noteIndex];
+    if (wrapper) {
+        const taskEls = wrapper.querySelectorAll('.note-task');
+        if (taskEls && taskEls[taskIndex]) {
+            const cb = taskEls[taskIndex].querySelector('.task-checkbox');
+            if (cb) {
+                cb.checked = isChecked;
+            }
+        }
+    }
+}
+window.syncFridgeTaskCheckbox = syncFridgeTaskCheckbox;
 
 function renderAllNotes() {
     fridgeContainer.innerHTML = '';
@@ -502,7 +549,7 @@ document.addEventListener("mousedown", (e) => {
 
     if (activeNoteIndex !== null) {
         activeNoteIndex = null;
-        renderAllNotes();
+        document.querySelectorAll('.note-paper.active').forEach(el => el.classList.remove('active'));
     }
 });
 
@@ -542,10 +589,8 @@ document.addEventListener("keydown", (e) => {
                 nextIdx = (currentIdx - 1 + stackNotes.length) % stackNotes.length;
             }
 
-            stacks[activeStackId].activeNoteId = stackNotes[nextIdx].id;
             activeNoteIndex = notes.indexOf(stackNotes[nextIdx]);
-            saveNotes();
-            renderAllNotes();
+            switchStackActiveNote(activeStackId, stackNotes[nextIdx].id);
         }
     }
 });
