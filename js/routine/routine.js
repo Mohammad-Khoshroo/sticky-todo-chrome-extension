@@ -10,6 +10,39 @@ function loadRoutines() {
         const saved = localStorage.getItem("fridgeRoutines");
         if (saved) {
             routines = JSON.parse(saved);
+            let changed = false;
+            routines.forEach(r => {
+                if (!r.startDate) {
+                    if (r.anchorDate) {
+                        r.startDate = r.anchorDate;
+                    } else if (r.createdAt) {
+                        r.startDate = r.createdAt.slice(0, 10);
+                    } else {
+                        const match = String(r.id).match(/^routine_(\d{10,13})/);
+                        if (match) {
+                            const d = new Date(parseInt(match[1], 10));
+                            const gy = d.getFullYear(), gm = String(d.getMonth() + 1).padStart(2, "0"), gd = String(d.getDate()).padStart(2, "0");
+                            r.startDate = `${gy}-${gm}-${gd}`;
+                        } else {
+                            const now = new Date();
+                            const gy = now.getFullYear(), gm = String(now.getMonth() + 1).padStart(2, "0"), gd = String(now.getDate()).padStart(2, "0");
+                            r.startDate = `${gy}-${gm}-${gd}`;
+                        }
+                    }
+                    changed = true;
+                }
+                if (!r.anchorDate) {
+                    r.anchorDate = r.startDate;
+                    changed = true;
+                }
+                if (!r.createdAt) {
+                    r.createdAt = r.startDate ? (r.startDate + "T00:00:00.000Z") : new Date().toISOString();
+                    changed = true;
+                }
+            });
+            if (changed) {
+                saveRoutines();
+            }
         } else {
             // Default introductory routines
             routines = [
@@ -19,6 +52,8 @@ function loadRoutines() {
                     pattern: "daily",
                     intervalDays: 1,
                     anchorDate: "2026-10-01",
+                    startDate: "2026-10-01",
+                    createdAt: "2026-10-01T00:00:00.000Z",
                     weeklyDays: [0, 1, 2, 3, 4, 5, 6],
                     monthlyDay: 1,
                     completedDates: {}
@@ -29,6 +64,8 @@ function loadRoutines() {
                     pattern: "interval",
                     intervalDays: 2, // Every other day
                     anchorDate: "2026-10-01",
+                    startDate: "2026-10-01",
+                    createdAt: "2026-10-01T00:00:00.000Z",
                     weeklyDays: [0, 2, 4],
                     monthlyDay: 1,
                     completedDates: {}
@@ -39,6 +76,8 @@ function loadRoutines() {
                     pattern: "weekly",
                     intervalDays: 1,
                     anchorDate: "2026-10-01",
+                    startDate: "2026-10-01",
+                    createdAt: "2026-10-01T00:00:00.000Z",
                     weeklyDays: [0], // Saturday only
                     monthlyDay: 1,
                     completedDates: {}
@@ -60,8 +99,94 @@ function saveRoutines() {
     } catch (e) {}
 }
 
+function getRoutineStartDate(routine) {
+    if (!routine) return null;
+
+    if (routine.startDate) {
+        const parts = String(routine.startDate).split("-");
+        if (parts.length === 3) {
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const d = parseInt(parts[2], 10);
+            return new Date(y, m, d, 0, 0, 0, 0);
+        }
+        const parsed = new Date(routine.startDate);
+        if (!isNaN(parsed.getTime())) {
+            return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 0, 0, 0, 0);
+        }
+    }
+
+    if (routine.createdAt) {
+        const parsed = new Date(routine.createdAt);
+        if (!isNaN(parsed.getTime())) {
+            return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 0, 0, 0, 0);
+        }
+    }
+
+    if (routine.anchorDate) {
+        const parts = String(routine.anchorDate).split("-");
+        if (parts.length === 3) {
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const d = parseInt(parts[2], 10);
+            return new Date(y, m, d, 0, 0, 0, 0);
+        }
+        const parsed = new Date(routine.anchorDate);
+        if (!isNaN(parsed.getTime())) {
+            return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 0, 0, 0, 0);
+        }
+    }
+
+    if (typeof routine.id === "string") {
+        const match = routine.id.match(/^routine_(\d{10,13})/);
+        if (match) {
+            const parsed = new Date(parseInt(match[1], 10));
+            if (!isNaN(parsed.getTime())) {
+                return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 0, 0, 0, 0);
+            }
+        }
+    }
+
+    return null;
+}
+
+function isRoutineCompletedOnDate(routine, dayJalaliKey, gDate) {
+    if (!routine || !routine.completedDates) return false;
+    if (dayJalaliKey && routine.completedDates[dayJalaliKey]) return true;
+
+    if (gDate) {
+        const gy = gDate.getFullYear(), gm = String(gDate.getMonth() + 1).padStart(2, "0"), gd = String(gDate.getDate()).padStart(2, "0");
+        const gKey = `${gy}-${gm}-${gd}`;
+        if (routine.completedDates[gKey]) return true;
+
+        if (typeof jalaali !== "undefined") {
+            const j = jalaali.toJalaali(gDate);
+            const jKey = formatJalaliKey(j.jy, j.jm, j.jd);
+            if (routine.completedDates[jKey]) return true;
+        }
+    }
+    return false;
+}
+
 function isRoutineScheduledForDate(routine, gDate) {
     if (!routine || !gDate) return false;
+
+    // 1. If explicitly completed on this date (e.g. retroactive check), it counts as scheduled and completed
+    if (isRoutineCompletedOnDate(routine, null, gDate)) {
+        return true;
+    }
+
+    // 2. Check if the target date is strictly before the routine was created / started
+    const startDate = getRoutineStartDate(routine);
+    if (startDate) {
+        const targetDate = new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 0, 0, 0, 0);
+        if (targetDate.getTime() < startDate.getTime()) {
+            // Target date is before the routine existed; DO NOT count or calculate as missed!
+            return false;
+        }
+    }
+
+    // 3. Pattern checking for active routine
     const pattern = routine.pattern || "daily";
 
     if (pattern === "daily") {
@@ -70,7 +195,7 @@ function isRoutineScheduledForDate(routine, gDate) {
 
     if (pattern === "interval") {
         const interval = Math.max(1, parseInt(routine.intervalDays, 10) || 1);
-        const anchor = routine.anchorDate ? new Date(routine.anchorDate + "T12:00:00Z") : new Date(Date.UTC(2026, 9, 1, 12, 0, 0));
+        const anchor = routine.anchorDate ? new Date(routine.anchorDate + "T12:00:00Z") : (startDate || new Date(Date.UTC(2026, 9, 1, 12, 0, 0)));
         const target = new Date(Date.UTC(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 12, 0, 0));
         const diffDays = Math.round((target.getTime() - anchor.getTime()) / 86400000);
         return diffDays >= 0 && (diffDays % interval === 0);
@@ -98,19 +223,55 @@ function isRoutineScheduledForDate(routine, gDate) {
     return true;
 }
 
-function isRoutineCompletedOnDate(routine, dayJalaliKey, gDate) {
-    if (!routine || !routine.completedDates) return false;
-    if (dayJalaliKey && routine.completedDates[dayJalaliKey]) return true;
+const ROUTINE_EDIT_WINDOW_DAYS = 7;
 
-    if (gDate) {
-        const gy = gDate.getFullYear(), gm = String(gDate.getMonth() + 1).padStart(2, "0"), gd = String(gDate.getDate()).padStart(2, "0");
-        const gKey = `${gy}-${gm}-${gd}`;
-        if (routine.completedDates[gKey]) return true;
+function isDateLockedForRoutineEditing(gDate) {
+    if (!gDate) return false;
+    let d = gDate;
+    if (!(d instanceof Date)) {
+        if (typeof parseAnyDeadlineKey === "function") {
+            const p = parseAnyDeadlineKey(d);
+            if (p && p.gDate) d = p.gDate;
+            else if (typeof d === "string" && d.includes("-")) {
+                const parts = d.split("-").map(Number);
+                d = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+                d = new Date(d);
+            }
+        } else if (typeof d === "string" && d.includes("-")) {
+            const parts = d.split("-").map(Number);
+            d = new Date(parts[0], parts[1] - 1, parts[2]);
+        } else {
+            d = new Date(d);
+        }
     }
-    return false;
+    if (isNaN(d.getTime())) return false;
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+
+    // Dates in the future are not older than 7 days
+    if (targetDate.getTime() > todayStart.getTime()) {
+        return false;
+    }
+
+    const diffDays = Math.round((todayStart.getTime() - targetDate.getTime()) / 86400000);
+    return diffDays > ROUTINE_EDIT_WINDOW_DAYS;
 }
 
 function toggleRoutineCompletion(routineId, dayJalaliKey, gDate) {
+    let targetGDate = gDate;
+    if (!targetGDate && dayJalaliKey && typeof parseAnyDeadlineKey === "function") {
+        const parsed = parseAnyDeadlineKey(dayJalaliKey);
+        if (parsed) targetGDate = parsed.gDate;
+    }
+
+    if (targetGDate && isDateLockedForRoutineEditing(targetGDate)) {
+        console.warn("Routine modification is locked for dates older than 7 days.");
+        return;
+    }
+
     const routine = routines.find(r => r.id === routineId);
     if (!routine) return;
 
@@ -244,12 +405,20 @@ function createRoutineModalDOM() {
     const monthlySuffix = rDict ? rDict.modalMonthlySuffix : "هر ماه (مثلاً ۱ = اول ماه)";
     const btnCancel = rDict ? rDict.modalCancel : "انصراف";
     const btnSave = rDict ? rDict.modalSave : "ذخیره کار روزمره";
+    const todayModalG = new Date();
+    const modalGy = todayModalG.getFullYear(), modalGm = String(todayModalG.getMonth() + 1).padStart(2, "0"), modalGd = String(todayModalG.getDate()).padStart(2, "0");
+    const todayStr = `${modalGy}-${modalGm}-${modalGd}`;
+    let dateDisplayHint = todayStr;
+    if (typeof jalaali !== "undefined") {
+        const j = jalaali.toJalaali(todayModalG);
+        dateDisplayHint = `${j.jy}/${String(j.jm).padStart(2, "0")}/${String(j.jd).padStart(2, "0")}`;
+    }
 
     modal.innerHTML = `
         <div class="routine-modal-backdrop" id="routine-modal-backdrop"></div>
         <div class="routine-modal-content">
             <div class="routine-modal-header">
-                <h3>⚡ ${modalTitle}</h3>
+                <h3>${modalTitle}</h3>
                 <button type="button" class="close-routine-modal" id="close-routine-modal">✕</button>
             </div>
             <div class="routine-modal-body">
@@ -309,6 +478,14 @@ function createRoutineModalDOM() {
                         <input type="number" id="routine-monthly-input" class="routine-number-input" value="1" min="1" max="31">
                         <span>${monthlySuffix}</span>
                     </div>
+                <div class="routine-form-group" id="routine-start-date-field">
+                    <label>${rDict ? rDict.modalStartDateLabel : 'تاریخ شروع:'}</label>
+                    <div class="start-date-input-row">
+                        <input type="date" id="routine-start-date-input" class="routine-input" value="${todayStr}">
+                        <span class="routine-date-hint">(${dateDisplayHint})</span>
+                    </div>
+                    <span class="routine-form-subhint">${rDict ? rDict.modalStartDateHint : 'روزهای قبل از این تاریخ جزو آمار کارهای انجام‌نشده محاسبه نخواهند شد'}</span>
+                </div>
                 </div>
             </div>
             <div class="routine-modal-actions">
@@ -357,13 +534,19 @@ function createRoutineModalDOM() {
 
         const todayG = new Date();
         const gy = todayG.getFullYear(), gm = String(todayG.getMonth() + 1).padStart(2, "0"), gd = String(todayG.getDate()).padStart(2, "0");
+        const todayStr = `${gy}-${gm}-${gd}`;
+
+        const startDateInput = modal.querySelector("#routine-start-date-input");
+        const chosenStartDate = (startDateInput && startDateInput.value) ? startDateInput.value : todayStr;
 
         const newRoutine = {
             id: "routine_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
             title,
             pattern,
             intervalDays,
-            anchorDate: `${gy}-${gm}-${gd}`,
+            anchorDate: chosenStartDate,
+            startDate: chosenStartDate,
+            createdAt: new Date().toISOString(),
             weeklyDays,
             monthlyDay,
             completedDates: {}
@@ -411,6 +594,7 @@ function updateRoutinePanel(deadlineKey) {
     const targetParsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(deadlineKey) : null;
     const gDate = targetParsed ? targetParsed.gDate : new Date();
     const dayJalaliKey = targetParsed ? targetParsed.jKey : deadlineKey;
+    const isLocked = isDateLockedForRoutineEditing(gDate);
 
     const dayRoutines = routines.filter(r => isRoutineScheduledForDate(r, gDate));
     const completedRoutines = dayRoutines.filter(r => isRoutineCompletedOnDate(r, dayJalaliKey, gDate));
@@ -458,6 +642,7 @@ function updateRoutinePanel(deadlineKey) {
         <div class="progress-info-box">
             <div class="progress-title">${pTitle}</div>
             <div class="progress-subtitle">${pSub}</div>
+            ${isLocked ? `<div class="progress-locked-notice" title="${rDict ? rDict.lockedTooltip : ''}">🔒 ${rDict ? rDict.lockedNotice : 'قفل‌شده: مهلت ویرایش پس از یک هفته به پایان رسیده است'}</div>` : ''}
         </div>
     `;
 
@@ -484,26 +669,34 @@ function updateRoutinePanel(deadlineKey) {
             }
 
             const rItem = document.createElement("div");
-            rItem.className = `routine-item ${isDone ? "done" : ""}`;
+            rItem.className = `routine-item ${isDone ? "done" : ""} ${isLocked ? "is-locked" : ""}`;
 
             const escapedTitle = (typeof escapeHTML === "function") ? escapeHTML(routine.title) : routine.title;
+            const lockBadgeHTML = isLocked
+                ? `<span class="routine-lock-badge" title="${rDict ? rDict.lockedTooltip : ''}">🔒 ${rDict ? rDict.lockedBadge : 'قفل‌شده'}</span>`
+                : "";
 
             rItem.innerHTML = `
                 <div class="routine-item-left">
-                    <input type="checkbox" class="routine-checkbox" ${isDone ? "checked" : ""}>
+                    <input type="checkbox" class="routine-checkbox" ${isDone ? "checked" : ""} ${isLocked ? "disabled" : ""}>
                     <span class="routine-item-title">${escapedTitle}</span>
                 </div>
                 <div class="routine-item-right">
+                    ${lockBadgeHTML}
                     <span class="routine-badge">${badgeText}</span>
                     <button type="button" class="routine-del-btn" title="حذف">✕</button>
                 </div>
             `;
 
             const chk = rItem.querySelector(".routine-checkbox");
-            chk.addEventListener("change", (e) => {
-                e.stopPropagation();
-                toggleRoutineCompletion(routine.id, dayJalaliKey, gDate);
-            });
+            if (!isLocked) {
+                chk.addEventListener("change", (e) => {
+                    e.stopPropagation();
+                    toggleRoutineCompletion(routine.id, dayJalaliKey, gDate);
+                });
+            } else {
+                chk.title = rDict ? rDict.lockedTooltip : "";
+            }
 
             const delBtn = rItem.querySelector(".routine-del-btn");
             delBtn.addEventListener("click", (e) => {
@@ -516,6 +709,10 @@ function updateRoutinePanel(deadlineKey) {
 
             listEl.appendChild(rItem);
         });
+    }
+
+    if (typeof updateSleepTrackerWidget === "function") {
+        updateSleepTrackerWidget(deadlineKey);
     }
 
     if (typeof updateSidePanelHeader === "function") {
@@ -551,9 +748,14 @@ function updateSidePanelHeader(deadlineKey) {
     const isToday = targetParsed && targetParsed.jKey === todayJalaliKey;
 
     if (currentSidePanelMode === "routines") {
-        if (iconEl) iconEl.textContent = "⚡";
+        if (iconEl) iconEl.textContent = "🔄";
         if (titleTextEl) titleTextEl.textContent = rDict ? rDict.title : "کارهای روزمره";
         if (addBtn) addBtn.classList.remove("hidden");
+        const dashBtn = document.getElementById("btn-open-routine-dashboard");
+        if (dashBtn) {
+            dashBtn.classList.remove("hidden");
+            dashBtn.title = rDict ? rDict.dashboardBtnTitle : "داشبورد و تحلیل پیشرفت کارهای روزمره";
+        }
 
         const gDate = targetParsed ? targetParsed.gDate : new Date();
         const dayRoutines = routines.filter(r => isRoutineScheduledForDate(r, gDate));
@@ -566,6 +768,8 @@ function updateSidePanelHeader(deadlineKey) {
     } else { // "deadlines"
         if (iconEl) iconEl.textContent = "📅";
         if (addBtn) addBtn.classList.add("hidden");
+        const dashBtnDeadlines = document.getElementById("btn-open-routine-dashboard");
+        if (dashBtnDeadlines) dashBtnDeadlines.classList.add("hidden");
 
         let titleText = "";
         if (isToday) {
@@ -745,12 +949,22 @@ function initSidePanelsUI() {
         });
     }
 
-    // 2. Add routine button
+    // 2. Add routine & Dashboard buttons
     const addBtn = document.getElementById("btn-open-add-routine");
     if (addBtn) {
         addBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             openAddRoutineModal();
+        });
+    }
+
+    const dashBtn = document.getElementById("btn-open-routine-dashboard");
+    if (dashBtn) {
+        dashBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (typeof openRoutineDashboardModal === "function") {
+                openRoutineDashboardModal();
+            }
         });
     }
 

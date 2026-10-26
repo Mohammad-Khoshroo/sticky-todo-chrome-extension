@@ -543,3 +543,35 @@ html[dir="ltr"] .lang-option {
 .task-context-menu button:hover {
     background: rgba(0, 0, 0, 0.08);
 }
+
+/* ----------------------
+   LTR ADAPTATIONS
+---------------------- */
+html[dir="ltr"] .bottom-actions {
+    right: auto;
+    left: 20px;
+}
+
+html[dir="ltr"] #pen {
+    right: auto;
+    left: 25px;
+}
+
+html[dir="ltr"] #eraser {
+    right: auto;
+    left: 80px;
+}
+
+html[dir="ltr"] #trash-bin {
+    left: auto;
+    right: 20px;
+}
+
+html[dir="ltr"] .trash-badge {
+    right: auto;
+    left: -2px;
+}
+
+html[dir="ltr"] .trash-modal {
+    direction: ltr;
+}

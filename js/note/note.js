@@ -362,6 +362,8 @@ function updateNotesLayout() {
         msnry.destroy();
     }
 
+    fridgeContainer.style.width = '';
+
     msnry = new Masonry(fridgeContainer, {
         itemSelector: '.note-wrapper',
         columnWidth: 270,

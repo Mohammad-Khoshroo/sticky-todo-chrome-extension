@@ -91,6 +91,15 @@
                 </div>
                 <div class="side-panel-actions">
                     <button type="button" id="btn-open-add-routine" class="btn-add-routine-chip hidden" title="تعریف کار روزمره جدید">+ کار جدید</button>
+                    <button type="button" id="btn-open-routine-dashboard" class="btn-routine-dashboard-chip hidden" title="داشبورد و تحلیل پیشرفت کارهای روزمره">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="17" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                            <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01M16 17h.01"/>
+                        </svg>
+                    </button>
                     <button type="button" id="panel-mode-toggle-btn" class="panel-mode-toggle-btn" title="سوئیچ به کارهای روزمره"></button>
                     <button type="button" id="side-panel-collapse-btn" class="panel-collapse-btn hidden" title="کوچک / بزرگ کردن پنل">−</button>
                 </div>
@@ -105,6 +114,7 @@
                 <!-- VIEW 2: DAILY ROUTINES / کارهای روزمره -->
                 <div id="routine-view" class="side-panel-view hidden">
                     <div id="daily-progress-container" class="daily-progress-container"></div>
+                    <div id="sleep-tracker-container" class="sleep-tracker-container"></div>
                     <div id="routine-list" class="routine-list"></div>
                 </div>
             </div>
@@ -233,6 +243,8 @@
 
     <script src="js/main.js"></script>
     <script src="js/routine/routine.js"></script>
+    <script src="js/routine/sleep.js"></script>
+    <script src="js/routine/dashboard.js"></script>
     <script src="js/calendar/calendar.js"></script>
     <script src="js/UI/trash-bin.js"></script>
     <script src="js/UI/pencil.js"></script>

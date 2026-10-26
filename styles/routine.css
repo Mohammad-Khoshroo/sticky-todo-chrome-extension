@@ -565,7 +565,7 @@
    ----------------------------------- */
 
 .side-panel {
-    width: 350px;
+    width: 390px;
     background-color: #ffffff;
     border-radius: 15px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
@@ -765,4 +765,2741 @@
 .dark-mode .panel-collapse-btn:hover {
     background: #1e293b;
     color: #ffffff;
+}
+
+/* ===============================================================
+   ROUTINE DASHBOARD & BIG CALENDAR ANALYTICS STYLES
+   =============================================================== */
+
+/* Dashboard button in side-panel header */
+.btn-routine-dashboard-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0284c7;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    padding: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-routine-dashboard-chip:hover {
+    background: #f0f9ff;
+    color: #0369a1;
+    border-color: #7dd3fc;
+    transform: scale(1.08);
+    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.2);
+}
+
+.btn-routine-dashboard-chip:active {
+    transform: scale(0.92);
+}
+
+/* Dashboard Modal Dialog */
+.routine-dashboard-modal .routine-dashboard-content {
+    width: 880px;
+    max-width: 94vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    border: 1px solid #e2e8f0;
+}
+
+.routine-dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.routine-dashboard-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.routine-dash-icon {
+    font-size: 1.25rem;
+}
+
+.routine-dashboard-header-title h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.routine-dashboard-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #e2e8f0;
+    padding: 3px;
+    border-radius: 10px;
+}
+
+.routine-tab-btn {
+    border: none;
+    background: transparent;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.routine-tab-btn:hover {
+    color: #0f172a;
+}
+
+.routine-tab-btn.active {
+    background: #ffffff;
+    color: #4f46e5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.routine-dashboard-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Tab 1: Top KPI Pills */
+.dash-top-kpis {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dash-kpi-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.dash-kpi-pill .kpi-val {
+    font-weight: 800;
+}
+
+.dash-kpi-pill .kpi-val.highlight {
+    color: #4f46e5;
+}
+
+.dash-kpi-pill .kpi-val.fire {
+    color: #ea580c;
+}
+
+.dash-kpi-pill .kpi-val.done {
+    color: #16a34a;
+}
+
+.dash-kpi-pill .kpi-val.skipped {
+    color: #e11d48;
+}
+
+/* Tab 1: Big Calendar Grid */
+.dash-calendar-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dash-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.dash-cal-month-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.dash-cal-nav-btn {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.dash-cal-nav-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.dash-cal-today-btn {
+    border: 1px solid #c7d2fe;
+    background: #eef2ff;
+    color: #4f46e5;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dash-cal-today-btn:hover {
+    background: #e0e7ff;
+}
+
+.dash-cal-grid-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 6px;
+}
+
+.dash-cal-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.dash-cal-cell {
+    min-height: 58px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #fafafa;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.dash-cal-cell:hover:not(.empty) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.dash-cal-cell.empty {
+    border: none;
+    background: transparent;
+    cursor: default;
+}
+
+.dash-cal-cell.selected {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+}
+
+.dash-cal-cell.is-today {
+    border-color: #818cf8;
+    background: #f5f3ff;
+}
+
+.dash-cell-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dash-cell-num {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dash-today-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6366f1;
+}
+
+.dash-cell-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Status Badges in Calendar Cells */
+.dash-cal-cell.full {
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+.dash-badge-full {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #16a34a;
+    background: #dcfce7;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.dash-cal-cell.partial {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.dash-badge-partial {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #d97706;
+    background: #fef3c7;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.dash-cal-cell.missed {
+    background: #fff1f2;
+    border-color: #fecdd3;
+}
+
+.dash-badge-missed {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #e11d48;
+    background: #ffe4e6;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.dash-badge-pending {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+/* Day Inspector Drawer */
+.dash-inspector-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dash-inspector-card.empty {
+    background: #f8fafc;
+}
+
+.dash-inspector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dash-inspector-header h4 {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.dash-inspector-tip {
+    font-size: 0.74rem;
+    color: #64748b;
+}
+
+.dash-inspector-empty {
+    font-size: 0.82rem;
+    color: #64748b;
+    padding: 8px 0;
+}
+
+.dash-inspector-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dash-inspector-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.dash-inspector-item:hover {
+    background: #f1f5f9;
+}
+
+.dash-inspector-item.done {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.dash-inspector-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.dash-inspector-checkbox {
+    width: 17px;
+    height: 17px;
+    accent-color: #16a34a;
+    cursor: pointer;
+}
+
+.dash-inspector-title {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.dash-inspector-item.done .dash-inspector-title {
+    text-decoration: line-through;
+    color: #64748b;
+}
+
+.dash-inspector-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+.dash-inspector-badge.done {
+    color: #16a34a;
+    background: #dcfce7;
+}
+
+.dash-inspector-badge.pending {
+    color: #e11d48;
+    background: #ffe4e6;
+}
+
+/* Tab 2: Analytics KPI Cards */
+.dash-analytics-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+@media (max-width: 768px) {
+    .dash-analytics-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-analytics-kpi-grid.sleep-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 820px) {
+    .dash-analytics-kpi-grid.sleep-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+    .dash-analytics-kpi-grid.sleep-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-big-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    min-width: 0;
+}
+
+.kpi-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.kpi-title {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.kpi-number {
+    font-size: 1.28rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.kpi-number.fire {
+    color: #ea580c;
+}
+
+.kpi-number.highlight {
+    color: #4f46e5;
+}
+
+.kpi-number.done {
+    color: #16a34a;
+}
+
+.kpi-number .divider {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.kpi-number .missed {
+    color: #e11d48;
+}
+
+.kpi-sub {
+    font-size: 0.72rem;
+    color: #64748b;
+    white-space: normal;
+    word-break: normal;
+    line-height: 1.35;
+}
+
+/* Chart Card */
+.dash-chart-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dash-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dash-chart-header h4 {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.dash-chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-item .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+}
+
+.legend-item .dot.done { background: #10b981; }
+.legend-item .dot.partial { background: #f59e0b; }
+.legend-item .dot.missed { background: #f43f5e; }
+
+.dash-svg-container {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+
+.dash-svg-chart {
+    width: 100%;
+    min-width: 600px;
+    height: 120px;
+    display: block;
+}
+
+.dash-chart-bar-group {
+    cursor: pointer;
+}
+
+.dash-chart-bar {
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.dash-chart-bar-group:hover .dash-chart-bar {
+    opacity: 0.82;
+    transform: scaleY(1.04);
+    transform-origin: bottom;
+}
+
+/* Habit Breakdown Card */
+.dash-habit-breakdown-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dash-habit-breakdown-card h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.dash-habits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dash-habit-item-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.habit-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.habit-item-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.habit-title {
+    font-size: 0.88rem;
+    color: #0f172a;
+}
+
+.habit-item-stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.habit-badge-pct {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #4f46e5;
+    background: #eef2ff;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+.habit-badge-streak {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ea580c;
+    background: #fff7ed;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+.habit-progress-bar-bg {
+    width: 100%;
+    height: 7px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.habit-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4f46e5, #06b6d4);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+.habit-insight-text {
+    font-size: 0.74rem;
+    color: #475569;
+    background: #ffffff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+}
+
+/* Tab 3: Management */
+.dash-mgmt-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dash-mgmt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.dash-mgmt-header h4 {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.btn-mgmt-new-habit {
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-mgmt-new-habit:hover {
+    background: #4338ca;
+}
+
+.dash-mgmt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dash-mgmt-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    gap: 10px;
+}
+
+.dash-mgmt-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dash-mgmt-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.dash-mgmt-texts strong {
+    font-size: 0.88rem;
+    color: #0f172a;
+}
+
+.dash-mgmt-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dash-mgmt-pill {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #4f46e5;
+    background: #eef2ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.dash-mgmt-history-count {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.dash-mgmt-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-mgmt-reset,
+.btn-mgmt-delete {
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-mgmt-reset {
+    color: #475569;
+}
+
+.btn-mgmt-reset:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.btn-mgmt-delete {
+    color: #ef4444;
+    border-color: #fecdd3;
+}
+
+.btn-mgmt-delete:hover {
+    background: #fee2e2;
+}
+
+/* ----------------------
+   DARK MODE FOR DASHBOARD
+   ---------------------- */
+.dark-mode .btn-routine-dashboard-chip {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #38bdf8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .btn-routine-dashboard-chip:hover {
+    background: #1e293b;
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #7dd3fc;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.dark-mode .routine-dashboard-modal .routine-dashboard-content {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .routine-dashboard-header {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .routine-dashboard-header-title h3 {
+    color: #f1f5f9;
+}
+
+.dark-mode .routine-dashboard-tabs {
+    background: #0f172a;
+}
+
+.dark-mode .routine-tab-btn {
+    color: #94a3b8;
+}
+
+.dark-mode .routine-tab-btn.active {
+    background: #1e293b;
+    color: #818cf8;
+}
+
+.dark-mode .dash-kpi-pill {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+}
+
+.dark-mode .dash-calendar-container,
+.dark-mode .dash-inspector-card,
+.dark-mode .dash-big-kpi-card,
+.dark-mode .dash-chart-card,
+.dark-mode .dash-habit-breakdown-card,
+.dark-mode .dash-mgmt-container {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .dash-cal-month-title,
+.dark-mode .dash-inspector-header h4,
+.dark-mode .kpi-number,
+.dark-mode .dash-chart-header h4,
+.dark-mode .dash-habit-breakdown-card h4,
+.dark-mode .habit-title,
+.dark-mode .dash-mgmt-header h4,
+.dark-mode .kpi-title {
+    color: #94a3b8;
+}
+
+.dark-mode .kpi-sub {
+    color: #94a3b8;
+}
+
+.dark-mode .dash-mgmt-texts strong {
+    color: #f1f5f9;
+}
+
+.dark-mode .dash-cal-cell {
+    background: #162032;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark-mode .dash-cal-cell .dash-cell-num {
+    color: #cbd5e1;
+}
+
+.dark-mode .dash-cal-cell.is-today {
+    background: #1e1b4b;
+    border-color: #6366f1;
+}
+
+.dark-mode .dash-cal-cell.full {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dark-mode .dash-cal-cell.partial {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.dark-mode .dash-cal-cell.missed {
+    background: rgba(244, 63, 94, 0.12);
+    border-color: rgba(244, 63, 94, 0.35);
+}
+
+.dark-mode .dash-inspector-item,
+.dark-mode .dash-habit-item-card,
+.dark-mode .dash-mgmt-item {
+    background: #162032;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark-mode .dash-inspector-title {
+    color: #f1f5f9;
+}
+
+.dark-mode .habit-insight-text {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.dark-mode .btn-mgmt-reset {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.dark-mode .btn-mgmt-delete {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+/* Start Date field in Routine Creation Modal */
+.start-date-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.start-date-input-row input[type="date"] {
+    flex: 1;
+    font-family: inherit;
+    font-size: 0.88rem;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.start-date-input-row input[type="date"]:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.routine-date-hint {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.routine-form-subhint {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* Day Inspector Retroactive Section */
+.dash-inspector-retroactive-section {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.btn-toggle-retroactive {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 7px 12px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-toggle-retroactive:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    border-color: #94a3b8;
+}
+
+.retroactive-chevron {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.dash-retroactive-list {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dash-inspector-item.retroactive-item {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    opacity: 0.9;
+}
+
+.dash-inspector-badge.unstarted {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    font-size: 0.72rem;
+}
+
+/* Management Tab Start Date Pill */
+.dash-mgmt-start-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    color: #475569;
+}
+
+/* Dark Mode Overrides */
+.dark-mode .start-date-input-row input[type="date"] {
+    background: #162032;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #f1f5f9;
+}
+
+.dark-mode .routine-date-hint {
+    color: #94a3b8;
+}
+
+.dark-mode .routine-form-subhint {
+    color: #94a3b8;
+}
+
+.dark-mode .dash-inspector-retroactive-section {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .btn-toggle-retroactive {
+    background: #162032;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.dark-mode .btn-toggle-retroactive:hover {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .dash-inspector-item.retroactive-item {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .dash-inspector-badge.unstarted {
+    background: #162032;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+}
+
+.dark-mode .dash-mgmt-start-pill {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+}
+
+/* ===================================
+   LOCKED ROUTINES (AFTER 7 DAYS)
+   =================================== */
+
+.routine-item.is-locked {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    opacity: 0.88;
+}
+
+.routine-item.is-locked .routine-checkbox {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.routine-lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.progress-locked-notice {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #b91c1c;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dash-inspector-card.is-locked {
+    border-color: #cbd5e1;
+}
+
+.dash-inspector-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.dash-inspector-locked-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.dash-inspector-tip.is-locked {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.dash-inspector-item.is-locked {
+    opacity: 0.88;
+}
+
+.dash-inspector-label.is-locked {
+    cursor: not-allowed;
+}
+
+.dash-inspector-item.is-locked .dash-inspector-checkbox {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dash-inspector-badge.locked-missed {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.dash-locked-icon {
+    font-size: 0.68rem;
+    line-height: 1;
+}
+
+.dash-cal-cell.is-locked {
+    position: relative;
+}
+
+/* Dark mode overrides for locked routines */
+.dark-mode .routine-item.is-locked {
+    background: #172033;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .routine-lock-badge {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+.dark-mode .progress-locked-notice {
+    color: #fca5a5;
+}
+
+.dark-mode .dash-inspector-card.is-locked {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .dash-inspector-locked-pill {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark-mode .dash-inspector-tip.is-locked {
+    color: #fca5a5;
+}
+
+.dark-mode .dash-inspector-item.is-locked {
+    background: #172033;
+}
+
+.dark-mode .dash-inspector-badge.locked-missed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ===================================
+   SLEEP & WAKE-UP TRACKER (خواب و بیداری)
+   24-Hour Celestial Circadian Curve & Minimalist Actions
+   =================================== */
+
+.sleep-tracker-container {
+    margin-bottom: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sleep-tracker-card {
+    border-radius: 14px;
+    padding: 8px 12px 10px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+    box-sizing: border-box;
+}
+
+.sleep-locked-badge {
+    font-size: 0.72rem;
+    line-height: 1;
+    margin-right: 2px;
+}
+
+.btn-clear-sleep-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+/* ==============================================
+   LIGHT THEME: ADAPTIVE TO DAY & NIGHT
+   ============================================== */
+
+/* 1. Light Theme — Daytime (06:00 to 18:00) */
+.sleep-tracker-card,
+.sleep-tracker-card.is-day {
+    background: linear-gradient(135deg, #ffffff 0%, #fffdf5 45%, #fef3c7 100%);
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    color: #1e293b;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.09), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sleep-tracker-card.is-day .circadian-horizon-line {
+    stroke: rgba(148, 163, 184, 0.35);
+}
+
+.sleep-tracker-card.is-day .circadian-tick {
+    fill: rgba(180, 83, 9, 0.3);
+}
+
+.sleep-tracker-card.is-day .circadian-tick-text {
+    fill: #64748b;
+}
+
+.sleep-tracker-card.is-day .circadian-tick-text.day-highlight {
+    fill: #b45309;
+    font-weight: 800;
+}
+
+.sleep-tracker-card.is-day .circadian-tick-text.night-highlight {
+    fill: #6366f1;
+    font-weight: 700;
+}
+
+.sleep-tracker-card.is-day .day-path {
+    stroke: #f59e0b;
+    opacity: 0.35;
+    stroke-width: 1.5;
+}
+
+.sleep-tracker-card.is-day .day-path.active-path {
+    stroke: #d97706;
+    opacity: 1;
+    stroke-width: 1.8;
+    filter: drop-shadow(0 1px 4px rgba(217, 119, 6, 0.28));
+}
+
+.sleep-tracker-card.is-day .night-path {
+    stroke: #a5b4fc;
+    opacity: 0.35;
+    stroke-width: 1.5;
+}
+
+.sleep-tracker-card.is-day .celestial-sun-disc {
+    fill: #fbbf24;
+    stroke: #d97706;
+    stroke-width: 1.2;
+}
+
+.sleep-tracker-card.is-day .celestial-sun-rays {
+    stroke: #d97706;
+}
+
+.sleep-tracker-card.is-day .celestial-moon-body {
+    fill: #818cf8;
+    stroke: #6366f1;
+    stroke-width: 1;
+}
+
+.sleep-tracker-card.is-day .circadian-controls-row {
+    border-top: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.sleep-tracker-card.is-day .circadian-duration-text {
+    color: #0f172a;
+}
+
+.sleep-tracker-card.is-day .time-chip {
+    background: #ffffff;
+    border: 1px solid rgba(217, 119, 6, 0.24);
+    color: #78350f;
+    box-shadow: 0 1px 2px rgba(245, 158, 11, 0.06);
+}
+
+.sleep-tracker-card.is-day .time-chip:hover {
+    background: #fffdf5;
+    border-color: #d97706;
+}
+
+.sleep-tracker-card.is-day .time-chip:focus-within {
+    border-color: #d97706;
+    background: #fffdf5;
+    outline: 1px solid rgba(217, 119, 6, 0.35);
+}
+
+.sleep-tracker-card.is-day .time-chip svg {
+    color: #d97706;
+    opacity: 0.9;
+}
+
+.sleep-tracker-card.is-day .chip-time-input {
+    color: #0f172a;
+}
+
+.sleep-tracker-card.is-day .btn-circadian-action {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.sleep-tracker-card.is-day .btn-circadian-action:hover:not(:disabled) {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.sleep-tracker-card.is-day .btn-circadian-action.sleep-act:hover:not(:disabled) {
+    background: #eef2ff;
+    border-color: #818cf8;
+    color: #3730a3;
+}
+
+.sleep-tracker-card.is-day .btn-circadian-action.wake-act:hover:not(:disabled) {
+    background: #fffbeb;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.sleep-tracker-card.is-day .btn-clear-sleep-mini {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.sleep-tracker-card.is-day .btn-clear-sleep-mini:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+/* 2. Light Theme — Nighttime (18:00 to 06:00) */
+.sleep-tracker-card.is-night {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 40%, #e0e7ff 100%);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #1e293b;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sleep-tracker-card.is-night .circadian-horizon-line {
+    stroke: rgba(148, 163, 184, 0.32);
+}
+
+.sleep-tracker-card.is-night .circadian-tick {
+    fill: rgba(99, 102, 241, 0.3);
+}
+
+.sleep-tracker-card.is-night .circadian-tick-text {
+    fill: #64748b;
+}
+
+.sleep-tracker-card.is-night .circadian-tick-text.day-highlight {
+    fill: #b45309;
+    font-weight: 700;
+}
+
+.sleep-tracker-card.is-night .circadian-tick-text.night-highlight {
+    fill: #4338ca;
+    font-weight: 800;
+}
+
+.sleep-tracker-card.is-night .night-path {
+    stroke: #818cf8;
+    opacity: 0.35;
+    stroke-width: 1.5;
+}
+
+.sleep-tracker-card.is-night .night-path.active-path {
+    stroke: #6366f1;
+    opacity: 1;
+    stroke-width: 1.8;
+    filter: drop-shadow(0 1px 4px rgba(99, 102, 241, 0.28));
+}
+
+.sleep-tracker-card.is-night .day-path {
+    stroke: #fcd34d;
+    opacity: 0.35;
+    stroke-width: 1.5;
+}
+
+.sleep-tracker-card.is-night .celestial-sun-disc {
+    fill: #fcd34d;
+    stroke: #d97706;
+    stroke-width: 1.2;
+}
+
+.sleep-tracker-card.is-night .celestial-sun-rays {
+    stroke: #f59e0b;
+}
+
+.sleep-tracker-card.is-night .celestial-moon-body {
+    fill: #4f46e5;
+    stroke: #3730a3;
+    stroke-width: 1;
+}
+
+.sleep-tracker-card.is-night .moon-pulse-aura {
+    fill: #6366f1;
+    fill-opacity: 0.2;
+}
+
+.sleep-tracker-card.is-night .circadian-controls-row {
+    border-top: 1px solid rgba(99, 102, 241, 0.16);
+}
+
+.sleep-tracker-card.is-night .circadian-duration-text {
+    color: #0f172a;
+}
+
+.sleep-tracker-card.is-night .time-chip {
+    background: #ffffff;
+    border: 1px solid rgba(99, 102, 241, 0.24);
+    color: #3730a3;
+    box-shadow: 0 1px 2px rgba(99, 102, 241, 0.06);
+}
+
+.sleep-tracker-card.is-night .time-chip:hover {
+    background: #faf5ff;
+    border-color: #6366f1;
+}
+
+.sleep-tracker-card.is-night .time-chip:focus-within {
+    border-color: #6366f1;
+    background: #faf5ff;
+    outline: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.sleep-tracker-card.is-night .time-chip svg {
+    color: #6366f1;
+    opacity: 0.9;
+}
+
+.sleep-tracker-card.is-night .chip-time-input {
+    color: #0f172a;
+}
+
+.sleep-tracker-card.is-night .btn-circadian-action {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.sleep-tracker-card.is-night .btn-circadian-action:hover:not(:disabled) {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.sleep-tracker-card.is-night .btn-circadian-action.sleep-act:hover:not(:disabled) {
+    background: #eef2ff;
+    border-color: #818cf8;
+    color: #3730a3;
+}
+
+.sleep-tracker-card.is-night .btn-circadian-action.wake-act:hover:not(:disabled) {
+    background: #fffbeb;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.sleep-tracker-card.is-night .btn-clear-sleep-mini {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.sleep-tracker-card.is-night .btn-clear-sleep-mini:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+/* 24-Hour Circadian Curve SVG */
+.circadian-curve-wrapper {
+    position: relative;
+    width: 100%;
+    height: 84px;
+    margin: 0 0 2px;
+    overflow: hidden;
+}
+
+.circadian-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+}
+
+.circadian-horizon-line {
+    stroke: rgba(255, 255, 255, 0.16);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+}
+
+.circadian-area-fill {
+    transition: opacity 0.3s;
+}
+
+.circadian-curve-path {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: all 0.3s ease;
+}
+
+.day-path {
+    stroke: #fbbf24;
+    opacity: 0.35;
+}
+
+.day-path.active-path {
+    stroke: #f59e0b;
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.45));
+    stroke-width: 1.8;
+}
+
+.night-path {
+    stroke: #818cf8;
+    opacity: 0.35;
+}
+
+.night-path.active-path {
+    stroke: #a5b4fc;
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.45));
+    stroke-width: 1.8;
+}
+
+.circadian-tick {
+    fill: rgba(255, 255, 255, 0.25);
+}
+
+.circadian-tick-text {
+    fill: #64748b;
+    font-size: 8.5px;
+    font-family: inherit;
+    font-weight: 600;
+    user-select: none;
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-rendering: geometricPrecision;
+}
+
+.circadian-tick-text.day-highlight {
+    fill: #fcd34d;
+    font-weight: 700;
+}
+
+.circadian-tick-text.night-highlight {
+    fill: #c7d2fe;
+    font-weight: 700;
+}
+
+/* Celestial Actors */
+.celestial-actor-group {
+    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: default;
+}
+
+.celestial-actor-group.resting-actor {
+    opacity: 0.3;
+}
+
+@keyframes sunPulseLive {
+    0%, 100% { transform: scale(0.9); opacity: 0.6; }
+    50% { transform: scale(1.25); opacity: 1; }
+}
+
+.sun-pulse-aura {
+    animation: sunPulseLive 3s infinite ease-in-out;
+    transform-origin: 0 0;
+}
+
+@keyframes sunSpinLive {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.sun-mini-rays {
+    animation: sunSpinLive 16s linear infinite;
+    transform-origin: 0 0;
+}
+
+@keyframes moonPulseLive {
+    0%, 100% { transform: scale(0.9); opacity: 0.4; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.moon-pulse-aura {
+    animation: moonPulseLive 3.2s infinite ease-in-out;
+    transform-origin: 0 0;
+}
+
+/* Circadian Controls Row */
+.circadian-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.circadian-status-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.circadian-duration-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    justify-content: center;
+}
+
+.circadian-row-top {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.circadian-row-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.circadian-duration-text {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #f8fafc;
+    line-height: 1.2;
+}
+
+.circadian-times-summary,
+.circadian-single-time,
+.circadian-lastnight-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #475569;
+}
+
+.sleep-tracker-card.is-day .circadian-times-summary,
+.sleep-tracker-card.is-day .circadian-single-time,
+.sleep-tracker-card.is-day .circadian-lastnight-tag {
+    color: #78350f;
+}
+
+.sleep-tracker-card.is-night .circadian-times-summary,
+.sleep-tracker-card.is-night .circadian-single-time,
+.sleep-tracker-card.is-night .circadian-lastnight-tag {
+    color: #3730a3;
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-times-summary,
+.dark-mode .sleep-tracker-card.is-day .circadian-single-time,
+.dark-mode .sleep-tracker-card.is-day .circadian-lastnight-tag {
+    color: #fde68a;
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-times-summary,
+.dark-mode .sleep-tracker-card.is-night .circadian-single-time,
+.dark-mode .sleep-tracker-card.is-night .circadian-lastnight-tag {
+    color: #c7d2fe;
+}
+
+.circadian-quality-pill {
+    font-size: 0.66rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 6px;
+    border: 1px solid;
+}
+
+.circadian-quality-pill.optimal {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #047857;
+}
+
+.circadian-quality-pill.fair {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #1d4ed8;
+}
+
+.circadian-quality-pill.short {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #b45309;
+}
+
+.circadian-quality-pill.long {
+    background: rgba(139, 92, 246, 0.12);
+    border-color: rgba(139, 92, 246, 0.35);
+    color: #6d28d9;
+}
+
+.dark-mode .circadian-quality-pill.optimal {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+}
+
+.dark-mode .circadian-quality-pill.fair {
+    background: rgba(59, 130, 246, 0.16);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+}
+
+.dark-mode .circadian-quality-pill.short {
+    background: rgba(245, 158, 11, 0.16);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fcd34d;
+}
+
+.dark-mode .circadian-quality-pill.long {
+    background: rgba(139, 92, 246, 0.16);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #c4b5fd;
+}
+
+.circadian-time-chips {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.time-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 2px 5px;
+    color: #94a3b8;
+    height: 24px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.time-chip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.24);
+    color: #f8fafc;
+}
+
+.time-chip:focus-within {
+    border-color: #818cf8;
+    background: rgba(129, 140, 248, 0.12);
+    color: #ffffff;
+}
+
+.time-chip svg {
+    flex-shrink: 0;
+    opacity: 0.75;
+}
+
+.time-chip-sep {
+    font-size: 0.6rem;
+    color: #64748b;
+    opacity: 0.7;
+}
+
+.chip-time-input {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: #f1f5f9;
+    font-family: inherit;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 0;
+    width: 44px;
+    min-width: 44px;
+    max-width: 46px;
+    text-align: center;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.chip-time-input::-webkit-calendar-picker-indicator,
+.chip-time-input::-webkit-inner-spin-button,
+.chip-time-input::-webkit-clear-button {
+    display: none !important;
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.chip-time-input:focus {
+    outline: none;
+    color: #ffffff;
+}
+
+.chip-time-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Quick Action Buttons (Expanding Hover Pill) */
+.circadian-quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-circadian-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.btn-circadian-action .btn-action-text {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: inherit;
+    transition: max-width 0.25s ease, opacity 0.2s ease, margin 0.2s ease;
+    margin-right: 0;
+}
+
+.btn-circadian-action:hover:not(:disabled) {
+    padding: 0 10px;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-circadian-action:hover:not(:disabled) .btn-action-text {
+    max-width: 100px;
+    opacity: 1;
+}
+
+.btn-circadian-action.sleep-act:hover:not(:disabled) {
+    background: rgba(129, 140, 248, 0.25);
+    border-color: rgba(129, 140, 248, 0.5);
+    color: #e0e7ff;
+}
+
+.btn-circadian-action.wake-act:hover:not(:disabled) {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fef3c7;
+}
+
+/* Sleepy Coffee Emoji Icon inside Wake Action */
+.btn-circadian-action.wake-act .sleepy-coffee-icon {
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-circadian-action.wake-act:hover:not(:disabled) .sleepy-coffee-icon {
+    transform: scale(1.12) rotate(-4deg);
+}
+
+/* Steam lines: STATIC by default when idle */
+.btn-circadian-action.wake-act .steam-line {
+    opacity: 0.4;
+    transition: opacity 0.25s ease;
+}
+
+/* Playful floating steam animation - HOVER ONLY */
+@keyframes steamFloat {
+    0% { transform: translateY(0) scaleX(1); opacity: 0.45; }
+    50% { transform: translateY(-2.5px) scaleX(1.15); opacity: 0.9; }
+    100% { transform: translateY(-4.5px) scaleX(0.9); opacity: 0.25; }
+}
+
+.btn-circadian-action.wake-act:hover:not(:disabled) .steam-1 {
+    animation: steamFloat 1.8s ease-in-out infinite alternate;
+    transform-origin: bottom center;
+}
+
+.btn-circadian-action.wake-act:hover:not(:disabled) .steam-2 {
+    animation: steamFloat 2.2s ease-in-out infinite 0.5s alternate;
+    transform-origin: bottom center;
+}
+
+/* Zzz Icon inside Sleep Action */
+.btn-circadian-action.sleep-act .zzz-svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.btn-circadian-action.sleep-act .zzz-path {
+    transform-origin: center;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* Zzz Floating Dream Animation - HOVER ONLY */
+@keyframes zzzFloat1 {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+    50% { transform: translateY(-2px) scale(1.15); opacity: 1; }
+}
+@keyframes zzzFloat2 {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.85; }
+    50% { transform: translateY(-2.5px) scale(1.18); opacity: 1; }
+}
+@keyframes zzzFloat3 {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+    50% { transform: translateY(-3px) scale(1.22); opacity: 1; }
+}
+
+.btn-circadian-action.sleep-act:hover:not(:disabled) .zzz-p1 {
+    animation: zzzFloat1 1.5s ease-in-out infinite alternate;
+}
+
+.btn-circadian-action.sleep-act:hover:not(:disabled) .zzz-p2 {
+    animation: zzzFloat2 1.5s ease-in-out infinite 0.2s alternate;
+}
+
+.btn-circadian-action.sleep-act:hover:not(:disabled) .zzz-p3 {
+    animation: zzzFloat3 1.5s ease-in-out infinite 0.4s alternate;
+}
+
+.btn-circadian-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+/* Day Inspector Sleep Pill */
+.dash-inspector-sleep-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    color: #f8fafc;
+    font-size: 0.74rem;
+    font-weight: 700;
+    margin-top: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sleep-pill-quality.optimal { color: #6ee7b7; }
+.sleep-pill-quality.fair { color: #93c5fd; }
+.sleep-pill-quality.short { color: #fcd34d; }
+.sleep-pill-quality.long { color: #c4b5fd; }
+
+/* ==============================================
+   DARK THEME: ADAPTIVE TO DAY & NIGHT
+   ============================================== */
+
+/* 1. Dark Theme — Daytime (06:00 to 18:00) */
+.dark-mode .sleep-tracker-card,
+.dark-mode .sleep-tracker-card.is-day {
+    background: linear-gradient(135deg, #13171f 0%, #1a1e28 50%, #292318 100%);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #f8fafc;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(245, 158, 11, 0.15);
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-horizon-line {
+    stroke: rgba(255, 255, 255, 0.16);
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-tick {
+    fill: rgba(255, 255, 255, 0.25);
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-tick-text {
+    fill: #64748b;
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-tick-text.day-highlight {
+    fill: #fcd34d;
+    font-weight: 700;
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-tick-text.night-highlight {
+    fill: #c7d2fe;
+    font-weight: 700;
+}
+
+.dark-mode .sleep-tracker-card.is-day .day-path.active-path {
+    stroke: #f59e0b;
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.45));
+    stroke-width: 1.8;
+}
+
+.dark-mode .sleep-tracker-card.is-day .night-path {
+    stroke: #818cf8;
+    opacity: 0.35;
+    stroke-width: 1.5;
+}
+
+.dark-mode .sleep-tracker-card.is-day .celestial-sun-disc {
+    fill: #fde047;
+    stroke: #d97706;
+    stroke-width: 1.2;
+}
+
+.dark-mode .sleep-tracker-card.is-day .celestial-sun-rays {
+    stroke: #f59e0b;
+}
+
+.dark-mode .sleep-tracker-card.is-day .celestial-moon-body {
+    fill: #e0e7ff;
+    stroke: #a5b4fc;
+    stroke-width: 1;
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-controls-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .sleep-tracker-card.is-day .circadian-duration-text {
+    color: #f8fafc;
+}
+
+.dark-mode .sleep-tracker-card.is-day .time-chip {
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #fde68a;
+    box-shadow: none;
+}
+
+.dark-mode .sleep-tracker-card.is-day .time-chip:hover {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.dark-mode .sleep-tracker-card.is-day .time-chip:focus-within {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.dark-mode .sleep-tracker-card.is-day .time-chip svg {
+    color: #fbbf24;
+}
+
+.dark-mode .sleep-tracker-card.is-day .chip-time-input {
+    color: #f8fafc;
+}
+
+.dark-mode .sleep-tracker-card.is-day .btn-circadian-action {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #cbd5e1;
+    box-shadow: none;
+}
+
+.dark-mode .sleep-tracker-card.is-day .btn-circadian-action.sleep-act:hover:not(:disabled) {
+    background: rgba(129, 140, 248, 0.25);
+    border-color: rgba(129, 140, 248, 0.5);
+    color: #e0e7ff;
+}
+
+.dark-mode .sleep-tracker-card.is-day .btn-circadian-action.wake-act:hover:not(:disabled) {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fef3c7;
+}
+
+.dark-mode .sleep-tracker-card.is-day .btn-clear-sleep-mini {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+}
+
+.dark-mode .sleep-tracker-card.is-day .btn-clear-sleep-mini:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+/* 2. Dark Theme — Nighttime (18:00 to 06:00) */
+.dark-mode .sleep-tracker-card.is-night {
+    background: linear-gradient(135deg, #070b14 0%, #0d1322 50%, #16183a 100%);
+    border: 1px solid rgba(129, 140, 248, 0.2);
+    color: #f8fafc;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(129, 140, 248, 0.12);
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-horizon-line {
+    stroke: rgba(255, 255, 255, 0.16);
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-tick {
+    fill: rgba(255, 255, 255, 0.25);
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-tick-text {
+    fill: #64748b;
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-tick-text.day-highlight {
+    fill: #fcd34d;
+    font-weight: 700;
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-tick-text.night-highlight {
+    fill: #c7d2fe;
+    font-weight: 700;
+}
+
+.dark-mode .sleep-tracker-card.is-night .night-path.active-path {
+    stroke: #a5b4fc;
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.45));
+    stroke-width: 1.8;
+}
+
+.dark-mode .sleep-tracker-card.is-night .day-path {
+    stroke: #fbbf24;
+    opacity: 0.35;
+    stroke-width: 1.5;
+}
+
+.dark-mode .sleep-tracker-card.is-night .celestial-sun-disc {
+    fill: #fbbf24;
+    stroke: #d97706;
+    stroke-width: 1.2;
+}
+
+.dark-mode .sleep-tracker-card.is-night .celestial-sun-rays {
+    stroke: #f59e0b;
+}
+
+.dark-mode .sleep-tracker-card.is-night .celestial-moon-body {
+    fill: #e0e7ff;
+    stroke: #a5b4fc;
+    stroke-width: 1;
+}
+
+.dark-mode .sleep-tracker-card.is-night .moon-pulse-aura {
+    fill: #818cf8;
+    fill-opacity: 0.25;
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-controls-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .sleep-tracker-card.is-night .circadian-duration-text {
+    color: #f8fafc;
+}
+
+.dark-mode .sleep-tracker-card.is-night .time-chip {
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid rgba(129, 140, 248, 0.22);
+    color: #c7d2fe;
+    box-shadow: none;
+}
+
+.dark-mode .sleep-tracker-card.is-night .time-chip:hover {
+    border-color: #818cf8;
+    background: rgba(129, 140, 248, 0.12);
+}
+
+.dark-mode .sleep-tracker-card.is-night .time-chip:focus-within {
+    border-color: #818cf8;
+    background: rgba(129, 140, 248, 0.15);
+}
+
+.dark-mode .sleep-tracker-card.is-night .time-chip svg {
+    color: #818cf8;
+}
+
+.dark-mode .sleep-tracker-card.is-night .chip-time-input {
+    color: #f8fafc;
+}
+
+.dark-mode .sleep-tracker-card.is-night .btn-circadian-action {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #cbd5e1;
+    box-shadow: none;
+}
+
+.dark-mode .sleep-tracker-card.is-night .btn-circadian-action.sleep-act:hover:not(:disabled) {
+    background: rgba(129, 140, 248, 0.25);
+    border-color: rgba(129, 140, 248, 0.5);
+    color: #e0e7ff;
+}
+
+.dark-mode .sleep-tracker-card.is-night .btn-circadian-action.wake-act:hover:not(:disabled) {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fef3c7;
+}
+
+.dark-mode .sleep-tracker-card.is-night .btn-clear-sleep-mini {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+}
+
+.dark-mode .sleep-tracker-card.is-night .btn-clear-sleep-mini:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+/* Edit action button hover */
+.btn-circadian-action.edit-act:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #059669;
+}
+
+.dark-mode .btn-circadian-action.edit-act:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
+}
+
+/* Calendar Cell Sleep Badge */
+.dash-cell-sleep-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: #eef2ff;
+    color: #4338ca;
+    line-height: 1.1;
+    margin-right: auto;
+}
+
+.dark-mode .dash-cell-sleep-badge {
+    background: rgba(99, 102, 241, 0.2);
+    color: #c7d2fe;
+}
+
+.dash-cell-sleep-badge.optimal {
+    background: #ecfdf5;
+    color: #059669;
+}
+.dark-mode .dash-cell-sleep-badge.optimal {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.dash-cell-sleep-badge.short {
+    background: #fffbeb;
+    color: #d97706;
+}
+.dark-mode .dash-cell-sleep-badge.short {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+}
+
+/* Day Inspector Sleep Box */
+.dash-inspector-sleep-box {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+    transition: all 0.25s ease;
+}
+
+.dash-inspector-sleep-box.is-locked {
+    opacity: 0.8;
+    background: #f8fafc;
+}
+
+.dark-mode .dash-inspector-sleep-box {
+    background: linear-gradient(135deg, #181d29 0%, #1e2433 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .dash-inspector-sleep-box.is-locked {
+    background: #151821;
+}
+
+.dash-inspector-sleep-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dash-inspector-sleep-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dark-mode .dash-inspector-sleep-title {
+    color: #f1f5f9;
+}
+
+.dash-sleep-sublabel {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.08);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.dark-mode .dash-sleep-sublabel {
+    color: #a5b4fc;
+    background: rgba(165, 180, 252, 0.12);
+}
+
+.dash-sleep-lock-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.15);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.btn-inspector-clear-sleep {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-inspector-clear-sleep:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+.dark-mode .btn-inspector-clear-sleep {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+}
+
+.dark-mode .btn-inspector-clear-sleep:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+.dash-inspector-sleep-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.dash-sleep-input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dash-sleep-input-lbl {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.dark-mode .dash-sleep-input-lbl {
+    color: #94a3b8;
+}
+
+.dash-sleep-input-field {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dash-sleep-input-field:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.dash-sleep-input-field:disabled {
+    cursor: not-allowed;
+    background: #f1f5f9;
+    color: #94a3b8;
+    opacity: 0.7;
+}
+
+.dark-mode .dash-sleep-input-field {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+}
+
+.dark-mode .dash-sleep-input-field:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25);
+}
+
+.dark-mode .dash-sleep-input-field:disabled {
+    background: #1e2433;
+    color: #64748b;
+}
+
+.dash-sleep-calc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: auto;
+}
+
+.dash-sleep-calc-dur {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dark-mode .dash-sleep-calc-dur {
+    color: #f8fafc;
+}
+
+.dash-sleep-calc-empty {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Sleep & Circadian Analytics Section (Tab 2) */
+.dash-sleep-analytics-section {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.dark-mode .dash-sleep-analytics-section {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.dash-sleep-analytics-section .dash-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dash-sleep-analytics-section .dash-section-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.dark-mode .dash-sleep-analytics-section .dash-section-header h4 {
+    color: #f8fafc;
+}
+
+.dash-sleep-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.dash-sleep-legend .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 3px;
+}
+
+.dash-sleep-legend .dot.optimal { background: #10b981; }
+.dash-sleep-legend .dot.fair { background: #38bdf8; }
+.dash-sleep-legend .dot.short { background: #f59e0b; }
+
+.sleep-kpi-grid .sleep-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+}
+
+.dark-mode .sleep-kpi-grid .sleep-card {
+    background: linear-gradient(135deg, #131722 0%, #1c2030 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sleep-chart-card {
+    margin-top: 14px;
+}
+
+.dash-chart-target-hint {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #059669;
+    background: #ecfdf5;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.dark-mode .dash-chart-target-hint {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+}
+
+.dash-sleep-insight-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #1e1b4b;
+}
+
+.dark-mode .dash-sleep-insight-card {
+    background: linear-gradient(135deg, #121528 0%, #1e2142 100%);
+    border-color: rgba(129, 140, 248, 0.25);
+    color: #e0e7ff;
+}
+
+.dash-sleep-insight-card .sleep-insight-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.dash-sleep-insight-card .sleep-insight-content {
+    flex: 1;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.dash-sleep-insight-card .sleep-insight-content strong {
+    display: block;
+    margin-bottom: 2px;
+    color: #312e81;
+}
+
+.dark-mode .dash-sleep-insight-card .sleep-insight-content strong {
+    color: #a5b4fc;
+}
+
+.dash-sleep-insight-card .sleep-insight-content p {
+    margin: 0;
+}
+
+/* ----------------------
+   LTR ADAPTATIONS
+---------------------- */
+html[dir="ltr"] .dash-cell-sleep-badge {
+    margin-right: 0;
+    margin-left: auto;
 }
