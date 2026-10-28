@@ -1400,11 +1400,6 @@ function updateRoutinePanel(deadlineKey) {
                                 <div class="stopwatch-display">
                                     <span class="timer-digits">${elapsedFormatted}</span>
                                 </div>
-                                <div class="stopwatch-target-pill ${isGoalReached ? 'goal-reached' : ''}">
-                                    <span class="target-icon">${isGoalReached ? '🎉' : '⏱️'}</span>
-                                    <span class="target-text">${targetBadgeTextShort}</span>
-                                    <span class="target-percent">${fd(progressPercent)}%</span>
-                                </div>
                             </div>
                         </div>
                     </div>
