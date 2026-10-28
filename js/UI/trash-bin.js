@@ -58,9 +58,20 @@ function openTrashModal() {
     trashModal.classList.remove("hidden");
 }
 
-function closeTrashModal() {
+function closeTrashModal(immediate = false) {
     if (!trashModal) return;
-    trashModal.classList.add("hidden");
+    if (immediate) {
+        trashModal.classList.add("hidden");
+        trashModal.classList.remove("is-closing");
+        return;
+    }
+    trashModal.classList.add("is-closing");
+    setTimeout(() => {
+        if (trashModal.classList.contains("is-closing")) {
+            trashModal.classList.add("hidden");
+            trashModal.classList.remove("is-closing");
+        }
+    }, 200);
 }
 
 function renderTrashModal() {

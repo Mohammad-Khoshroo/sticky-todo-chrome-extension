@@ -240,6 +240,22 @@
     100% { transform: scale(1); opacity: 1; }
 }
 
+.routine-modal.is-closing {
+    pointer-events: none;
+    opacity: 0;
+}
+
+.routine-modal.is-closing .routine-modal-content {
+    transform: scale(0.92);
+    opacity: 0;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+}
+
+.routine-modal.is-closing .routine-modal-backdrop {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
 .routine-modal-header {
     display: flex;
     justify-content: space-between;
@@ -576,7 +592,12 @@
 }
 
 .side-panel.collapsed .side-panel-body {
-    display: none !important;
+    max-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    opacity: 0;
+    overflow: hidden !important;
+    pointer-events: none;
 }
 
 .side-panel-header {
@@ -704,8 +725,11 @@
 .side-panel-body {
     max-height: 520px;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 8px 10px;
-    transition: max-height 0.25s ease;
+    transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+                padding 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+                opacity 0.2s ease;
 }
 
 .btn-add-routine-chip.hidden,
@@ -811,6 +835,28 @@
     border-radius: 18px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
     border: 1px solid #e2e8f0;
+    animation: dashboardModalIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dashboardModalIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.routine-dashboard-modal.is-closing {
+    pointer-events: none;
+    opacity: 0;
+}
+
+.routine-dashboard-modal.is-closing .routine-dashboard-content {
+    transform: translateY(16px) scale(0.96);
+    opacity: 0;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+}
+
+.routine-dashboard-modal.is-closing .routine-modal-backdrop {
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .routine-dashboard-header {
@@ -3502,4 +3548,580 @@
 html[dir="ltr"] .dash-cell-sleep-badge {
     margin-right: 0;
     margin-left: auto;
+}
+
+
+/* ----------------------
+   ROUTINE TIMER (TARGET STOPWATCH)
+---------------------- */
+
+/* Timer options in Add Routine Modal */
+.routine-timer-toggle-group {
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+
+.routine-checkbox-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    user-select: none;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.routine-checkbox-toggle-label:hover {
+    background: #e5e7eb;
+}
+
+.routine-checkbox-toggle-label input[type="checkbox"] {
+    accent-color: #4f46e5;
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+}
+
+.routine-timer-duration-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.timer-duration-input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: #4b5563;
+    flex: 1;
+}
+
+.timer-duration-input-group input {
+    width: 50px;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+}
+
+.timer-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.timer-chip {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.timer-chip:hover {
+    background: #e0e7ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+.timer-chip.active {
+    background: #4f46e5;
+    color: #ffffff;
+    border-color: #4338ca;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+}
+
+.routine-close-behavior-row {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.routine-close-behavior-row .sub-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.routine-select {
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: #374151;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Timed Routine Item Layout in Side Panel */
+.routine-item.is-timed {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.routine-item-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.routine-badge.timer-target-badge {
+    background: #ede9fe;
+    color: #6d28d9;
+    border: 1px solid #ddd6fe;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+/* Stopwatch / Focus Chronometer Widget */
+.routine-timer-widget {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #f8faff 0%, #f1f5f9 100%);
+    border: 1px solid #e0e7ff;
+    border-radius: 12px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.25s ease;
+}
+
+.routine-timer-widget[data-is-running="true"] {
+    background: linear-gradient(135deg, #eef2ff 0%, #f8faff 100%);
+    border-color: #c7d2fe;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.routine-timer-widget.goal-reached {
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    border-color: #a7f3d0;
+}
+
+/* 1. Circular Stopwatch Dial */
+.routine-stopwatch-dial {
+    position: relative;
+    width: 46px;
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.stopwatch-crown {
+    width: 10px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 2px 2px 0 0;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.routine-timer-widget[data-is-running="true"] .stopwatch-crown {
+    background: #6366f1;
+    box-shadow: 0 -1px 4px rgba(99, 102, 241, 0.5);
+}
+
+.routine-timer-widget.goal-reached .stopwatch-crown {
+    background: #10b981;
+    box-shadow: 0 -1px 4px rgba(16, 185, 129, 0.5);
+}
+
+.stopwatch-ring-wrapper {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stopwatch-ring-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 46px;
+    height: 46px;
+    pointer-events: none;
+}
+
+.stopwatch-ring-bg {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.08);
+    stroke-width: 3.5;
+}
+
+.stopwatch-ring-fill {
+    fill: none;
+    stroke: #6366f1;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-dasharray: 119.4;
+    stroke-dashoffset: 119.4;
+    transform: rotate(-90deg);
+    transform-origin: 23px 23px;
+    transition: stroke-dashoffset 0.35s ease, stroke 0.25s ease;
+}
+
+.routine-timer-widget[data-is-running="true"] .stopwatch-ring-fill {
+    stroke: #4f46e5;
+    filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.6));
+}
+
+.stopwatch-ring-fill.goal-reached,
+.routine-timer-widget.goal-reached .stopwatch-ring-fill {
+    stroke: #10b981 !important;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.7)) !important;
+}
+
+/* Play / Pause Central Button */
+.routine-timer-btn-toggle {
+    position: relative;
+    z-index: 2;
+    width: 29px;
+    height: 29px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    color: #4b5563;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 #ffffff;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    padding: 0;
+}
+
+.routine-timer-btn-toggle:hover {
+    transform: scale(1.08);
+    background: #f8fafc;
+    color: #1e293b;
+    border-color: rgba(0, 0, 0, 0.18);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+.routine-timer-btn-toggle.is-running {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #ffffff;
+    border-color: #4338ca;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    animation: stopwatchButtonThrob 2s infinite ease-in-out;
+}
+
+@keyframes stopwatchButtonThrob {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4), 0 2px 6px rgba(79, 70, 229, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 2px 6px rgba(79, 70, 229, 0.35);
+    }
+}
+
+.routine-timer-locked-icon {
+    font-size: 0.95rem;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 2. Stopwatch Info & Readout */
+.routine-stopwatch-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.routine-stopwatch-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.stopwatch-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.stopwatch-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #94a3b8;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.stopwatch-status-dot.is-ready {
+    background: #94a3b8;
+}
+
+.stopwatch-status-dot.is-running {
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: liveDotPulse 1.6s infinite ease-out;
+}
+
+.stopwatch-status-dot.is-paused {
+    background: #f59e0b;
+}
+
+.stopwatch-status-dot.is-done {
+    background: #10b981;
+}
+
+@keyframes liveDotPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.stopwatch-status-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.routine-timer-btn-reset {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.routine-timer-btn-reset:hover {
+    color: #ef4444;
+    border-color: #fca5a5;
+    background: #fef2f2;
+    transform: scale(1.08);
+}
+
+.routine-stopwatch-row-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.stopwatch-display {
+    display: inline-flex;
+    align-items: baseline;
+}
+
+.stopwatch-display .timer-digits {
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1;
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+
+.routine-timer-widget[data-is-running="true"] .timer-digits {
+    color: #4f46e5;
+}
+
+.stopwatch-target-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #475569;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #e2e8f0;
+    padding: 2px 7px;
+    border-radius: 999px;
+    direction: ltr;
+    unicode-bidi: isolate;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.stopwatch-target-pill .target-percent {
+    font-weight: 700;
+    color: #4f46e5;
+}
+
+.stopwatch-target-pill.goal-reached {
+    background: #d1fae5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.stopwatch-target-pill.goal-reached .target-percent {
+    color: #059669;
+}
+
+/* Recovery Prompt Banner */
+.routine-recovery-banner {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: bannerSlideDown 0.3s ease-out;
+}
+
+@keyframes bannerSlideDown {
+    from { transform: translateY(-8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.recovery-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #166534;
+    margin-bottom: 4px;
+}
+
+.recovery-banner-header strong {
+    flex: 1;
+}
+
+.recovery-close-btn {
+    border: none;
+    background: transparent;
+    color: #15803d;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0;
+}
+
+.recovery-desc {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #374151;
+    margin: 0 0 8px 0;
+}
+
+.recovery-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-recovery-accept {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-recovery-accept:hover {
+    background: #15803d;
+}
+
+.btn-recovery-reject {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    background: transparent;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-recovery-reject:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+/* Management Tab and Day Inspector Badges */
+.dash-mgmt-timer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #ede9fe;
+    color: #6d28d9;
+    border: 1px solid #ddd6fe;
+}
+
+.dash-inspector-timer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    background: #ede9fe;
+    color: #6d28d9;
+    margin-inline-start: 4px;
 }

@@ -202,15 +202,29 @@ function openReminderModal() {
     document.body.classList.add("modal-open");
 }
 
-function closeReminderModal() {
+function closeReminderModal(immediate = false) {
     if (typeof closeExpandedCalendar === "function") {
-        closeExpandedCalendar();
+        closeExpandedCalendar(immediate);
     }
     const modal = document.getElementById("reminder-modal");
-    if (modal) {
-        modal.classList.add("hidden");
+    if (!modal) {
+        document.body.classList.remove("modal-open");
+        return;
     }
-    document.body.classList.remove("modal-open");
+    if (immediate) {
+        modal.classList.add("hidden");
+        modal.classList.remove("is-closing");
+        document.body.classList.remove("modal-open");
+        return;
+    }
+    modal.classList.add("is-closing");
+    setTimeout(() => {
+        if (modal.classList.contains("is-closing")) {
+            modal.classList.add("hidden");
+            modal.classList.remove("is-closing");
+            document.body.classList.remove("modal-open");
+        }
+    }, 200);
 }
 
 function renderReminderModalContent(modal) {
@@ -561,7 +575,7 @@ function jumpToNoteOnFridge(noteIndex, taskIndex) {
             if (taskIndex !== undefined) {
                 const taskInputs = noteEl.querySelectorAll(".note-task-text");
                 if (taskInputs && taskInputs[taskIndex]) {
-                    taskInputs[taskIndex].focus();
+                    taskInputs[taskIndex].focus({ preventScroll: true });
                 }
             }
         }

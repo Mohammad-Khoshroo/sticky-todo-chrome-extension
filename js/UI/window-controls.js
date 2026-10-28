@@ -9,10 +9,14 @@ function checkWindowMaximized() {
     }
 }
 
+let resizeDebounceTimer = null;
 window.addEventListener('resize', () => {
     checkWindowMaximized();
-    if (typeof updateNotesLayout === 'function') {
-        updateNotesLayout();
-    }
+    if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
+    resizeDebounceTimer = setTimeout(() => {
+        if (typeof msnry !== 'undefined' && msnry && typeof msnry.layout === 'function') {
+            msnry.layout();
+        }
+    }, 150);
 });
 checkWindowMaximized();

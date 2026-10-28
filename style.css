@@ -37,7 +37,7 @@ body {
     margin: 0;
     padding: 30px;
     padding-top: 45px;
-    padding-right: 455px;
+    padding-right: 525px;
     height: 100vh;
     box-sizing: border-box;
     overflow-y: auto;
@@ -74,7 +74,7 @@ body.calendar-closed {
 ---------------------- */
 html[dir="ltr"] body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
-    padding-left: 455px;
+    padding-left: 525px;
     padding-right: 30px;
 }
 

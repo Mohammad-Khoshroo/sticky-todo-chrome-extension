@@ -219,7 +219,11 @@ taskContextMenu.addEventListener("click", (e) => {
         note.tasks.splice(taskIndex, 1);
 
         saveNotes();
-        renderAllNotes();
+        if (typeof refreshSingleNoteOnFridge === 'function') {
+            refreshSingleNoteOnFridge(note);
+        } else {
+            renderAllNotes();
+        }
         closeTaskContextMenu();
         return;
     }

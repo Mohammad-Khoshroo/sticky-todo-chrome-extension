@@ -59,11 +59,16 @@ function renderStackWrapper(stackId, stackNotes) {
     wrapper.dataset.noteId = currentNote.id;
     wrapper.draggable = true;
 
+    if (stacks[stackId]?.layout && !noteLayouts[stackId]) {
+        noteLayouts[stackId] = stacks[stackId].layout;
+    }
     if (!noteLayouts[stackId]) {
         noteLayouts[stackId] = createRandomNoteLayout({ tasks: [] });
+        if (stacks[stackId]) stacks[stackId].layout = noteLayouts[stackId];
     }
     const layout = noteLayouts[stackId];
     wrapper.style.transform = `rotate(${layout.wrapperRotation}deg)`;
+    wrapper.style.setProperty('--note-rot', `${layout.wrapperRotation}deg`);
     wrapper.style.marginTop = `${layout.marginTop}px`;
     wrapper.style.marginLeft = `${layout.marginLeft}px`;
 
@@ -139,6 +144,14 @@ function renderStackWrapper(stackId, stackNotes) {
     wrapper.appendChild(headerPaper);
 
     // 2. Physical Paper Layers & Active Note Paper
+    const pileContainer = renderStackPileContainer(stackId, stackNotes, activeIdx);
+    wrapper.appendChild(pileContainer);
+    return wrapper;
+}
+
+function renderStackPileContainer(stackId, stackNotes, activeIdx) {
+    const currentNote = stackNotes[activeIdx];
+    const currentNoteIndex = notes.indexOf(currentNote);
     const pileContainer = document.createElement('div');
     pileContainer.className = 'stack-pile-container';
 
@@ -173,8 +186,12 @@ function renderStackWrapper(stackId, stackNotes) {
     // Active Note Paper inside Pile
     let taskOffset = 0;
     let pageIndex = 0;
+    if (currentNote.layout && !noteLayouts[currentNote.id]) {
+        noteLayouts[currentNote.id] = currentNote.layout;
+    }
     if (!noteLayouts[currentNote.id]) {
         noteLayouts[currentNote.id] = createRandomNoteLayout(currentNote);
+        currentNote.layout = noteLayouts[currentNote.id];
     }
     const currentNoteLayout = noteLayouts[currentNote.id];
 
@@ -183,8 +200,11 @@ function renderStackWrapper(stackId, stackNotes) {
         const pageTasks = (currentNote.tasks || []).slice(taskOffset, taskOffset + tasksLimit);
 
         const noteDiv = document.createElement('div');
-        const rotationAngle = currentNoteLayout.pageRotations[pageIndex] ?? 0;
+        const rotationAngle = (currentNoteLayout.pageRotations && currentNoteLayout.pageRotations[pageIndex] !== undefined)
+            ? currentNoteLayout.pageRotations[pageIndex]
+            : 0;
         noteDiv.style.transform = `rotate(${rotationAngle}deg)`;
+        noteDiv.style.setProperty('--page-rot', `${rotationAngle}deg`);
         noteDiv.className = `note-paper ${currentNote.colorClass} ${activeNoteIndex === currentNoteIndex ? 'active' : ''}`;
         noteDiv.dataset.noteIndex = currentNoteIndex;
 
@@ -219,8 +239,7 @@ function renderStackWrapper(stackId, stackNotes) {
         pageIndex++;
     } while (taskOffset < (currentNote.tasks ? currentNote.tasks.length : 0));
 
-    wrapper.appendChild(pileContainer);
-    return wrapper;
+    return pileContainer;
 }
 
 function switchStackActiveNote(stackId, targetNoteId) {
@@ -238,19 +257,39 @@ function switchStackActiveNote(stackId, targetNoteId) {
         saveNotes();
     }
 
-    const oldWrapper = document.querySelector(`.note-wrapper[data-stack-id="${stackId}"]`);
-    if (oldWrapper && typeof getStackNotes === "function") {
+    const wrapper = document.querySelector(`.note-wrapper[data-stack-id="${stackId}"]`);
+    if (wrapper && typeof getStackNotes === "function") {
         const stackNotes = getStackNotes(stackId);
-        const newWrapper = renderStackWrapper(stackId, stackNotes);
-        oldWrapper.replaceWith(newWrapper);
+        let activeIdx = stackNotes.findIndex(n => n.id === targetNoteId);
+        if (activeIdx === -1) activeIdx = 0;
+        const currentNote = stackNotes[activeIdx];
+
+        wrapper.dataset.noteId = currentNote.id;
+        activeNoteIndex = notes.indexOf(currentNote);
+
+        const counterBadge = wrapper.querySelector('.stack-paper-counter');
+        if (counterBadge) {
+            counterBadge.textContent = `${toFarsiNumber(activeIdx + 1)}/${toFarsiNumber(stackNotes.length)}`;
+        }
+
+        const prevHeight = wrapper.offsetHeight;
+        const oldPile = wrapper.querySelector('.stack-pile-container');
+        const newPile = renderStackPileContainer(stackId, stackNotes, activeIdx);
+        if (oldPile) {
+            oldPile.replaceWith(newPile);
+        } else {
+            wrapper.appendChild(newPile);
+        }
+
         if (typeof autoResizeTextareas === "function") {
             autoResizeTextareas();
         }
-        if (typeof msnry !== "undefined" && msnry && typeof msnry.reloadItems === "function") {
-            msnry.reloadItems();
+
+        const newHeight = wrapper.offsetHeight;
+        if (prevHeight !== newHeight && typeof msnry !== "undefined" && msnry && typeof msnry.layout === "function") {
             msnry.layout();
         }
-        return newWrapper;
+        return wrapper;
     }
     return null;
 }
@@ -274,6 +313,152 @@ function syncFridgeTaskCheckbox(noteIndex, taskIndex, isChecked) {
 }
 window.syncFridgeTaskCheckbox = syncFridgeTaskCheckbox;
 
+function renderSingleNoteWrapper(note, noteIndex) {
+    if (!note.id) {
+        note.id = 'note_' + Date.now() + '_' + Math.random();
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'note-wrapper';
+    if (note.isNew) {
+        wrapper.classList.add('new-note-anim');
+        wrapper.addEventListener('animationend', () => wrapper.classList.remove('new-note-anim'), { once: true });
+        delete note.isNew;
+    }
+    wrapper.dataset.noteId = note.id;
+    wrapper.draggable = true;
+
+    if (note.layout && !noteLayouts[note.id]) {
+        noteLayouts[note.id] = note.layout;
+    }
+    if (!noteLayouts[note.id]) {
+        noteLayouts[note.id] = createRandomNoteLayout(note);
+        note.layout = noteLayouts[note.id];
+    }
+
+    const layout = noteLayouts[note.id];
+
+    const expectedPages = (() => {
+        if (!note.tasks || note.tasks.length <= 4) return 1;
+        return 1 + Math.ceil((note.tasks.length - 4) / 5);
+    })();
+
+    if (!layout.pageRotations || layout.pageRotations.length !== expectedPages) {
+        const newLayout = createRandomNoteLayout(note);
+        newLayout.wrapperRotation = layout.wrapperRotation;
+        newLayout.marginTop = layout.marginTop;
+        newLayout.marginLeft = layout.marginLeft;
+        noteLayouts[note.id] = newLayout;
+        note.layout = newLayout;
+    }
+
+    const finalLayout = noteLayouts[note.id];
+
+    wrapper.style.transform = `rotate(${finalLayout.wrapperRotation}deg)`;
+    wrapper.style.setProperty('--note-rot', `${finalLayout.wrapperRotation}deg`);
+    wrapper.style.marginTop = `${finalLayout.marginTop}px`;
+    wrapper.style.marginLeft = `${finalLayout.marginLeft}px`;
+
+    let taskOffset = 0;
+    let pageIndex = 0;
+
+    do {
+        const tasksLimit = pageIndex === 0 ? 4 : 5;
+        const pageTasks = (note.tasks || []).slice(taskOffset, taskOffset + tasksLimit);
+
+        const noteDiv = document.createElement('div');
+        const rotationAngle = (finalLayout.pageRotations && finalLayout.pageRotations[pageIndex] !== undefined)
+            ? finalLayout.pageRotations[pageIndex]
+            : 0;
+        noteDiv.style.transform = `rotate(${rotationAngle}deg)`;
+        noteDiv.style.setProperty('--page-rot', `${rotationAngle}deg`);
+        noteDiv.className = `note-paper ${note.colorClass} ${activeNoteIndex === noteIndex ? 'active' : ''}`;
+        noteDiv.dataset.noteIndex = noteIndex;
+
+        let tasksHTML = pageTasks.map((task, tIndex) => {
+            const absoluteIndex = taskOffset + tIndex;
+            const taskPlh = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].taskPlaceholder : "کار جدید...";
+            return `
+                <li class="note-task ${task.scribbled ? 'scribbled' : ''}" 
+                    data-task-index="${absoluteIndex}" 
+                    draggable="true">
+                    
+                    <input 
+                        type="checkbox" 
+                        class="task-checkbox" 
+                        draggable="false"
+                        ${task.checked ? "checked" : ""}>
+                        
+                    <textarea 
+                        class="note-task-text ${task.text.trim() ? 'locked-task' : 'editing-task'}" 
+                        rows="1" 
+                        draggable="false"
+                        placeholder="${taskPlh}"
+                        ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
+                </li>
+            `;
+        }).join('');
+
+        let innerHTML = '';
+
+        if (pageIndex === 0) {
+            const notePlh = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].noteTitlePlaceholder : "عنوان یادداشت...";
+            innerHTML += `<div class="tape"></div>`;
+            innerHTML += `
+                <textarea 
+                    class="note-title" 
+                    rows="1" 
+                    draggable="false"
+                    placeholder="${notePlh}">${escapeHTML(note.title)}</textarea>
+            `;
+        } else {
+            innerHTML += `<div class="tape link-tape"></div>`;
+            noteDiv.classList.add('chained-note');
+        }
+
+        innerHTML += `<ul class="task-list">${tasksHTML}</ul>`;
+        noteDiv.innerHTML = innerHTML;
+
+        wrapper.appendChild(noteDiv);
+
+        taskOffset += pageTasks.length;
+        pageIndex++;
+    } while (taskOffset < (note.tasks ? note.tasks.length : 0));
+
+    return wrapper;
+}
+
+function refreshSingleNoteOnFridge(note) {
+    if (!note || note.deletedAt) return;
+    if (note.stackId) {
+        switchStackActiveNote(note.stackId, note.id);
+        return;
+    }
+    const oldWrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`);
+    if (!oldWrapper) {
+        renderAllNotes();
+        return;
+    }
+    const noteIndex = notes.indexOf(note);
+    const newWrapper = renderSingleNoteWrapper(note, noteIndex);
+
+    // Keep existing position coordinates to prevent any jump or unpositioned flash
+    newWrapper.style.position = 'absolute';
+    if (oldWrapper.style.left) newWrapper.style.left = oldWrapper.style.left;
+    if (oldWrapper.style.top) newWrapper.style.top = oldWrapper.style.top;
+
+    const prevHeight = oldWrapper.offsetHeight;
+    oldWrapper.replaceWith(newWrapper);
+    autoResizeTextareas();
+
+    const newHeight = newWrapper.offsetHeight;
+    if (prevHeight !== newHeight && typeof msnry !== 'undefined' && msnry) {
+        msnry.reloadItems();
+        msnry.layout();
+    }
+}
+window.refreshSingleNoteOnFridge = refreshSingleNoteOnFridge;
+
 function renderAllNotes() {
     fridgeContainer.innerHTML = '';
     const renderedStackIds = new Set();
@@ -291,104 +476,7 @@ function renderAllNotes() {
                 }
             }
         } else {
-            if (!note.id) {
-                note.id = 'note_' + Date.now() + '_' + Math.random();
-            }
-
-            const wrapper = document.createElement('div');
-            wrapper.className = 'note-wrapper';
-            if (note.isNew) {
-                wrapper.classList.add('new-note-anim');
-                delete note.isNew;
-            }
-            wrapper.dataset.noteId = note.id;
-            wrapper.draggable = true;
-
-            if (!noteLayouts[note.id]) {
-                noteLayouts[note.id] = createRandomNoteLayout(note);
-            }
-
-            const layout = noteLayouts[note.id];
-
-            const expectedPages = (() => {
-                if (note.tasks.length <= 4) return 1;
-                return 1 + Math.ceil((note.tasks.length - 4) / 5);
-            })();
-
-            if (layout.pageRotations.length !== expectedPages) {
-                noteLayouts[note.id] = createRandomNoteLayout(note);
-            }
-
-            const finalLayout = noteLayouts[note.id];
-
-            wrapper.style.transform = `rotate(${finalLayout.wrapperRotation}deg)`;
-            wrapper.style.marginTop = `${finalLayout.marginTop}px`;
-            wrapper.style.marginLeft = `${finalLayout.marginLeft}px`;
-
-            let taskOffset = 0;
-            let pageIndex = 0;
-
-            do {
-                const tasksLimit = pageIndex === 0 ? 4 : 5;
-                const pageTasks = note.tasks.slice(taskOffset, taskOffset + tasksLimit);
-
-                const noteDiv = document.createElement('div');
-
-                const rotationAngle = finalLayout.pageRotations[pageIndex] ?? 0;
-                noteDiv.style.transform = `rotate(${rotationAngle}deg)`;
-
-                noteDiv.className = `note-paper ${note.colorClass} ${activeNoteIndex === noteIndex ? 'active' : ''}`;
-                noteDiv.dataset.noteIndex = noteIndex;
-
-                let tasksHTML = pageTasks.map((task, tIndex) => {
-                    const absoluteIndex = taskOffset + tIndex;
-
-                    return `
-                        <li class="note-task ${task.scribbled ? 'scribbled' : ''}" 
-                            data-task-index="${absoluteIndex}" 
-                            draggable="true">
-                            
-                            <input 
-                                type="checkbox" 
-                                class="task-checkbox" 
-                                draggable="false"
-                                ${task.checked ? "checked" : ""}>
-                                
-                            <textarea 
-                                class="note-task-text ${task.text.trim() ? 'locked-task' : 'editing-task'}" 
-                                rows="1" 
-                                draggable="false"
-                                placeholder="${(typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].taskPlaceholder : 'کار جدید...'}"
-                                ${task.text.trim() ? 'readonly' : ''}>${escapeHTML(task.text)}</textarea>
-                        </li>
-                    `;
-                }).join('');
-
-                let innerHTML = '';
-
-                if (pageIndex === 0) {
-                    innerHTML += `<div class="tape"></div>`;
-                    innerHTML += `
-                        <textarea 
-                            class="note-title" 
-                            rows="1" 
-                            draggable="false"
-                            placeholder="${(typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage].noteTitlePlaceholder : 'عنوان یادداشت...'}">${escapeHTML(note.title)}</textarea>
-                    `;
-                } else {
-                    innerHTML += `<div class="tape link-tape"></div>`;
-                    noteDiv.classList.add('chained-note');
-                }
-
-                innerHTML += `<ul class="task-list">${tasksHTML}</ul>`;
-                noteDiv.innerHTML = innerHTML;
-
-                wrapper.appendChild(noteDiv);
-
-                taskOffset += pageTasks.length;
-                pageIndex++;
-            } while (taskOffset < note.tasks.length);
-
+            const wrapper = renderSingleNoteWrapper(note, noteIndex);
             fridgeContainer.appendChild(wrapper);
         }
     });
@@ -398,25 +486,24 @@ function renderAllNotes() {
     renderCalendar(currentJy, currentJm);
     updateDeadlinePanel(selectedDeadlineKey);
 
-    setTimeout(() => {
-        updateNotesLayout();
-    }, 50);
+    updateNotesLayout();
 }
 
 function updateNotesLayout() {
     if (typeof Masonry === 'undefined' || !fridgeContainer) return;
-    if (msnry) {
-        msnry.destroy();
-    }
 
-    fridgeContainer.style.width = '';
+    if (msnry) {
+        msnry.reloadItems();
+        msnry.layout();
+        return;
+    }
 
     msnry = new Masonry(fridgeContainer, {
         itemSelector: '.note-wrapper',
         columnWidth: 270,
         gutter: 20,
         fitWidth: true,
-        transitionDuration: '0.2s'
+        transitionDuration: 0
     });
 }
 window.updateNotesLayout = updateNotesLayout;

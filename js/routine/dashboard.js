@@ -388,12 +388,21 @@ function openRoutineDashboardModal(targetDate) {
     document.addEventListener("keydown", escListener);
 }
 
-function closeRoutineDashboardModal() {
+function closeRoutineDashboardModal(immediate = false) {
     const modal = document.getElementById("routine-dashboard-modal");
-    if (modal) {
+    if (!modal) return;
+    if (immediate) {
         modal.classList.add("hidden");
-        setTimeout(() => modal.remove(), 200);
+        modal.remove();
+        return;
     }
+    modal.classList.add("is-closing");
+    setTimeout(() => {
+        if (modal && modal.parentNode) {
+            modal.classList.add("hidden");
+            modal.remove();
+        }
+    }, 200);
 }
 
 function createRoutineDashboardModalDOM() {
@@ -860,10 +869,22 @@ function renderDayInspector(container, gDate, dayJalaliKey) {
                 badgeClass = 'pending';
             }
 
+            let timedBadgeHTML = '';
+            if (routine.isTimed && routine.targetDurationMinutes) {
+                const durH = Math.floor(routine.targetDurationMinutes / 60);
+                const durM = routine.targetDurationMinutes % 60;
+                let durStr = '';
+                if (durH > 0 && durM > 0) durStr = `${fd(durH)}h ${fd(durM)}m`;
+                else if (durH > 0) durStr = `${fd(durH)}h`;
+                else durStr = `${fd(durM)}m`;
+                timedBadgeHTML = `<span class="dash-inspector-timer-badge">⏱️ ${durStr}</span>`;
+            }
+
             item.innerHTML = `
                 <label class="dash-inspector-label ${isLocked ? 'is-locked' : ''}">
                     <input type="checkbox" class="dash-inspector-checkbox" ${isDone ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
-                    <span class="dash-inspector-title">${routine.title}</span>
+                    <span class="dash-inspector-title">${typeof escapeHTML === "function" ? escapeHTML(routine.title) : routine.title}</span>
+                    ${timedBadgeHTML}
                 </label>
                 <span class="dash-inspector-badge ${badgeClass}">
                     ${badgeStatusText}
@@ -1264,12 +1285,29 @@ function renderDashboardManagementTab(container) {
         if (typeof formatDayTitleForCurrentCalendar === "function" && (routine.startDate || routine.anchorDate)) {
             startDateDisplay = formatDayTitleForCurrentCalendar(routine.startDate || routine.anchorDate);
         }
+
+        let timerPillHTML = "";
+        if (routine.isTimed && routine.targetDurationMinutes) {
+            const durHours = Math.floor(routine.targetDurationMinutes / 60);
+            const durMins = routine.targetDurationMinutes % 60;
+            let durText = "";
+            if (durHours > 0 && durMins > 0) {
+                durText = `${fd(durHours)} ${rDict ? rDict.timerHours : 'ساعت'} و ${fd(durMins)} ${rDict ? rDict.timerMinutes : 'دقیقه'}`;
+            } else if (durHours > 0) {
+                durText = `${fd(durHours)} ${rDict ? rDict.timerHours : 'ساعت'}`;
+            } else {
+                durText = `${fd(durMins)} ${rDict ? rDict.timerMinutes : 'دقیقه'}`;
+            }
+            timerPillHTML = `<span class="dash-mgmt-timer-pill">⏱️ ${durText}</span>`;
+        }
+
         item.innerHTML = `
             <div class="dash-mgmt-item-info">
                 <div class="dash-mgmt-texts">
                     <strong>${escapeHTML(routine.title)}</strong>
                     <div class="dash-mgmt-sub">
                         <span class="dash-mgmt-pill">${patternText}</span>
+                        ${timerPillHTML}
                         <span class="dash-mgmt-start-pill">📅 ${rDict ? rDict.startDatePrefix : "شروع:"} ${startDateDisplay}</span>
                         <span class="dash-mgmt-history-count">${fd(completedHistoryCount)} بار انجام ثبت‌شده</span>
                     </div>

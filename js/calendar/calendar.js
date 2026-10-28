@@ -1088,21 +1088,12 @@ if (toggleBtn && calendar) {
         });
     });
 
-    const calendarTopBar = document.querySelector('.calendar-top-bar');
-    if (calendarTopBar) {
-        calendarTopBar.addEventListener('click', function (e) {
-            if (e.target.closest('#calendar-type-btn, #reminder-bell-btn, #btn-expand-calendar')) return;
-            const isMinimized = !calendar.classList.contains('minimized');
-            applyCalendarState(isMinimized);
-            saveCalendarState(isMinimized);
-        });
-    } else {
-        toggleBtn.addEventListener('click', function () {
-            const isMinimized = !calendar.classList.contains('minimized');
-            applyCalendarState(isMinimized);
-            saveCalendarState(isMinimized);
-        });
-    }
+    toggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isMinimized = !calendar.classList.contains('minimized');
+        applyCalendarState(isMinimized);
+        saveCalendarState(isMinimized);
+    });
 }
 
 const deadlineToggleBtn = document.getElementById('deadline-panel-toggle-btn');

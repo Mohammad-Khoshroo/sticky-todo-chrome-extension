@@ -21,7 +21,11 @@ document.addEventListener("keydown", e => {
         });
 
         saveNotes();
-        renderAllNotes();
+        if (typeof refreshSingleNoteOnFridge === 'function') {
+            refreshSingleNoteOnFridge(notes[activeNoteIndex]);
+        } else {
+            renderAllNotes();
+        }
 
         setTimeout(() => {
             const inputs = document.querySelectorAll(
@@ -162,6 +166,10 @@ fridgeContainer.addEventListener("dragover", (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
                 target.classList.add("can-stack-drop");
+                const hint = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage].dropToStack)
+                    ? TRANSLATIONS[currentLanguage].dropToStack
+                    : "➕ رها کنید برای دسته‌بندی";
+                target.setAttribute("data-drop-hint", hint);
                 return;
             }
         }
@@ -329,6 +337,10 @@ fridgeContainer.addEventListener("drop", (e) => {
         notes[targetNoteIndex].tasks.splice(targetTaskIndex, 1);
 
         saveNotes();
-        renderAllNotes();
+        if (typeof refreshSingleNoteOnFridge === 'function') {
+            refreshSingleNoteOnFridge(notes[targetNoteIndex]);
+        } else {
+            renderAllNotes();
+        }
     }
 });

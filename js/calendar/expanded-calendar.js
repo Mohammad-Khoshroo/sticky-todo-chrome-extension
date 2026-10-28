@@ -12,6 +12,8 @@ let expGm = null;
 let expHy = null;
 let expHm = null;
 let isOverdueDrawerOpen = false;
+let draggedCalendarDeadline = null;
+let isDraggingCalendarItem = false;
 
 function initExpandedCalendarState() {
     const today = new Date();
@@ -43,6 +45,10 @@ function openExpandedCalendar() {
     isExpandedCalendarOpen = true;
     renderExpandedCalendarContent(modal);
     modal.classList.remove("hidden", "is-closing");
+    modal.classList.add("is-opening");
+    setTimeout(() => {
+        modal.classList.remove("is-opening");
+    }, 290);
     document.body.classList.add("modal-open");
 }
 
@@ -52,7 +58,7 @@ function closeExpandedCalendar(immediate = false) {
 
     if (immediate) {
         modal.classList.add("hidden");
-        modal.classList.remove("is-closing");
+        modal.classList.remove("is-closing", "is-opening");
         isExpandedCalendarOpen = false;
         document.body.classList.remove("modal-open");
         return;
@@ -62,7 +68,7 @@ function closeExpandedCalendar(immediate = false) {
     setTimeout(() => {
         if (modal.classList.contains("is-closing")) {
             modal.classList.add("hidden");
-            modal.classList.remove("is-closing");
+            modal.classList.remove("is-closing", "is-opening");
             isExpandedCalendarOpen = false;
             document.body.classList.remove("modal-open");
         }
@@ -80,7 +86,7 @@ function renderOverdueTasksCards(list, fd, remDict) {
             : `${fd(diffDays)} روز پیش`;
 
         return `
-            <div class="exp-overdue-card ${colorClass}">
+            <div class="exp-overdue-card ${colorClass}" draggable="true" data-note="${item.noteIndex}" data-task="${item.taskIndex}">
                 <div class="exp-overdue-top">
                     <label class="exp-overdue-check-label">
                         <input type="checkbox" class="exp-overdue-check" data-note="${item.noteIndex}" data-task="${item.taskIndex}">
@@ -97,40 +103,8 @@ function renderOverdueTasksCards(list, fd, remDict) {
     }).join('');
 }
 
-function renderExpandedCalendarContent(modal) {
-    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
-        ? TRANSLATIONS[currentLanguage]
-        : null;
-    const expDict = dict && dict.expandedCal ? dict.expandedCal : null;
-    const remDict = dict && dict.reminder ? dict.reminder : null;
-    const fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
-        ? toFarsiNumber
-        : (x => x);
-
-    const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
-
-    const dlData = (typeof getThreeWeekDeadlines === "function") ? getThreeWeekDeadlines() : null;
-    const overdueList = dlData ? dlData.overdue.filter(x => !x.isChecked) : [];
-    const overdueCount = overdueList.length;
-    const todayCount = dlData ? dlData.today.filter(x => !x.isChecked).length : 0;
-    const thisWeekCount = dlData ? dlData.thisWeekRemaining.filter(x => !x.isChecked).length : 0;
-    const nextWeekCount = dlData ? dlData.nextWeek.filter(x => !x.isChecked).length : 0;
-    const totalCount = dlData ? dlData.totalActive : 0;
-
-    let monthTitle = "";
-    if (calType === "jalali") {
-        const mNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-        monthTitle = `${mNames[expJm - 1]} ${fd(expJy)}`;
-    } else if (calType === "gregorian") {
-        const gDate = new Date(expGy, expGm - 1, 1);
-        const mName = gDate.toLocaleDateString(currentLanguage || "en", { month: "long" });
-        monthTitle = `${mName} ${expGy}`;
-    } else if (calType === "hijri") {
-        const hNames = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
-        monthTitle = `${hNames[expHm - 1]} ${fd(expHy)}`;
-    }
-
-    const typeBadgeText = (calType === "jalali") ? "شمسی" : (calType === "gregorian" ? "میلادی" : "قمری");
+function ensureExpandedCalendarSkeleton(modal) {
+    if (modal.querySelector(".expanded-cal-container")) return;
 
     modal.innerHTML = `
         <div class="expanded-cal-backdrop" id="expanded-cal-backdrop"></div>
@@ -139,64 +113,75 @@ function renderExpandedCalendarContent(modal) {
             <div class="expanded-cal-header">
                 <div class="expanded-cal-header-left">
                     <button type="button" class="expanded-cal-nav-btn" id="exp-prev-btn" title="ماه قبل">❮</button>
-                    <h2 class="expanded-cal-month-title">${monthTitle}</h2>
+                    <h2 class="expanded-cal-month-title"></h2>
                     <button type="button" class="expanded-cal-nav-btn" id="exp-next-btn" title="ماه بعد">❯</button>
-                    <button type="button" class="expanded-cal-today-btn" id="exp-today-btn">${expDict ? expDict.today : 'امروز'}</button>
+                    <button type="button" class="expanded-cal-today-btn" id="exp-today-btn">امروز</button>
                 </div>
                 <div class="expanded-cal-header-right">
                     <button type="button" class="expanded-cal-type-btn" id="exp-type-btn" title="تغییر نوع تقویم">
                         <span>🌐</span>
-                        <span class="exp-type-badge">${typeBadgeText}</span>
+                        <span class="exp-type-badge">شمسی</span>
                     </button>
                     <button type="button" class="close-expanded-cal-btn" id="btn-close-expanded-cal" title="بستن">✕</button>
                 </div>
             </div>
 
             <!-- Overdue Tasks Accordion Banner -->
-            ${overdueCount > 0 ? `
-            <div class="expanded-overdue-banner ${isOverdueDrawerOpen ? 'is-open' : ''}">
+            <div class="expanded-overdue-banner" id="exp-overdue-banner" style="display: none;">
                 <div class="expanded-overdue-header" id="exp-overdue-toggle">
                     <div class="expanded-overdue-title">
                         <span class="overdue-warning-icon">⚠️</span>
-                        <span>${fd(overdueCount)} ${remDict ? remDict.kpiOverdue : 'کار عقب افتاده'} نیاز به رسیدگی دارند</span>
+                        <span class="overdue-title-text"></span>
                     </div>
                     <button type="button" class="expanded-overdue-toggle-btn">
-                        <span>${isOverdueDrawerOpen ? 'بستن' : 'مشاهده کارهای عقب افتاده'}</span>
-                        <span>${isOverdueDrawerOpen ? '▲' : '▼'}</span>
+                        <span>مشاهده کارهای عقب افتاده</span>
+                        <span>▼</span>
                     </button>
                 </div>
-                <div class="expanded-overdue-body">
-                    ${renderOverdueTasksCards(overdueList, fd, remDict)}
-                </div>
+                <div class="expanded-overdue-body"></div>
             </div>
-            ` : ''}
 
             <!-- Weekdays Row -->
-            <div class="expanded-cal-weekdays">
-                ${renderExpandedWeekdays(calType)}
-            </div>
+            <div class="expanded-cal-weekdays"></div>
 
             <!-- Days Grid -->
-            <div class="expanded-cal-days-grid" id="expanded-cal-days-grid">
-                <!-- Injected via renderExpandedGridDays -->
-            </div>
+            <div class="expanded-cal-days-grid" id="expanded-cal-days-grid"></div>
         </div>
     `;
 
-    // Bind event listeners
-    modal.querySelector("#expanded-cal-backdrop").addEventListener("click", closeExpandedCalendar);
-    modal.querySelector("#btn-close-expanded-cal").addEventListener("click", closeExpandedCalendar);
+    // Static event listeners
+    modal.querySelector("#expanded-cal-backdrop").addEventListener("click", () => closeExpandedCalendar());
+    modal.querySelector("#btn-close-expanded-cal").addEventListener("click", () => closeExpandedCalendar());
 
-    modal.querySelector("#exp-prev-btn").addEventListener("click", () => {
-        changeExpandedMonth(-1);
-    });
+    const prevBtn = modal.querySelector("#exp-prev-btn");
+    const nextBtn = modal.querySelector("#exp-next-btn");
+    prevBtn.addEventListener("click", () => changeExpandedMonth(-1));
+    nextBtn.addEventListener("click", () => changeExpandedMonth(1));
 
-    modal.querySelector("#exp-next-btn").addEventListener("click", () => {
-        changeExpandedMonth(1);
+    let monthNavTimer = null;
+    [prevBtn, nextBtn].forEach(btn => {
+        const delta = (btn === prevBtn) ? -1 : 1;
+        btn.addEventListener("dragover", (e) => {
+            if (!draggedCalendarDeadline) return;
+            e.preventDefault();
+            if (!monthNavTimer) {
+                monthNavTimer = setTimeout(() => {
+                    changeExpandedMonth(delta);
+                    monthNavTimer = null;
+                }, 550);
+            }
+        });
+        btn.addEventListener("dragleave", () => {
+            if (monthNavTimer) {
+                clearTimeout(monthNavTimer);
+                monthNavTimer = null;
+            }
+        });
     });
 
     modal.querySelector("#exp-today-btn").addEventListener("click", () => {
         const now = new Date();
+        const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
         if (calType === "jalali" && typeof jalaali !== "undefined") {
             const j = jalaali.toJalaali(now);
             expJy = j.jy;
@@ -224,7 +209,6 @@ function renderExpandedCalendarContent(modal) {
         renderExpandedCalendarContent(modal);
     });
 
-    // Overdue toggle
     const overdueToggle = modal.querySelector("#exp-overdue-toggle");
     if (overdueToggle) {
         overdueToggle.addEventListener("click", () => {
@@ -239,9 +223,63 @@ function renderExpandedCalendarContent(modal) {
             }
         });
     }
+}
 
-    // Overdue check events
-    modal.querySelectorAll(".exp-overdue-check").forEach(chk => {
+function updateExpandedOverdueBanner(modal, overdueList, fd, remDict) {
+    if (!modal) modal = document.getElementById("expanded-calendar-modal");
+    if (!modal) return;
+
+    if (!overdueList) {
+        const dlData = (typeof getThreeWeekDeadlines === "function") ? getThreeWeekDeadlines() : null;
+        overdueList = dlData ? dlData.overdue.filter(x => !x.isChecked) : [];
+    }
+    if (!fd) {
+        fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
+            ? toFarsiNumber
+            : (x => x);
+    }
+    if (!remDict) {
+        const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+            ? TRANSLATIONS[currentLanguage]
+            : null;
+        remDict = dict && dict.reminder ? dict.reminder : null;
+    }
+
+    const banner = modal.querySelector(".expanded-overdue-banner");
+    if (!banner) return;
+
+    const count = overdueList.length;
+    if (count === 0) {
+        banner.style.display = "none";
+        banner.classList.remove("is-open");
+        isOverdueDrawerOpen = false;
+        return;
+    }
+
+    banner.style.display = "";
+    banner.classList.toggle("is-open", isOverdueDrawerOpen);
+
+    const titleTextEl = banner.querySelector(".overdue-title-text");
+    if (titleTextEl) {
+        titleTextEl.textContent = `${fd(count)} ${remDict ? remDict.kpiOverdue : 'کار عقب افتاده'} نیاز به رسیدگی دارند`;
+    }
+
+    const toggleBtn = banner.querySelector(".expanded-overdue-toggle-btn");
+    if (toggleBtn) {
+        toggleBtn.innerHTML = `<span>${isOverdueDrawerOpen ? 'بستن' : 'مشاهده کارهای عقب افتاده'}</span> <span>${isOverdueDrawerOpen ? '▲' : '▼'}</span>`;
+    }
+
+    const bodyEl = banner.querySelector(".expanded-overdue-body");
+    if (bodyEl) {
+        bodyEl.innerHTML = renderOverdueTasksCards(overdueList, fd, remDict);
+        bindOverdueCardsEvents(bodyEl);
+    }
+}
+
+function bindOverdueCardsEvents(container) {
+    if (!container) return;
+
+    container.querySelectorAll(".exp-overdue-check").forEach(chk => {
         chk.addEventListener("change", (e) => {
             e.stopPropagation();
             const nIdx = Number(e.target.dataset.note);
@@ -256,13 +294,14 @@ function renderExpandedCalendarContent(modal) {
                 }
                 if (typeof updateReminderBell === "function") updateReminderBell();
 
-                renderExpandedCalendarContent(modal);
+                const dl = notes[nIdx].tasks[tIdx].deadline;
+                updateExpandedOverdueBanner();
+                if (dl) refreshExpandedDayCell(dl);
             }
         });
     });
 
-    // Overdue jump events
-    modal.querySelectorAll(".exp-overdue-jump-btn").forEach(btn => {
+    container.querySelectorAll(".exp-overdue-jump-btn").forEach(btn => {
         btn.addEventListener("click", (e) => {
             e.stopPropagation();
             const nIdx = Number(btn.dataset.note);
@@ -273,7 +312,92 @@ function renderExpandedCalendarContent(modal) {
         });
     });
 
-    renderExpandedGridDays(modal.querySelector("#expanded-cal-days-grid"), calType);
+    container.querySelectorAll(".exp-overdue-card").forEach(card => {
+        card.addEventListener("dragstart", (e) => {
+            if (e.target.closest("input, button, .exp-overdue-jump-btn")) {
+                e.preventDefault();
+                return;
+            }
+            isDraggingCalendarItem = true;
+            const nIdx = Number(card.dataset.note);
+            const tIdx = Number(card.dataset.task);
+            draggedCalendarDeadline = {
+                noteIndex: nIdx,
+                taskIndex: tIdx,
+                sourceDayKey: null
+            };
+            e.dataTransfer.setData("text/plain", JSON.stringify(draggedCalendarDeadline));
+            e.dataTransfer.effectAllowed = "move";
+            card.classList.add("is-dragging");
+        });
+        card.addEventListener("dragend", () => {
+            card.classList.remove("is-dragging");
+            document.querySelectorAll(".expanded-day-cell.drag-over").forEach(c => c.classList.remove("drag-over"));
+            draggedCalendarDeadline = null;
+            setTimeout(() => { isDraggingCalendarItem = false; }, 60);
+        });
+    });
+}
+
+function renderExpandedCalendarContent(modal) {
+    if (!modal) modal = document.getElementById("expanded-calendar-modal");
+    if (!modal) return;
+
+    ensureExpandedCalendarSkeleton(modal);
+
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+    const expDict = dict && dict.expandedCal ? dict.expandedCal : null;
+    const remDict = dict && dict.reminder ? dict.reminder : null;
+    const fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
+        ? toFarsiNumber
+        : (x => x);
+
+    const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
+
+    const dlData = (typeof getThreeWeekDeadlines === "function") ? getThreeWeekDeadlines() : null;
+    const overdueList = dlData ? dlData.overdue.filter(x => !x.isChecked) : [];
+
+    let monthTitle = "";
+    if (calType === "jalali") {
+        const mNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+        const mName = (dict && dict.months && dict.months.jalali) ? dict.months.jalali[expJm - 1] : mNames[expJm - 1];
+        monthTitle = `${mName} ${fd(expJy)}`;
+    } else if (calType === "gregorian") {
+        const mNames = ['ژانویه', 'فوریه', 'مارس', 'آوریل', 'مه', 'ژوئن', 'ژوئیه', 'اوت', 'سپتامبر', 'اکتبر', 'نوامبر', 'دسامبر'];
+        const mName = (dict && dict.months && dict.months.gregorian) ? dict.months.gregorian[expGm - 1] : mNames[expGm - 1];
+        monthTitle = `${mName} ${fd(expGy)}`;
+    } else if (calType === "hijri") {
+        const hNames = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+        const mName = (dict && dict.months && dict.months.hijri) ? dict.months.hijri[expHm - 1] : hNames[expHm - 1];
+        monthTitle = `${mName} ${fd(expHy)}`;
+    }
+
+    const typeBadgeText = (dict && dict.calendarNames && dict.calendarNames[calType])
+        ? dict.calendarNames[calType]
+        : ((calType === "jalali") ? "شمسی" : (calType === "gregorian" ? "میلادی" : "قمری"));
+
+    // Update dynamic header elements
+    const titleEl = modal.querySelector(".expanded-cal-month-title");
+    if (titleEl) titleEl.textContent = monthTitle;
+
+    const todayBtn = modal.querySelector("#exp-today-btn");
+    if (todayBtn) todayBtn.textContent = expDict ? expDict.today : 'امروز';
+
+    const typeBadge = modal.querySelector(".exp-type-badge");
+    if (typeBadge) typeBadge.textContent = typeBadgeText;
+
+    // Update Overdue banner
+    updateExpandedOverdueBanner(modal, overdueList, fd, remDict);
+
+    // Update Weekdays
+    const weekdaysEl = modal.querySelector(".expanded-cal-weekdays");
+    if (weekdaysEl) weekdaysEl.innerHTML = renderExpandedWeekdays(calType);
+
+    // Update Days Grid
+    const gridEl = modal.querySelector("#expanded-cal-days-grid");
+    if (gridEl) renderExpandedGridDays(gridEl, calType);
 }
 
 function renderExpandedWeekdays(calType) {
@@ -281,10 +405,8 @@ function renderExpandedWeekdays(calType) {
     let days;
 
     if (!isLtr) {
-        // Persian / Arabic: Sat to Fri
         days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
     } else {
-        // English / Korean: Sun to Sat
         days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         if (currentLanguage === "ko") {
             days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -384,14 +506,18 @@ function renderExpandedGridDays(gridEl, calType) {
 
         for (let day = 1; day <= totalDays; day++) {
             const gDate = new Date(expGy, expGm - 1, day, 12, 0, 0);
-            const dayKey = `${expGy}-${String(expGm).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isToday = (now.getFullYear() === expGy && now.getMonth() + 1 === expGm && now.getDate() === day);
+            const dayKey = (typeof formatGregorianKey === "function")
+                ? formatGregorianKey(expGy, expGm, day)
+                : `${expGy}-${String(expGm).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            const isToday = (now.getFullYear() === expGy && (now.getMonth() + 1) === expGm && now.getDate() === day);
             renderExpandedDayCell(gridEl, day, dayKey, gDate, isToday, fd);
         }
-    } else if (calType === "hijri" && typeof hijriToGregorianDate === "function") {
-        const firstGDate = hijriToGregorianDate(expHy, expHm, 1);
-        const jsDay = firstGDate.getDay();
+    } else if (calType === "hijri") {
+        const hFirst = hijriToGregorianDate(expHy, expHm, 1);
+        const jsDay = hFirst.getDay();
         const startDayIndex = (jsDay + 1) % 7;
+
         const totalDays = (typeof getHijriMonthLength === "function") ? getHijriMonthLength(expHy, expHm) : 30;
 
         for (let i = 0; i < startDayIndex; i++) {
@@ -413,15 +539,22 @@ function renderExpandedGridDays(gridEl, calType) {
     }
 }
 
-function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
+function populateDayCellContent(cell, dayNumber, dayKey, gDate, isToday, fd) {
+    if (!fd) {
+        fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
+            ? toFarsiNumber
+            : (x => x);
+    }
     const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
         ? TRANSLATIONS[currentLanguage]
         : null;
     const remDict = dict && dict.reminder ? dict.reminder : null;
 
-    const cell = document.createElement("div");
-    cell.className = `expanded-day-cell ${isToday ? 'is-today' : ''}`;
     cell.dataset.dayKey = dayKey;
+    cell.dataset.dayNumber = dayNumber;
+    cell.dataset.isToday = isToday ? "1" : "0";
+    cell.className = `expanded-day-cell ${isToday ? 'is-today' : ''}`;
+    cell.innerHTML = "";
 
     // Get tasks matching this date
     const tasks = (typeof getTasksMatchingDayKey === "function")
@@ -450,6 +583,10 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
         const noteTitle = item.note.title || (remDict ? remDict.untitledNote : 'یادداشت');
         pill.className = `expanded-task-pill ${colorClass} ${isDone ? 'is-done' : ''}`;
         pill.title = `${noteTitle}: ${item.task.text}`;
+        pill.draggable = true;
+        pill.dataset.noteIndex = item.noteIndex;
+        pill.dataset.taskIndex = item.taskIndex;
+        pill.dataset.dayKey = dayKey;
 
         const jumpTitle = (remDict && remDict.jumpToNote) ? remDict.jumpToNote : 'مشاهده روی برگه';
         pill.innerHTML = `
@@ -462,6 +599,34 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
                 <button type="button" class="expanded-pill-jump-btn" title="${jumpTitle}">🔍</button>
             </div>
         `;
+
+        let isDraggingThisPill = false;
+        pill.addEventListener("dragstart", (e) => {
+            if (e.target.closest("input, button, .expanded-pill-jump-btn, .expanded-pill-note-badge")) {
+                e.preventDefault();
+                return;
+            }
+            isDraggingThisPill = true;
+            isDraggingCalendarItem = true;
+            draggedCalendarDeadline = {
+                noteIndex: item.noteIndex,
+                taskIndex: item.taskIndex,
+                sourceDayKey: dayKey
+            };
+            e.dataTransfer.setData("text/plain", JSON.stringify(draggedCalendarDeadline));
+            e.dataTransfer.effectAllowed = "move";
+            pill.classList.add("is-dragging");
+        });
+
+        pill.addEventListener("dragend", () => {
+            pill.classList.remove("is-dragging");
+            document.querySelectorAll(".expanded-day-cell.drag-over").forEach(c => c.classList.remove("drag-over"));
+            draggedCalendarDeadline = null;
+            setTimeout(() => {
+                isDraggingThisPill = false;
+                isDraggingCalendarItem = false;
+            }, 60);
+        });
 
         const check = pill.querySelector(".expanded-pill-check");
         check.addEventListener("change", (e) => {
@@ -477,15 +642,13 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
                 if (typeof updateReminderBell === "function") updateReminderBell();
 
                 pill.classList.toggle("is-done", check.checked);
-                const modal = document.getElementById("expanded-calendar-modal");
-                if (modal) {
-                    renderExpandedCalendarContent(modal);
-                }
+                updateExpandedOverdueBanner();
             }
         });
 
-        // Pill click triggers checkbox toggle (except when clicking actions)
+        // Pill click triggers checkbox toggle (except when dragging or clicking actions)
         pill.addEventListener("click", (e) => {
+            if (isDraggingThisPill || isDraggingCalendarItem) return;
             if (e.target.tagName !== "INPUT" && !e.target.closest(".expanded-pill-actions")) {
                 check.checked = !check.checked;
                 check.dispatchEvent(new Event("change"));
@@ -528,6 +691,68 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
     }
 
     cell.appendChild(taskListWrap);
+}
+
+function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
+    const cell = document.createElement("div");
+    populateDayCellContent(cell, dayNumber, dayKey, gDate, isToday, fd);
+
+    // Drag and Drop listeners on day cell
+    cell.addEventListener("dragover", (e) => {
+        if (!draggedCalendarDeadline) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        cell.classList.add("drag-over");
+    });
+
+    cell.addEventListener("dragleave", (e) => {
+        if (!cell.contains(e.relatedTarget)) {
+            cell.classList.remove("drag-over");
+        }
+    });
+
+    cell.addEventListener("drop", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cell.classList.remove("drag-over");
+        if (!draggedCalendarDeadline) return;
+
+        const { noteIndex, taskIndex, sourceDayKey } = draggedCalendarDeadline;
+        draggedCalendarDeadline = null;
+
+        const targetDayKey = cell.dataset.dayKey;
+        if (!targetDayKey) return;
+
+        const targetParsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(targetDayKey) : null;
+        if (!targetParsed) return;
+
+        if (sourceDayKey) {
+            const sourceParsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(sourceDayKey) : null;
+            if (sourceParsed && sourceParsed.jKey === targetParsed.jKey) {
+                return; // Dropped on the same date, no update needed
+            }
+        }
+
+        const note = (typeof notes !== "undefined" && notes[noteIndex]) ? notes[noteIndex] : null;
+        if (!note || !note.tasks || !note.tasks[taskIndex]) return;
+
+        // Set deadline to canonical target Jalali key
+        note.tasks[taskIndex].deadline = targetParsed.jKey;
+
+        if (typeof saveNotes === "function") saveNotes();
+        if (typeof renderCalendar === "function") renderCalendar();
+        if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
+            updateDeadlinePanel(selectedDeadlineKey);
+        }
+        if (typeof updateReminderBell === "function") updateReminderBell();
+
+        // Remove any open popover
+        const pop = document.querySelector(".expanded-cal-popover");
+        if (pop) pop.remove();
+
+        // Seamless in-place drop update (NO modal animation, NO drop pulse)
+        handleCalendarDropUpdate(sourceDayKey, targetDayKey);
+    });
 
     // Clicking cell selects it in the regular calendar too
     cell.addEventListener("click", () => {
@@ -542,6 +767,45 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
     gridEl.appendChild(cell);
 }
 
+function refreshExpandedDayCell(dayKey) {
+    if (!dayKey) return false;
+    const modal = document.getElementById("expanded-calendar-modal");
+    if (!modal) return false;
+
+    const parsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(dayKey) : null;
+    let cell = modal.querySelector(`.expanded-day-cell[data-day-key="${dayKey}"]`);
+    if (!cell && parsed) {
+        cell = modal.querySelector(`.expanded-day-cell[data-day-key="${parsed.jKey}"]`)
+            || modal.querySelector(`.expanded-day-cell[data-day-key="${parsed.gKey}"]`)
+            || modal.querySelector(`.expanded-day-cell[data-day-key="${parsed.hKey}"]`);
+    }
+    if (!cell) return false;
+
+    const dayNumber = Number(cell.dataset.dayNumber || 1);
+    const isToday = cell.dataset.isToday === "1";
+    const actualDayKey = cell.dataset.dayKey || dayKey;
+    populateDayCellContent(cell, dayNumber, actualDayKey, null, isToday);
+    return true;
+}
+
+function handleCalendarDropUpdate(sourceDayKey, targetDayKey) {
+    const modal = document.getElementById("expanded-calendar-modal");
+    if (!modal) return;
+
+    if (!sourceDayKey) {
+        updateExpandedOverdueBanner(modal);
+    } else {
+        refreshExpandedDayCell(sourceDayKey);
+    }
+
+    const targetRefreshed = refreshExpandedDayCell(targetDayKey);
+    if (!targetRefreshed) {
+        const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
+        const grid = modal.querySelector("#expanded-cal-days-grid");
+        if (grid) renderExpandedGridDays(grid, calType);
+    }
+}
+
 function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
     const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
         ? TRANSLATIONS[currentLanguage]
@@ -554,50 +818,111 @@ function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
     const popover = document.createElement("div");
     popover.className = "expanded-cal-popover";
 
-    let html = `
+    popover.innerHTML = `
+        <div class="popover-arrow"></div>
         <div class="popover-header">
-            <span>ددلاین‌های این روز (${tasks.length})</span>
+            <span class="popover-title">${escapeHTML(cellEl.querySelector('.expanded-day-num').textContent)}</span>
             <button type="button" class="popover-close-btn">✕</button>
         </div>
         <div class="popover-list">
+            ${tasks.map(item => {
+                const isDone = !!item.task.checked;
+                const colorClass = item.note.colorClass || 'color-0';
+                const noteTitle = item.note.title || (remDict ? remDict.untitledNote : 'یادداشت');
+                return `
+                    <div class="popover-task-item ${colorClass} ${isDone ? 'is-done' : ''}" draggable="true" data-note="${item.noteIndex}" data-task="${item.taskIndex}" data-day="${dayKey}">
+                        <label class="popover-label">
+                            <input type="checkbox" class="popover-check" data-note="${item.noteIndex}" data-task="${item.taskIndex}" ${isDone ? 'checked' : ''}>
+                            <span class="popover-text">${escapeHTML(item.task.text || 'تسک')}</span>
+                        </label>
+                        <div class="popover-actions">
+                            <span class="popover-note-badge">${escapeHTML(noteTitle)}</span>
+                            <button type="button" class="popover-jump-btn" data-note="${item.noteIndex}" data-task="${item.taskIndex}" title="${remDict ? remDict.jumpToNote : 'مشاهده روی برگه'}">🔍</button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
     `;
 
-    tasks.forEach(item => {
-        const isDone = !!item.task.checked;
-        const colorClass = item.note.colorClass || "color-0";
-        const noteTitle = item.note.title || (remDict ? remDict.untitledNote : 'یادداشت');
-        const jumpTitle = (remDict && remDict.jumpToNote) ? remDict.jumpToNote : 'مشاهده روی برگه';
-        html += `
-            <div class="popover-task-item ${colorClass} ${isDone ? 'is-done' : ''}" title="${escapeHTML(noteTitle)}: ${escapeHTML(item.task.text)}">
-                <div class="popover-task-main">
-                    <input type="checkbox" class="popover-check" ${isDone ? 'checked' : ''} data-note="${item.noteIndex}" data-task="${item.taskIndex}">
-                    <span class="popover-text">${escapeHTML(item.task.text)}</span>
-                </div>
-                <div class="popover-actions">
-                    <span class="popover-note-badge" title="${escapeHTML(noteTitle)}">${escapeHTML(noteTitle)}</span>
-                    <button type="button" class="popover-jump-btn" title="${jumpTitle}">🔍</button>
-                </div>
-            </div>
-        `;
+    popover.querySelector(".popover-close-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        popover.remove();
     });
 
-    html += `</div>`;
-    popover.innerHTML = html;
+    const closeHandler = (e) => {
+        if (!popover.contains(e.target) && !cellEl.contains(e.target)) {
+            popover.remove();
+            document.removeEventListener("click", closeHandler);
+        }
+    };
+    setTimeout(() => {
+        document.addEventListener("click", closeHandler);
+    }, 10);
 
-    popover.querySelector(".popover-close-btn").addEventListener("click", () => popover.remove());
-
-    popover.querySelectorAll(".popover-jump-btn, .popover-note-badge").forEach(el => {
-        el.addEventListener("click", (e) => {
+    popover.querySelectorAll(".popover-jump-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
             e.stopPropagation();
-            const parent = el.closest(".popover-task-item");
-            const check = parent ? parent.querySelector(".popover-check") : null;
-            if (check) {
-                const nIdx = Number(check.dataset.note);
-                const tIdx = Number(check.dataset.task);
-                if (typeof jumpToNoteOnFridge === "function") {
-                    jumpToNoteOnFridge(nIdx, tIdx);
+            const nIdx = Number(btn.dataset.note);
+            const tIdx = Number(btn.dataset.task);
+            if (typeof jumpToNoteOnFridge === "function") {
+                jumpToNoteOnFridge(nIdx, tIdx);
+            }
+        });
+    });
+
+    popover.querySelectorAll(".popover-task-item").forEach(itemEl => {
+        itemEl.addEventListener("click", (e) => {
+            if (isDraggingCalendarItem) return;
+            if (e.target.tagName !== "INPUT" && !e.target.closest(".popover-actions")) {
+                const check = itemEl.querySelector(".popover-check");
+                if (check) {
+                    check.checked = !check.checked;
+                    check.dispatchEvent(new Event("change"));
                 }
             }
+        });
+
+        const badge = itemEl.querySelector(".popover-note-badge");
+        if (badge) {
+            badge.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const check = itemEl.querySelector(".popover-check");
+                if (check) {
+                    const nIdx = Number(check.dataset.note);
+                    const tIdx = Number(check.dataset.task);
+                    if (typeof jumpToNoteOnFridge === "function") {
+                        jumpToNoteOnFridge(nIdx, tIdx);
+                    }
+                }
+            });
+        }
+    });
+
+    popover.querySelectorAll(".popover-task-item").forEach(itemEl => {
+        itemEl.addEventListener("dragstart", (e) => {
+            if (e.target.closest("input, button, .popover-jump-btn, .popover-note-badge")) {
+                e.preventDefault();
+                return;
+            }
+            isDraggingCalendarItem = true;
+            const nIdx = Number(itemEl.dataset.note);
+            const tIdx = Number(itemEl.dataset.task);
+            const dKey = itemEl.dataset.day;
+            draggedCalendarDeadline = {
+                noteIndex: nIdx,
+                taskIndex: tIdx,
+                sourceDayKey: dKey
+            };
+            e.dataTransfer.setData("text/plain", JSON.stringify(draggedCalendarDeadline));
+            e.dataTransfer.effectAllowed = "move";
+            itemEl.classList.add("is-dragging");
+        });
+        itemEl.addEventListener("dragend", () => {
+            itemEl.classList.remove("is-dragging");
+            document.querySelectorAll(".expanded-day-cell.drag-over").forEach(c => c.classList.remove("drag-over"));
+            draggedCalendarDeadline = null;
+            setTimeout(() => { isDraggingCalendarItem = false; }, 60);
         });
     });
 
@@ -613,11 +938,8 @@ function showDayDeadlinesPopover(cellEl, tasks, dayKey) {
                 if (typeof updateDeadlinePanel === "function") updateDeadlinePanel(dayKey);
                 if (typeof updateReminderBell === "function") updateReminderBell();
 
-                // Re-render expanded grid
-                const modal = document.getElementById("expanded-calendar-modal");
-                if (modal) {
-                    renderExpandedGridDays(modal.querySelector("#expanded-cal-days-grid"), currentCalendarType);
-                }
+                refreshExpandedDayCell(dayKey);
+                updateExpandedOverdueBanner();
             }
         });
     });
@@ -658,3 +980,5 @@ if (document.readyState === "loading") {
 
 window.openExpandedCalendar = openExpandedCalendar;
 window.closeExpandedCalendar = closeExpandedCalendar;
+window.renderExpandedCalendarContent = renderExpandedCalendarContent;
+window.refreshExpandedDayCell = refreshExpandedDayCell;

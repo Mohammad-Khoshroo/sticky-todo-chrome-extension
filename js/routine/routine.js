@@ -39,6 +39,22 @@ function loadRoutines() {
                     r.createdAt = r.startDate ? (r.startDate + "T00:00:00.000Z") : new Date().toISOString();
                     changed = true;
                 }
+                if (r.isTimed === undefined) {
+                    r.isTimed = false;
+                    changed = true;
+                }
+                if (r.targetDurationMinutes === undefined) {
+                    r.targetDurationMinutes = 60;
+                    changed = true;
+                }
+                if (!r.onCloseBehavior) {
+                    r.onCloseBehavior = "ask";
+                    changed = true;
+                }
+                if (!r.timerLogs) {
+                    r.timerLogs = {};
+                    changed = true;
+                }
             });
             if (changed) {
                 saveRoutines();
@@ -56,7 +72,11 @@ function loadRoutines() {
                     createdAt: "2026-10-01T00:00:00.000Z",
                     weeklyDays: [0, 1, 2, 3, 4, 5, 6],
                     monthlyDay: 1,
-                    completedDates: {}
+                    completedDates: {},
+                    isTimed: false,
+                    targetDurationMinutes: 60,
+                    onCloseBehavior: "ask",
+                    timerLogs: {}
                 },
                 {
                     id: "routine_def_2",
@@ -68,7 +88,11 @@ function loadRoutines() {
                     createdAt: "2026-10-01T00:00:00.000Z",
                     weeklyDays: [0, 2, 4],
                     monthlyDay: 1,
-                    completedDates: {}
+                    completedDates: {},
+                    isTimed: true,
+                    targetDurationMinutes: 30,
+                    onCloseBehavior: "ask",
+                    timerLogs: {}
                 },
                 {
                     id: "routine_def_3",
@@ -80,7 +104,11 @@ function loadRoutines() {
                     createdAt: "2026-10-01T00:00:00.000Z",
                     weeklyDays: [0], // Saturday only
                     monthlyDay: 1,
-                    completedDates: {}
+                    completedDates: {},
+                    isTimed: false,
+                    targetDurationMinutes: 60,
+                    onCloseBehavior: "ask",
+                    timerLogs: {}
                 }
             ];
             saveRoutines();
@@ -151,20 +179,42 @@ function getRoutineStartDate(routine) {
 }
 
 function isRoutineCompletedOnDate(routine, dayJalaliKey, gDate) {
-    if (!routine || !routine.completedDates) return false;
-    if (dayJalaliKey && routine.completedDates[dayJalaliKey]) return true;
+    if (!routine) return false;
+    if (routine.completedDates) {
+        if (dayJalaliKey && routine.completedDates[dayJalaliKey]) return true;
 
-    if (gDate) {
-        const gy = gDate.getFullYear(), gm = String(gDate.getMonth() + 1).padStart(2, "0"), gd = String(gDate.getDate()).padStart(2, "0");
-        const gKey = `${gy}-${gm}-${gd}`;
-        if (routine.completedDates[gKey]) return true;
+        if (gDate) {
+            const gy = gDate.getFullYear(), gm = String(gDate.getMonth() + 1).padStart(2, "0"), gd = String(gDate.getDate()).padStart(2, "0");
+            const gKey = `${gy}-${gm}-${gd}`;
+            if (routine.completedDates[gKey]) return true;
 
-        if (typeof jalaali !== "undefined") {
-            const j = jalaali.toJalaali(gDate);
-            const jKey = formatJalaliKey(j.jy, j.jm, j.jd);
-            if (routine.completedDates[jKey]) return true;
+            if (typeof jalaali !== "undefined") {
+                const j = jalaali.toJalaali(gDate);
+                const jKey = formatJalaliKey(j.jy, j.jm, j.jd);
+                if (routine.completedDates[jKey]) return true;
+            }
         }
     }
+
+    // Check if timed routine reached target duration on this date
+    if (routine.isTimed && routine.targetDurationMinutes && routine.timerLogs) {
+        let log = null;
+        if (gDate) {
+            const gy = gDate.getFullYear(), gm = String(gDate.getMonth() + 1).padStart(2, "0"), gd = String(gDate.getDate()).padStart(2, "0");
+            const gKey = `${gy}-${gm}-${gd}`;
+            log = routine.timerLogs[gKey];
+        }
+        if (!log && dayJalaliKey) {
+            log = routine.timerLogs[dayJalaliKey];
+        }
+        if (log) {
+            const live = (log.elapsedSeconds || 0) + ((log.isRunning && log.lastStartedAt) ? Math.floor((Date.now() - log.lastStartedAt) / 1000) : 0);
+            if (live >= (routine.targetDurationMinutes * 60)) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -336,6 +386,472 @@ function calculateDayProgress(dayKey) {
     };
 }
 
+
+//////////////////////////////////////////////////////////////////
+// ----------------------
+//   ROUTINE TIMER ENGINE
+// ----------------------
+
+let routineTimerInterval = null;
+
+function getRoutineIsoDateKey(gDate) {
+    const d = (gDate instanceof Date) ? gDate : new Date();
+    const gy = d.getFullYear();
+    const gm = String(d.getMonth() + 1).padStart(2, "0");
+    const gd = String(d.getDate()).padStart(2, "0");
+    return `${gy}-${gm}-${gd}`;
+}
+
+function getRoutineTimerData(routine, dateKey) {
+    if (!routine) return { elapsedSeconds: 0, isRunning: false, lastStartedAt: null };
+    if (!routine.timerLogs) routine.timerLogs = {};
+    if (!routine.timerLogs[dateKey]) {
+        routine.timerLogs[dateKey] = {
+            elapsedSeconds: 0,
+            isRunning: false,
+            lastStartedAt: null
+        };
+    }
+    return routine.timerLogs[dateKey];
+}
+
+function getLiveElapsedSeconds(timerData) {
+    if (!timerData) return 0;
+    let elapsed = timerData.elapsedSeconds || 0;
+    if (timerData.isRunning && timerData.lastStartedAt) {
+        const diffSec = Math.floor((Date.now() - timerData.lastStartedAt) / 1000);
+        if (diffSec > 0) elapsed += diffSec;
+    }
+    return elapsed;
+}
+
+function formatTimerSeconds(totalSeconds) {
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+    const pad = n => String(n).padStart(2, "0");
+
+    if (hours > 0) {
+        return `${fd(pad(hours))}:${fd(pad(mins))}:${fd(pad(secs))}`;
+    }
+    return `${fd(pad(mins))}:${fd(pad(secs))}`;
+}
+
+function formatTimerTimeWithTarget(seconds, targetSeconds) {
+    const s = Math.max(0, Math.floor(seconds));
+    const showHours = (targetSeconds >= 3600 || s >= 3600);
+    const hours = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+    const pad = n => String(n).padStart(2, "0");
+
+    if (showHours) {
+        return `${fd(pad(hours))}:${fd(pad(mins))}:${fd(pad(secs))}`;
+    }
+    return `${fd(pad(mins))}:${fd(pad(secs))}`;
+}
+
+function ensureRoutineTimerTicker() {
+    if (routineTimerInterval) return;
+    routineTimerInterval = setInterval(routineTimerTick, 1000);
+}
+
+function stopRoutineTimerTickerIfIdle() {
+    const hasRunning = routines.some(r => r.isTimed && r.timerLogs && Object.values(r.timerLogs).some(l => l && l.isRunning));
+    if (!hasRunning && routineTimerInterval) {
+        clearInterval(routineTimerInterval);
+        routineTimerInterval = null;
+    }
+}
+
+function startRoutineTimer(routineId, dateKey) {
+    const routine = routines.find(r => r.id === routineId);
+    if (!routine) return;
+    const log = getRoutineTimerData(routine, dateKey);
+    if (log.isRunning) return;
+
+    log.isRunning = true;
+    log.lastStartedAt = Date.now();
+    saveRoutines();
+
+    ensureRoutineTimerTicker();
+
+    const widget = document.querySelector(`.routine-timer-widget[data-routine-id="${routineId}"][data-date-key="${dateKey}"]`);
+    if (widget) {
+        widget.setAttribute("data-is-running", "true");
+        const btnToggle = widget.querySelector(".routine-timer-btn-toggle");
+        if (btnToggle) {
+            btnToggle.classList.add("is-running");
+            btnToggle.innerHTML = `
+                <svg class="stopwatch-btn-icon icon-pause" viewBox="0 0 24 24" width="13" height="13">
+                    <rect x="5.5" y="4" width="4" height="16" rx="1.5" fill="currentColor"/>
+                    <rect x="14.5" y="4" width="4" height="16" rx="1.5" fill="currentColor"/>
+                </svg>
+            `;
+            const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+            btnToggle.title = (dict && dict.routines && dict.routines.timerBtnPause) || "توقف";
+        }
+        const dot = widget.querySelector(".stopwatch-status-dot");
+        if (dot) {
+            dot.className = "stopwatch-status-dot is-running";
+        }
+        const statusLabel = widget.querySelector(".stopwatch-status-text");
+        if (statusLabel) {
+            const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+            statusLabel.textContent = (dict && dict.routines && dict.routines.timerStatusRunning) || "در حال زمان‌گیری...";
+        }
+    }
+}
+
+function pauseRoutineTimer(routineId, dateKey) {
+    const routine = routines.find(r => r.id === routineId);
+    if (!routine) return;
+    const log = getRoutineTimerData(routine, dateKey);
+    if (!log.isRunning) return;
+
+    const diff = Math.floor((Date.now() - log.lastStartedAt) / 1000);
+    if (diff > 0) {
+        log.elapsedSeconds = (log.elapsedSeconds || 0) + diff;
+    }
+    log.isRunning = false;
+    log.lastStartedAt = null;
+
+    const targetSec = (routine.targetDurationMinutes || 60) * 60;
+    const isGoalReached = log.elapsedSeconds >= targetSec;
+    if (isGoalReached) {
+        if (!routine.completedDates) routine.completedDates = {};
+        routine.completedDates[dateKey] = true;
+    }
+
+    saveRoutines();
+    stopRoutineTimerTickerIfIdle();
+
+    const widget = document.querySelector(`.routine-timer-widget[data-routine-id="${routineId}"][data-date-key="${dateKey}"]`);
+    if (widget) {
+        widget.setAttribute("data-is-running", "false");
+        const btnToggle = widget.querySelector(".routine-timer-btn-toggle");
+        if (btnToggle) {
+            btnToggle.classList.remove("is-running");
+            btnToggle.innerHTML = `
+                <svg class="stopwatch-btn-icon icon-play" viewBox="0 0 24 24" width="13" height="13">
+                    <path d="M7 4.5v15l12-7.5-12-7.5z" fill="currentColor"/>
+                </svg>
+            `;
+            const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+            btnToggle.title = (dict && dict.routines && dict.routines.timerBtnResume) || "ادامه";
+        }
+        const digitsEl = widget.querySelector(".timer-digits");
+        if (digitsEl) {
+            digitsEl.textContent = formatTimerTimeWithTarget(log.elapsedSeconds, targetSec);
+        }
+        const percent = Math.min(100, Math.round((log.elapsedSeconds / targetSec) * 100));
+        const ringFill = widget.querySelector(".stopwatch-ring-fill");
+        if (ringFill) {
+            const offset = Math.max(0, 119.4 * (1 - percent / 100));
+            ringFill.style.strokeDashoffset = offset.toFixed(1);
+            if (percent >= 100) ringFill.classList.add("goal-reached");
+        }
+        const percentEl = widget.querySelector(".target-percent");
+        if (percentEl) {
+            const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+            percentEl.textContent = `${fd(percent)}%`;
+        }
+        const dot = widget.querySelector(".stopwatch-status-dot");
+        const statusLabel = widget.querySelector(".stopwatch-status-text");
+        const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+        if (isGoalReached) {
+            widget.classList.add("goal-reached");
+            const targetPill = widget.querySelector(".stopwatch-target-pill");
+            if (targetPill) targetPill.classList.add("goal-reached");
+            const targetIcon = widget.querySelector(".target-icon");
+            if (targetIcon) targetIcon.textContent = "🎉";
+            if (dot) dot.className = "stopwatch-status-dot is-done";
+            if (statusLabel) statusLabel.textContent = (dict && dict.routines && dict.routines.timerStatusGoalMet) || "هدف محقق شد! 🎉";
+        } else {
+            if (dot) dot.className = "stopwatch-status-dot is-paused";
+            if (statusLabel) statusLabel.textContent = (dict && dict.routines && dict.routines.timerStatusPaused) || "متوقف شده";
+        }
+    }
+
+    if (typeof selectedDeadlineKey !== "undefined") {
+        updateDailyProgressRing(selectedDeadlineKey);
+    }
+}
+
+function resetRoutineTimer(routineId, dateKey) {
+    const routine = routines.find(r => r.id === routineId);
+    if (!routine) return;
+
+    const log = getRoutineTimerData(routine, dateKey);
+    log.elapsedSeconds = 0;
+    log.isRunning = false;
+    log.lastStartedAt = null;
+
+    saveRoutines();
+    stopRoutineTimerTickerIfIdle();
+
+    if (typeof selectedDeadlineKey !== "undefined" && typeof updateRoutinePanel === "function") {
+        updateRoutinePanel(selectedDeadlineKey);
+    }
+}
+
+function routineTimerTick() {
+    const activeWidgets = document.querySelectorAll(".routine-timer-widget[data-is-running='true']");
+    if (!activeWidgets.length) {
+        stopRoutineTimerTickerIfIdle();
+        return;
+    }
+
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+    const rDict = dict && dict.routines ? dict.routines : null;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+
+    let anyStateChanged = false;
+
+    activeWidgets.forEach(widget => {
+        const routineId = widget.getAttribute("data-routine-id");
+        const dateKey = widget.getAttribute("data-date-key");
+        const routine = routines.find(r => r.id === routineId);
+        if (!routine || !routine.timerLogs || !routine.timerLogs[dateKey]) return;
+
+        const log = routine.timerLogs[dateKey];
+        if (!log.isRunning) {
+            widget.setAttribute("data-is-running", "false");
+            const btnToggle = widget.querySelector(".routine-timer-btn-toggle");
+            if (btnToggle) {
+                btnToggle.classList.remove("is-running");
+                btnToggle.innerHTML = `
+                    <svg class="stopwatch-btn-icon icon-play" viewBox="0 0 24 24" width="13" height="13">
+                        <path d="M7 4.5v15l12-7.5-12-7.5z" fill="currentColor"/>
+                    </svg>
+                `;
+            }
+            return;
+        }
+
+        const elapsed = getLiveElapsedSeconds(log);
+        const targetSec = (routine.targetDurationMinutes || 60) * 60;
+        const percent = Math.min(100, Math.round((elapsed / targetSec) * 100));
+
+        const digitsEl = widget.querySelector(".timer-digits");
+        if (digitsEl) {
+            digitsEl.textContent = formatTimerTimeWithTarget(elapsed, targetSec);
+        }
+
+        const ringFill = widget.querySelector(".stopwatch-ring-fill");
+        if (ringFill) {
+            const offset = Math.max(0, 119.4 * (1 - percent / 100));
+            ringFill.style.strokeDashoffset = offset.toFixed(1);
+            if (percent >= 100) {
+                ringFill.classList.add("goal-reached");
+            }
+        }
+
+        const percentEl = widget.querySelector(".target-percent");
+        if (percentEl) {
+            percentEl.textContent = `${fd(percent)}%`;
+        }
+
+        // Auto-complete if goal reached
+        if (elapsed >= targetSec) {
+            if (!routine.completedDates) routine.completedDates = {};
+            if (!routine.completedDates[dateKey]) {
+                routine.completedDates[dateKey] = true;
+                anyStateChanged = true;
+
+                widget.classList.add("goal-reached");
+
+                const targetPill = widget.querySelector(".stopwatch-target-pill");
+                if (targetPill) targetPill.classList.add("goal-reached");
+
+                const targetIcon = widget.querySelector(".target-icon");
+                if (targetIcon) targetIcon.textContent = "🎉";
+
+                const dot = widget.querySelector(".stopwatch-status-dot");
+                if (dot) dot.className = "stopwatch-status-dot is-done";
+
+                const statusLabel = widget.querySelector(".stopwatch-status-text");
+                if (statusLabel) statusLabel.textContent = (rDict && rDict.timerStatusGoalMet) || "هدف محقق شد! 🎉";
+
+                const parentItem = widget.closest(".routine-item");
+                if (parentItem) {
+                    parentItem.classList.add("done");
+                    const chk = parentItem.querySelector(".routine-checkbox");
+                    if (chk) chk.checked = true;
+                }
+            }
+        }
+    });
+
+    if (anyStateChanged) {
+        saveRoutines();
+        if (typeof selectedDeadlineKey !== "undefined") {
+            updateDailyProgressRing(selectedDeadlineKey);
+        }
+    }
+}
+
+function showRoutineTimerRecoveryPrompt(routine, dateKey, diffSec) {
+    const sidePanel = document.getElementById("side-panel");
+    const bodyEl = document.getElementById("side-panel-body");
+    if (!sidePanel || !bodyEl) return;
+
+    const existing = document.getElementById(`recovery-banner-${routine.id}`);
+    if (existing) existing.remove();
+
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+    const rDict = dict && dict.routines ? dict.routines : null;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+
+    const banner = document.createElement("div");
+    banner.className = "routine-recovery-banner";
+    banner.id = `recovery-banner-${routine.id}`;
+
+    const diffHours = Math.floor(diffSec / 3600);
+    const diffMins = Math.floor((diffSec % 3600) / 60);
+    let timeStr = "";
+    if (diffHours > 0) {
+        timeStr = `${fd(diffHours)} ${rDict ? rDict.timerHours : 'ساعت'} و ${fd(diffMins)} ${rDict ? rDict.timerMinutes : 'دقیقه'}`;
+    } else {
+        timeStr = `${fd(Math.max(1, diffMins))} ${rDict ? rDict.timerMinutes : 'دقیقه'}`;
+    }
+
+    const titleText = rDict ? rDict.timerRecoveryTitle : "زمان سپری‌شده در پس‌زمینه";
+    const descText = (rDict && typeof rDict.timerRecoveryDesc === "function")
+        ? rDict.timerRecoveryDesc(escapeHTML(routine.title), timeStr)
+        : `زمان‌سنج «${escapeHTML(routine.title)}» در زمان بسته بودن مرورگر فعال بود (${timeStr} سپری شد). آیا این زمان به کار امروز افزوده شود؟`;
+    const acceptText = rDict ? rDict.timerRecoveryAccept : "✓ بله، افزوده شود";
+    const rejectText = rDict ? rDict.timerRecoveryReject : "✕ خیر، متوقف بماند";
+
+    banner.innerHTML = `
+        <div class="recovery-banner-header">
+            <span class="recovery-icon">⏱️</span>
+            <strong>${titleText}</strong>
+            <button type="button" class="recovery-close-btn" title="بستن">✕</button>
+        </div>
+        <p class="recovery-desc">${descText}</p>
+        <div class="recovery-actions">
+            <button type="button" class="btn-recovery-accept">${acceptText}</button>
+            <button type="button" class="btn-recovery-reject">${rejectText}</button>
+        </div>
+    `;
+
+    banner.querySelector(".recovery-close-btn").addEventListener("click", () => {
+        banner.remove();
+        if (typeof updateSidePanelHeightAndCollapse === "function") {
+            updateSidePanelHeightAndCollapse();
+        }
+    });
+
+    banner.querySelector(".btn-recovery-accept").addEventListener("click", () => {
+        const log = getRoutineTimerData(routine, dateKey);
+        log.elapsedSeconds = (log.elapsedSeconds || 0) + diffSec;
+        const targetSec = (routine.targetDurationMinutes || 60) * 60;
+        if (log.elapsedSeconds >= targetSec) {
+            if (!routine.completedDates) routine.completedDates = {};
+            routine.completedDates[dateKey] = true;
+        }
+        saveRoutines();
+        banner.remove();
+        if (typeof selectedDeadlineKey !== "undefined" && typeof updateRoutinePanel === "function") {
+            updateRoutinePanel(selectedDeadlineKey);
+        }
+    });
+
+    banner.querySelector(".btn-recovery-reject").addEventListener("click", () => {
+        banner.remove();
+        saveRoutines();
+        if (typeof selectedDeadlineKey !== "undefined" && typeof updateRoutinePanel === "function") {
+            updateRoutinePanel(selectedDeadlineKey);
+        }
+    });
+
+    bodyEl.insertBefore(banner, bodyEl.firstChild);
+    if (typeof updateSidePanelHeightAndCollapse === "function") {
+        updateSidePanelHeightAndCollapse();
+    }
+}
+
+function checkRoutineTimerRecovery() {
+    const now = Date.now();
+    let changed = false;
+
+    routines.forEach(routine => {
+        if (!routine.isTimed || !routine.timerLogs) return;
+        Object.entries(routine.timerLogs).forEach(([dateKey, log]) => {
+            if (!log) return;
+
+            if (log.isRunning && log.lastStartedAt && routine.onCloseBehavior === "continue") {
+                const diffSec = Math.floor((now - log.lastStartedAt) / 1000);
+                if (diffSec > 0) {
+                    log.elapsedSeconds = (log.elapsedSeconds || 0) + diffSec;
+                    log.lastStartedAt = now;
+                    changed = true;
+                    const targetSec = (routine.targetDurationMinutes || 60) * 60;
+                    if (log.elapsedSeconds >= targetSec) {
+                        if (!routine.completedDates) routine.completedDates = {};
+                        routine.completedDates[dateKey] = true;
+                    }
+                }
+                ensureRoutineTimerTicker();
+            } else if (log.isRunning && log.lastStartedAt && (routine.onCloseBehavior === "ask" || !routine.onCloseBehavior)) {
+                const diffSec = Math.floor((now - log.lastStartedAt) / 1000);
+                log.isRunning = false;
+                log.lastStartedAt = null;
+                changed = true;
+
+                if (diffSec >= 30) {
+                    setTimeout(() => {
+                        showRoutineTimerRecoveryPrompt(routine, dateKey, diffSec);
+                    }, 500);
+                }
+            } else if (log.isRunning && log.lastStartedAt && routine.onCloseBehavior === "pause") {
+                const diffSec = Math.floor((now - log.lastStartedAt) / 1000);
+                if (diffSec > 0) {
+                    log.elapsedSeconds = (log.elapsedSeconds || 0) + diffSec;
+                }
+                log.isRunning = false;
+                log.lastStartedAt = null;
+                changed = true;
+            }
+        });
+    });
+
+    if (changed) {
+        saveRoutines();
+    }
+}
+
+window.addEventListener("beforeunload", (e) => {
+    let hasRunning = false;
+    routines.forEach(routine => {
+        if (!routine.isTimed || !routine.timerLogs) return;
+        Object.entries(routine.timerLogs).forEach(([dateKey, log]) => {
+            if (log && log.isRunning && log.lastStartedAt) {
+                hasRunning = true;
+                const now = Date.now();
+                const diff = Math.floor((now - log.lastStartedAt) / 1000);
+
+                if (routine.onCloseBehavior === "pause") {
+                    if (diff > 0) log.elapsedSeconds = (log.elapsedSeconds || 0) + diff;
+                    log.isRunning = false;
+                    log.lastStartedAt = null;
+                }
+            }
+        });
+    });
+
+    saveRoutines();
+
+    if (hasRunning) {
+        e.preventDefault();
+        e.returnValue = "";
+    }
+});
+
 // ----------------------
 //   ROUTINES MODAL
 // ----------------------
@@ -361,9 +877,21 @@ function openAddRoutineModal() {
     modal.classList.remove("hidden");
 }
 
-function closeAddRoutineModal() {
+function closeAddRoutineModal(immediate = false) {
     const modal = document.getElementById("routine-modal");
-    if (modal) modal.classList.add("hidden");
+    if (!modal) return;
+    if (immediate) {
+        modal.classList.add("hidden");
+        modal.classList.remove("is-closing");
+        return;
+    }
+    modal.classList.add("is-closing");
+    setTimeout(() => {
+        if (modal.classList.contains("is-closing")) {
+            modal.classList.add("hidden");
+            modal.classList.remove("is-closing");
+        }
+    }, 200);
 }
 
 function toggleRoutinePatternFields(pattern) {
@@ -478,6 +1006,8 @@ function createRoutineModalDOM() {
                         <input type="number" id="routine-monthly-input" class="routine-number-input" value="1" min="1" max="31">
                         <span>${monthlySuffix}</span>
                     </div>
+                </div>
+
                 <div class="routine-form-group" id="routine-start-date-field">
                     <label>${rDict ? rDict.modalStartDateLabel : 'تاریخ شروع:'}</label>
                     <div class="start-date-input-row">
@@ -486,6 +1016,42 @@ function createRoutineModalDOM() {
                     </div>
                     <span class="routine-form-subhint">${rDict ? rDict.modalStartDateHint : 'روزهای قبل از این تاریخ جزو آمار کارهای انجام‌نشده محاسبه نخواهند شد'}</span>
                 </div>
+
+                <div class="routine-form-group routine-timer-toggle-group">
+                    <label class="routine-checkbox-toggle-label">
+                        <input type="checkbox" id="routine-timed-checkbox">
+                        <span class="routine-toggle-title">⏱️ ${rDict ? rDict.timerOptionToggle : 'فعال‌سازی زمان‌سنج (کرنومتر هدف)'}</span>
+                    </label>
+                </div>
+
+                <div class="routine-form-group hidden" id="routine-timer-fields">
+                    <label>${rDict ? rDict.timerTargetLabel : 'مدت زمان هدف:'}</label>
+                    <div class="routine-timer-duration-row">
+                        <div class="timer-duration-input-group">
+                            <input type="number" id="routine-timer-hours" class="routine-number-input" value="1" min="0" max="23">
+                            <span>${rDict ? rDict.timerHours : 'ساعت'}</span>
+                        </div>
+                        <div class="timer-duration-input-group">
+                            <input type="number" id="routine-timer-minutes" class="routine-number-input" value="0" min="0" max="59" step="5">
+                            <span>${rDict ? rDict.timerMinutes : 'دقیقه'}</span>
+                        </div>
+                    </div>
+                    <div class="timer-quick-chips">
+                        <button type="button" class="timer-chip" data-h="0" data-m="15">${rDict ? rDict.timerChip15m : '۱۵ دقیقه'}</button>
+                        <button type="button" class="timer-chip" data-h="0" data-m="25">${rDict ? rDict.timerChip25m : '۲۵ دقیقه (پومودورو)'}</button>
+                        <button type="button" class="timer-chip" data-h="0" data-m="30">${rDict ? rDict.timerChip30m : '۳۰ دقیقه'}</button>
+                        <button type="button" class="timer-chip" data-h="0" data-m="45">${rDict ? rDict.timerChip45m : '۴۵ دقیقه'}</button>
+                        <button type="button" class="timer-chip active" data-h="1" data-m="0">${rDict ? rDict.timerChip1h : '۱ ساعت'}</button>
+                        <button type="button" class="timer-chip" data-h="2" data-m="0">${rDict ? rDict.timerChip2h : '۲ ساعت'}</button>
+                    </div>
+                    <div class="routine-close-behavior-row">
+                        <label class="sub-label">${rDict ? rDict.timerCloseBehaviorLabel : 'هنگام بستن مرورگر:'}</label>
+                        <select id="routine-close-behavior-select" class="routine-select">
+                            <option value="ask" selected>${rDict ? rDict.timerCloseAsk : 'پرسش پس از بازگشایی (پیشنهادی)'}</option>
+                            <option value="pause">${rDict ? rDict.timerClosePause : 'توقف خودکار در لحظه خروج'}</option>
+                            <option value="continue">${rDict ? rDict.timerCloseContinue : 'ادامه خودکار زمان در پس‌زمینه'}</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="routine-modal-actions">
@@ -503,6 +1069,32 @@ function createRoutineModalDOM() {
     modal.querySelectorAll("input[name='routine-pattern']").forEach(radio => {
         radio.addEventListener("change", (e) => {
             toggleRoutinePatternFields(e.target.value);
+        });
+    });
+
+    const timedCheckbox = modal.querySelector("#routine-timed-checkbox");
+    const timerFields = modal.querySelector("#routine-timer-fields");
+    if (timedCheckbox && timerFields) {
+        timedCheckbox.addEventListener("change", (e) => {
+            if (e.target.checked) {
+                timerFields.classList.remove("hidden");
+            } else {
+                timerFields.classList.add("hidden");
+            }
+        });
+    }
+
+    modal.querySelectorAll(".timer-chip").forEach(chip => {
+        chip.addEventListener("click", (e) => {
+            e.preventDefault();
+            modal.querySelectorAll(".timer-chip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+            const h = chip.getAttribute("data-h");
+            const m = chip.getAttribute("data-m");
+            const hInput = modal.querySelector("#routine-timer-hours");
+            const mInput = modal.querySelector("#routine-timer-minutes");
+            if (hInput) hInput.value = h;
+            if (mInput) mInput.value = m;
         });
     });
 
@@ -539,6 +1131,16 @@ function createRoutineModalDOM() {
         const startDateInput = modal.querySelector("#routine-start-date-input");
         const chosenStartDate = (startDateInput && startDateInput.value) ? startDateInput.value : todayStr;
 
+        const isTimed = !!modal.querySelector("#routine-timed-checkbox")?.checked;
+        let targetDurationMinutes = 60;
+        let onCloseBehavior = "ask";
+        if (isTimed) {
+            const hours = parseInt(modal.querySelector("#routine-timer-hours")?.value, 10) || 0;
+            const mins = parseInt(modal.querySelector("#routine-timer-minutes")?.value, 10) || 0;
+            targetDurationMinutes = Math.max(1, (hours * 60) + mins);
+            onCloseBehavior = modal.querySelector("#routine-close-behavior-select")?.value || "ask";
+        }
+
         const newRoutine = {
             id: "routine_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
             title,
@@ -549,7 +1151,11 @@ function createRoutineModalDOM() {
             createdAt: new Date().toISOString(),
             weeklyDays,
             monthlyDay,
-            completedDates: {}
+            completedDates: {},
+            isTimed,
+            targetDurationMinutes,
+            onCloseBehavior,
+            timerLogs: {}
         };
 
         routines.push(newRoutine);
@@ -579,11 +1185,9 @@ let currentSidePanelMode = localStorage.getItem("sidePanelMode") || "deadlines";
 // ----------------------
 //   ROUTINES PANEL RENDERER
 // ----------------------
-function updateRoutinePanel(deadlineKey) {
-    const listEl = document.getElementById("routine-list");
+function updateDailyProgressRing(deadlineKey) {
     const progressEl = document.getElementById("daily-progress-container");
-
-    if (!listEl || !progressEl) return;
+    if (!progressEl) return;
 
     const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
         ? TRANSLATIONS[currentLanguage]
@@ -645,6 +1249,30 @@ function updateRoutinePanel(deadlineKey) {
             ${isLocked ? `<div class="progress-locked-notice" title="${rDict ? rDict.lockedTooltip : ''}">🔒 ${rDict ? rDict.lockedNotice : 'قفل‌شده: مهلت ویرایش پس از یک هفته به پایان رسیده است'}</div>` : ''}
         </div>
     `;
+}
+
+function updateRoutinePanel(deadlineKey) {
+    const listEl = document.getElementById("routine-list");
+    const progressEl = document.getElementById("daily-progress-container");
+
+    if (!listEl || !progressEl) return;
+
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage])
+        ? TRANSLATIONS[currentLanguage]
+        : null;
+    const rDict = dict && dict.routines ? dict.routines : null;
+    const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
+
+    const targetParsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(deadlineKey) : null;
+    const gDate = targetParsed ? targetParsed.gDate : new Date();
+    const dayJalaliKey = targetParsed ? targetParsed.jKey : deadlineKey;
+    const dateKey = getRoutineIsoDateKey(gDate);
+    const isLocked = isDateLockedForRoutineEditing(gDate);
+
+    const dayRoutines = routines.filter(r => isRoutineScheduledForDate(r, gDate));
+
+    // Update Progress Ring
+    updateDailyProgressRing(deadlineKey);
 
     // Render routines list
     listEl.innerHTML = "";
@@ -669,23 +1297,137 @@ function updateRoutinePanel(deadlineKey) {
             }
 
             const rItem = document.createElement("div");
-            rItem.className = `routine-item ${isDone ? "done" : ""} ${isLocked ? "is-locked" : ""}`;
+            rItem.className = `routine-item ${isDone ? "done" : ""} ${isLocked ? "is-locked" : ""} ${routine.isTimed ? "is-timed" : ""}`;
 
             const escapedTitle = (typeof escapeHTML === "function") ? escapeHTML(routine.title) : routine.title;
             const lockBadgeHTML = isLocked
                 ? `<span class="routine-lock-badge" title="${rDict ? rDict.lockedTooltip : ''}">🔒 ${rDict ? rDict.lockedBadge : 'قفل‌شده'}</span>`
                 : "";
 
+            let timerWidgetHTML = "";
+            let targetBadgeText = "";
+
+            if (routine.isTimed) {
+                const timerData = getRoutineTimerData(routine, dateKey);
+                const isRunning = timerData ? !!timerData.isRunning : false;
+                const liveElapsed = getLiveElapsedSeconds(timerData);
+                const targetSec = (routine.targetDurationMinutes || 60) * 60;
+                const progressPercent = Math.min(100, Math.round((liveElapsed / targetSec) * 100));
+                const isGoalReached = liveElapsed >= targetSec;
+                const dashOffset = Math.max(0, 119.4 * (1 - progressPercent / 100));
+
+                const durHours = Math.floor((routine.targetDurationMinutes || 60) / 60);
+                const durMins = (routine.targetDurationMinutes || 60) % 60;
+                let targetBadgeTextShort = "";
+                if (durHours > 0 && durMins > 0) {
+                    targetBadgeText = `⏱️ ${fd(durHours)}h ${fd(durMins)}m`;
+                    targetBadgeTextShort = `${fd(durHours)}h ${fd(durMins)}m`;
+                } else if (durHours > 0) {
+                    targetBadgeText = `⏱️ ${fd(durHours)}h`;
+                    targetBadgeTextShort = `${fd(durHours)}h`;
+                } else {
+                    targetBadgeText = `⏱️ ${fd(durMins)}m`;
+                    targetBadgeTextShort = `${fd(durMins)}m`;
+                }
+
+                const elapsedFormatted = formatTimerTimeWithTarget(liveElapsed, targetSec);
+                const btnPlayTitle = isRunning
+                    ? (rDict ? rDict.timerBtnPause : "توقف")
+                    : (liveElapsed > 0 ? (rDict ? rDict.timerBtnResume : "ادامه") : (rDict ? rDict.timerBtnStart : "شروع"));
+                const resetTitle = rDict ? rDict.timerBtnReset : "بازنشانی";
+
+                let statusText = "";
+                let statusDotClass = "";
+                if (isGoalReached) {
+                    statusText = (rDict && rDict.timerStatusGoalMet) || "هدف محقق شد! 🎉";
+                    statusDotClass = "is-done";
+                } else if (isRunning) {
+                    statusText = (rDict && rDict.timerStatusRunning) || "در حال زمان‌گیری...";
+                    statusDotClass = "is-running";
+                } else if (liveElapsed > 0) {
+                    statusText = (rDict && rDict.timerStatusPaused) || "متوقف شده";
+                    statusDotClass = "is-paused";
+                } else {
+                    statusText = (rDict && rDict.timerStatusReady) || "آماده شروع";
+                    statusDotClass = "is-ready";
+                }
+
+                timerWidgetHTML = `
+                    <div class="routine-timer-widget ${isGoalReached ? 'goal-reached' : ''}" data-routine-id="${routine.id}" data-date-key="${dateKey}" data-is-running="${isRunning ? 'true' : 'false'}">
+                        <div class="routine-stopwatch-dial">
+                            <div class="stopwatch-crown"></div>
+                            <div class="stopwatch-ring-wrapper">
+                                <svg class="stopwatch-ring-svg" viewBox="0 0 46 46">
+                                    <circle class="stopwatch-ring-bg" cx="23" cy="23" r="19" />
+                                    <circle class="stopwatch-ring-fill ${isGoalReached ? 'goal-reached' : ''}" cx="23" cy="23" r="19" style="stroke-dashoffset: ${dashOffset.toFixed(1)};" />
+                                </svg>
+                                ${!isLocked ? `
+                                    <button type="button" class="routine-timer-btn routine-timer-btn-toggle ${isRunning ? 'is-running' : ''}" title="${btnPlayTitle}">
+                                        ${isRunning ? `
+                                            <svg class="stopwatch-btn-icon icon-pause" viewBox="0 0 24 24" width="13" height="13">
+                                                <rect x="5.5" y="4" width="4" height="16" rx="1.5" fill="currentColor"/>
+                                                <rect x="14.5" y="4" width="4" height="16" rx="1.5" fill="currentColor"/>
+                                            </svg>
+                                        ` : `
+                                            <svg class="stopwatch-btn-icon icon-play" viewBox="0 0 24 24" width="13" height="13">
+                                                <path d="M7 4.5v15l12-7.5-12-7.5z" fill="currentColor"/>
+                                            </svg>
+                                        `}
+                                    </button>
+                                ` : `
+                                    <div class="routine-timer-locked-icon" title="${rDict ? rDict.lockedTooltip : ''}">🔒</div>
+                                `}
+                            </div>
+                        </div>
+
+                        <div class="routine-stopwatch-info">
+                            <div class="routine-stopwatch-row-top">
+                                <div class="stopwatch-status">
+                                    <span class="stopwatch-status-dot ${statusDotClass}"></span>
+                                    <span class="stopwatch-status-text">${statusText}</span>
+                                </div>
+                                ${!isLocked ? `
+                                    <button type="button" class="routine-timer-btn routine-timer-btn-reset" title="${resetTitle}">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                            <path d="M3 3v5h5"/>
+                                        </svg>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="routine-stopwatch-row-bottom">
+                                <div class="stopwatch-display">
+                                    <span class="timer-digits">${elapsedFormatted}</span>
+                                </div>
+                                <div class="stopwatch-target-pill ${isGoalReached ? 'goal-reached' : ''}">
+                                    <span class="target-icon">${isGoalReached ? '🎉' : '⏱️'}</span>
+                                    <span class="target-text">${targetBadgeTextShort}</span>
+                                    <span class="target-percent">${fd(progressPercent)}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if (isRunning) {
+                    ensureRoutineTimerTicker();
+                }
+            }
+
             rItem.innerHTML = `
-                <div class="routine-item-left">
-                    <input type="checkbox" class="routine-checkbox" ${isDone ? "checked" : ""} ${isLocked ? "disabled" : ""}>
-                    <span class="routine-item-title">${escapedTitle}</span>
+                <div class="routine-item-main">
+                    <div class="routine-item-left">
+                        <input type="checkbox" class="routine-checkbox" ${isDone ? "checked" : ""} ${isLocked ? "disabled" : ""}>
+                        <span class="routine-item-title">${escapedTitle}</span>
+                    </div>
+                    <div class="routine-item-right">
+                        ${lockBadgeHTML}
+                        ${routine.isTimed ? `<span class="routine-badge timer-target-badge">${targetBadgeText}</span>` : ''}
+                        <span class="routine-badge">${badgeText}</span>
+                        <button type="button" class="routine-del-btn" title="حذف">✕</button>
+                    </div>
                 </div>
-                <div class="routine-item-right">
-                    ${lockBadgeHTML}
-                    <span class="routine-badge">${badgeText}</span>
-                    <button type="button" class="routine-del-btn" title="حذف">✕</button>
-                </div>
+                ${timerWidgetHTML}
             `;
 
             const chk = rItem.querySelector(".routine-checkbox");
@@ -706,6 +1448,32 @@ function updateRoutinePanel(deadlineKey) {
                     deleteRoutine(routine.id);
                 }
             });
+
+            if (routine.isTimed && !isLocked) {
+                const toggleBtn = rItem.querySelector(".routine-timer-btn-toggle");
+                if (toggleBtn) {
+                    toggleBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        const currentLog = getRoutineTimerData(routine, dateKey);
+                        if (currentLog.isRunning) {
+                            pauseRoutineTimer(routine.id, dateKey);
+                        } else {
+                            startRoutineTimer(routine.id, dateKey);
+                        }
+                    });
+                }
+
+                const resetBtn = rItem.querySelector(".routine-timer-btn-reset");
+                if (resetBtn) {
+                    resetBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        const confirmMsg = rDict ? (rDict.timerBtnReset + "?") : "آیا از بازنشانی زمان این کار اطمینان دارید؟";
+                        if (confirm(confirmMsg)) {
+                            resetRoutineTimer(routine.id, dateKey);
+                        }
+                    });
+                }
+            }
 
             listEl.appendChild(rItem);
         });
@@ -993,7 +1761,12 @@ function initSidePanelsUI() {
     const savedMode = localStorage.getItem("sidePanelMode") || "deadlines";
     setSidePanelMode(savedMode, false);
 
-    // 6. Initial render of routines
+    // 6. Routine Timer Recovery check
+    try {
+        checkRoutineTimerRecovery();
+    } catch (e) {}
+
+    // 7. Initial render of routines
     try {
         if (typeof selectedDeadlineKey !== "undefined") {
             updateRoutinePanel(selectedDeadlineKey);

@@ -24,9 +24,7 @@ body.dark-mode {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.dark-mode .calendar-top-bar:hover {
-    background-color: #162032;
-}
+
 
 .dark-mode .toggleCalendarBtn {
     background: transparent;
@@ -340,20 +338,45 @@ body.dark-mode {
 }
 
 /* ===================================
-   LANGUAGE SELECTOR (DARK MODE)
+   THEME TOGGLE & LANGUAGE SELECTOR (DARK MODE)
    =================================== */
 
+.dark-mode .theme-toggle-btn {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.3)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.dark-mode .theme-toggle-btn:hover {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: drop-shadow(0 0 11px rgba(255, 255, 255, 0.5)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}
+
+.dark-mode .theme-toggle-btn:active {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25)) drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
+}
+
 .dark-mode .lang-toggle-btn {
-    background-color: #1e293b;
-    border-color: #334155;
-    color: #cbd5e1;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #e2e8f0;
+    filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.3)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
 }
 
 .dark-mode .lang-toggle-btn:hover {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     color: #60a5fa;
-    border-color: #60a5fa;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(96, 165, 250, 0.2);
+    filter: drop-shadow(0 0 11px rgba(255, 255, 255, 0.5)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}
+
+.dark-mode .lang-toggle-btn:active {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25)) drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
 }
 
 .dark-mode .lang-dropdown {
@@ -827,4 +850,191 @@ body.dark-mode {
 }
 .dark-mode .reminder-bell-magnet .reminder-bell-badge {
     border-color: #1e293b;
+}
+
+
+/* ----------------------
+   ROUTINE TIMER DARK MODE
+---------------------- */
+.dark-mode .routine-checkbox-toggle-label {
+    background: #232733;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+.dark-mode .routine-checkbox-toggle-label:hover {
+    background: #2d3342;
+}
+
+.dark-mode .timer-duration-input-group {
+    background: #1e2230;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+.dark-mode .timer-chip {
+    background: #232733;
+    color: #9ca3af;
+    border-color: #374151;
+}
+
+.dark-mode .timer-chip:hover {
+    background: #312e81;
+    color: #c7d2fe;
+    border-color: #4f46e5;
+}
+
+.dark-mode .timer-chip.active {
+    background: #4f46e5;
+    color: #ffffff;
+    border-color: #6366f1;
+}
+
+.dark-mode .routine-close-behavior-row .sub-label {
+    color: #9ca3af;
+}
+
+.dark-mode .routine-select {
+    background: #1e2230;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+.dark-mode .routine-badge.timer-target-badge {
+    background: rgba(109, 40, 217, 0.25);
+    color: #c4b5fd;
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+/* Dark Mode: Stopwatch / Focus Chronometer Widget */
+.dark-mode .routine-timer-widget {
+    background: linear-gradient(135deg, #1e2433 0%, #151a26 100%);
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.dark-mode .routine-timer-widget[data-is-running="true"] {
+    background: linear-gradient(135deg, #232a3d 0%, #171d2b 100%);
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .routine-timer-widget.goal-reached {
+    background: linear-gradient(135deg, #13271f 0%, #0d1a15 100%);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dark-mode .stopwatch-ring-bg {
+    stroke: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .stopwatch-crown {
+    background: #475569;
+}
+
+.dark-mode .routine-timer-btn-toggle {
+    background: #252c3c;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .routine-timer-btn-toggle:hover {
+    background: #2e3648;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .routine-timer-btn-reset {
+    background: #252c3c;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .routine-timer-btn-reset:hover {
+    background: #3b1e22;
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+.dark-mode .stopwatch-status {
+    color: #94a3b8;
+}
+
+.dark-mode .stopwatch-status-dot.is-ready {
+    background: #64748b;
+}
+
+.dark-mode .timer-digits {
+    color: #f8fafc;
+}
+
+.dark-mode .routine-timer-widget[data-is-running="true"] .timer-digits {
+    color: #818cf8;
+}
+
+.dark-mode .stopwatch-target-pill {
+    background: #252c3c;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.dark-mode .stopwatch-target-pill.goal-reached {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+}
+
+.dark-mode .stopwatch-target-pill.goal-reached .target-percent {
+    color: #34d399;
+}
+
+.dark-mode .routine-recovery-banner {
+    background: #14231b;
+    border-color: #1e3a29;
+}
+
+.dark-mode .recovery-banner-header {
+    color: #86efac;
+}
+
+.dark-mode .recovery-desc {
+    color: #d1d5db;
+}
+
+.dark-mode .btn-recovery-reject {
+    border-color: #374151;
+    color: #9ca3af;
+}
+
+.dark-mode .btn-recovery-reject:hover {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+.dark-mode .dash-mgmt-timer-pill {
+    background: rgba(109, 40, 217, 0.25);
+    color: #c4b5fd;
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+.dark-mode .dash-inspector-timer-badge {
+    background: rgba(109, 40, 217, 0.25);
+    color: #c4b5fd;
+}
+
+/* DRAG AND DROP IN EXPANDED CALENDAR (DARK MODE) */
+.dark-mode .expanded-day-cell.drag-over:not(.empty) {
+    background: rgba(99, 102, 241, 0.22) !important;
+    outline: 2.5px dashed #818cf8 !important;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+}
+
+.dark-mode .expanded-task-pill.is-dragging,
+.dark-mode .popover-task-item.is-dragging,
+.dark-mode .exp-overdue-card.is-dragging {
+    opacity: 0.45;
+    outline-color: #818cf8 !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
 }
