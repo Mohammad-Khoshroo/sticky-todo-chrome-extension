@@ -513,6 +513,7 @@ window.updateNotesLayout = updateNotesLayout;
 // ----------------------
 
 addNoteBtn.addEventListener('click', () => {
+    if (window.SoundEngine) SoundEngine.stick();
     const newNote = {
         id: 'note_' + Date.now(),
         title: '',
@@ -569,6 +570,7 @@ fridgeContainer.addEventListener('change', (e) => {
 
         const taskIndex = Number(taskEl.dataset.taskIndex);
         notes[noteIndex].tasks[taskIndex].checked = e.target.checked;
+        if (window.SoundEngine) SoundEngine.check(e.target.checked);
         saveNotes();
         if (typeof updateDeadlinePanel === 'function') {
             updateDeadlinePanel(selectedDeadlineKey);

@@ -286,6 +286,7 @@ function bindOverdueCardsEvents(container) {
             const tIdx = Number(e.target.dataset.task);
             if (notes[nIdx] && notes[nIdx].tasks[tIdx]) {
                 notes[nIdx].tasks[tIdx].checked = e.target.checked;
+                if (window.SoundEngine) SoundEngine.check(e.target.checked);
                 if (typeof saveNotes === "function") saveNotes();
                 if (typeof syncFridgeTaskCheckbox === "function") syncFridgeTaskCheckbox(nIdx, tIdx, e.target.checked);
                 if (typeof renderCalendar === "function") renderCalendar();
@@ -633,6 +634,7 @@ function populateDayCellContent(cell, dayNumber, dayKey, gDate, isToday, fd) {
             e.stopPropagation();
             if (notes[item.noteIndex] && notes[item.noteIndex].tasks[item.taskIndex]) {
                 notes[item.noteIndex].tasks[item.taskIndex].checked = check.checked;
+                if (window.SoundEngine) SoundEngine.check(check.checked);
                 if (typeof saveNotes === "function") saveNotes();
                 if (typeof syncFridgeTaskCheckbox === "function") syncFridgeTaskCheckbox(item.noteIndex, item.taskIndex, check.checked);
                 if (typeof renderCalendar === "function") renderCalendar();

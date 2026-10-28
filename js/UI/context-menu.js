@@ -97,6 +97,7 @@ taskContextMenu.addEventListener("click", (e) => {
     }
 
     if (action === "toggle-scribble") {
+        if (window.SoundEngine) SoundEngine.scribble();
         task.scribbled = !task.scribbled;
         task.scribbledAt = task.scribbled ? Date.now() : null;
         if (activeTaskElement) {
@@ -216,6 +217,7 @@ taskContextMenu.addEventListener("click", (e) => {
     }
 
     if (action === "delete") {
+        if (window.SoundEngine) SoundEngine.crumple();
         note.tasks.splice(taskIndex, 1);
 
         saveNotes();
@@ -343,6 +345,7 @@ noteContextMenu?.addEventListener("click", (e) => {
     }
 
     if (action === "delete-note") {
+        if (window.SoundEngine) SoundEngine.crumple();
         if (contextNoteTarget.type === 'stack') {
             const stackId = contextNoteTarget.stackId;
             notes.forEach(n => {

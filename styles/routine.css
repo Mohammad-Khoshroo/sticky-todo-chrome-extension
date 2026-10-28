@@ -723,6 +723,7 @@
 }
 
 .side-panel-body {
+    box-sizing: border-box;
     max-height: 520px;
     overflow-y: auto;
     overflow-x: hidden;

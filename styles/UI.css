@@ -623,3 +623,48 @@ html[dir="ltr"] .trash-badge {
 html[dir="ltr"] .trash-modal {
     direction: ltr;
 }
+
+/* ----------------------
+   SOUND TOGGLE BUTTON
+---------------------- */
+.sound-toggle-btn {
+    all: unset;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 48px;
+    height: 48px;
+    color: #475569;
+    filter: drop-shadow(2px 3px 5px rgba(0, 0, 0, 0.35));
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.22s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.sound-toggle-btn:hover {
+    transform: scale(1.12) translateY(-2px);
+    filter: drop-shadow(3px 6px 10px rgba(0, 0, 0, 0.45));
+    color: #2563eb;
+}
+
+.sound-toggle-btn:active {
+    transform: scale(0.95);
+    filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.sound-toggle-btn .sound-icon {
+    display: block;
+    width: 32px;
+    height: 32px;
+}
+
+.sound-toggle-btn.is-muted {
+    opacity: 0.65;
+}
+
+.sound-toggle-btn.is-muted:hover {
+    opacity: 1;
+    color: #ef4444;
+}

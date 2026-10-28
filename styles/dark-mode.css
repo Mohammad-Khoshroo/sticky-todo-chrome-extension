@@ -2,11 +2,14 @@
    DARK MODE STYLES
    =================================== */
 
-html.dark-mode,
+html.dark-mode {
+    background-color: #0d131f;
+}
+
 body.dark-mode {
-    background-color: #0b1120;
+    background-color: #0d131f;
     background-image:
-        radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.7) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(20, 28, 44, 0.45) 0%, rgba(13, 19, 31, 0.45) 100%),
         repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 255, 255, 0.015) 2px, rgba(255, 255, 255, 0.015) 4px);
     color: #f1f5f9;
 }
@@ -1037,4 +1040,16 @@ body.dark-mode {
     opacity: 0.45;
     outline-color: #818cf8 !important;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-mode .sound-toggle-btn {
+    color: #94a3b8;
+}
+
+.dark-mode .sound-toggle-btn:hover {
+    color: #60a5fa;
+}
+
+.dark-mode .sound-toggle-btn.is-muted:hover {
+    color: #f87171;
 }

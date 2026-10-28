@@ -217,6 +217,7 @@ fridgeContainer.addEventListener("dragleave", (e) => {
 
 fridgeContainer.addEventListener("drop", (e) => {
     if (currentDragType === "note" && draggedNoteId) {
+        if (window.SoundEngine) SoundEngine.stick();
         const targetStack = e.target.closest(".note-wrapper.is-stack");
         const targetNoteWrapper = e.target.closest(".note-wrapper:not(.is-stack)");
 
@@ -324,6 +325,7 @@ fridgeContainer.addEventListener("drop", (e) => {
         if (!task) return;
 
         task.scribbled = !task.scribbled;
+        if (window.SoundEngine) SoundEngine.scribble();
         task.scribbledAt = task.scribbled ? Date.now() : null;
         targetTaskEl.classList.toggle("scribbled", task.scribbled);
 
@@ -335,6 +337,7 @@ fridgeContainer.addEventListener("drop", (e) => {
         if (!notes[targetNoteIndex]?.tasks) return;
 
         notes[targetNoteIndex].tasks.splice(targetTaskIndex, 1);
+        if (window.SoundEngine) SoundEngine.erase();
 
         saveNotes();
         if (typeof refreshSingleNoteOnFridge === 'function') {

@@ -427,7 +427,9 @@ function getAvailableDeadlineListHeight() {
         if (penTop > 0) barrier = penTop;
     }
 
-    const targetBottom = barrier - 18;
+    // Increased buffer so the panel bottom has generous, comfortable breathing room
+    // above the eraser and pencil magnets (upper icons) at its max height.
+    const targetBottom = barrier - 50;
     const panelRect = deadlinePanel.getBoundingClientRect();
     let panelTop = panelRect.top;
     if (!panelTop || panelTop <= 0) {
@@ -437,8 +439,8 @@ function getAvailableDeadlineListHeight() {
     }
 
     const headerHeight = deadlinePanel.querySelector(".deadline-panel-header")?.offsetHeight || 42;
-    const available = Math.floor(targetBottom - panelTop - headerHeight - 4);
-    return Math.max(available, 60);
+    const available = Math.floor(targetBottom - panelTop - headerHeight);
+    return Math.max(available, 40);
 }
 
 function applyDeadlinePanelState() {
@@ -1090,6 +1092,7 @@ if (toggleBtn && calendar) {
 
     toggleBtn.addEventListener('click', function (e) {
         e.stopPropagation();
+        if (window.SoundEngine) SoundEngine.click();
         const isMinimized = !calendar.classList.contains('minimized');
         applyCalendarState(isMinimized);
         saveCalendarState(isMinimized);
@@ -1099,6 +1102,7 @@ if (toggleBtn && calendar) {
 const deadlineToggleBtn = document.getElementById('deadline-panel-toggle-btn');
 if (deadlineToggleBtn) {
     deadlineToggleBtn.addEventListener('click', () => {
+        if (window.SoundEngine) SoundEngine.click();
         isDeadlinePanelUserCollapsed = !isDeadlinePanelUserCollapsed;
         applyDeadlinePanelState();
     });

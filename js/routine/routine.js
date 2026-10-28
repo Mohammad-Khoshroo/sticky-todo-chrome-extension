@@ -675,6 +675,7 @@ function routineTimerTick() {
 
                 const statusLabel = widget.querySelector(".stopwatch-status-text");
                 if (statusLabel) statusLabel.textContent = (rDict && rDict.timerStatusGoalMet) || "هدف محقق شد! 🎉";
+                if (window.SoundEngine) SoundEngine.timerDing();
 
                 const parentItem = widget.closest(".routine-item");
                 if (parentItem) {
@@ -1434,6 +1435,7 @@ function updateRoutinePanel(deadlineKey) {
             if (!isLocked) {
                 chk.addEventListener("change", (e) => {
                     e.stopPropagation();
+                    if (window.SoundEngine) SoundEngine.check(chk.checked);
                     toggleRoutineCompletion(routine.id, dayJalaliKey, gDate);
                 });
             } else {
@@ -1454,6 +1456,7 @@ function updateRoutinePanel(deadlineKey) {
                 if (toggleBtn) {
                     toggleBtn.addEventListener("click", (e) => {
                         e.stopPropagation();
+                        if (window.SoundEngine) SoundEngine.timerTick();
                         const currentLog = getRoutineTimerData(routine, dateKey);
                         if (currentLog.isRunning) {
                             pauseRoutineTimer(routine.id, dateKey);
@@ -1627,7 +1630,9 @@ function getAvailableSidePanelHeight() {
         if (penTop > 0) barrier = penTop;
     }
 
-    const targetBottom = barrier - 20;
+    // Increased buffer so the panel bottom has generous, comfortable breathing room
+    // above the eraser and pencil magnets (upper icons) at its max height.
+    const targetBottom = barrier - 50;
 
     let panelTop = 0;
     if (sidePanel) {
@@ -1643,8 +1648,8 @@ function getAvailableSidePanelHeight() {
     const header = sidePanel ? sidePanel.querySelector(".side-panel-header") : null;
     const headerHeight = header ? header.offsetHeight : 44;
 
-    const available = Math.floor(targetBottom - panelTop - headerHeight - 16);
-    return Math.max(available, 60);
+    const available = Math.floor(targetBottom - panelTop - headerHeight);
+    return Math.max(available, 40);
 }
 
 function updateSidePanelHeightAndCollapse() {

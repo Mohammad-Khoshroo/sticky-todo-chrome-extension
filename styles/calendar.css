@@ -627,12 +627,12 @@ html[dir="ltr"] .deadline-item.done {
 .reminder-bell-magnet {
     all: unset;
     position: fixed;
-    top: 18px;
-    right: 432px;
+    top: 16px;
+    right: 422px;
     left: auto;
     z-index: 950;
-    width: 78px;
-    height: 78px;
+    width: 74px;
+    height: 74px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -656,8 +656,8 @@ html[dir="ltr"] .deadline-item.done {
 .bell-magnet-img,
 .bell-magnet-svg {
     display: block;
-    width: 78px;
-    height: 78px;
+    width: 74px;
+    height: 74px;
     transform: translate(4px, -4px);
     pointer-events: none;
     user-select: none;
@@ -1926,9 +1926,9 @@ html[dir="ltr"] .expanded-calendar-modal {
 }
 
 html[dir="ltr"] .reminder-bell-magnet {
-    left: 432px;
+    left: 422px;
     right: auto;
-    top: 18px;
+    top: 16px;
 }
 
 html[dir="ltr"] .reminder-bell-magnet:hover {

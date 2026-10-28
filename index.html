@@ -150,7 +150,7 @@
 
     <!-- Reminder Bell Magnet (تقویم بزرگ و یادآور ددلاین‌ها) -->
     <button id="reminder-bell-btn" class="reminder-bell-magnet" type="button" title="تقویم بزرگ و ددلاین‌ها">
-        <svg class="bell-magnet-svg" viewBox="0 0 100 100" width="78" height="78" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="bell-magnet-svg" viewBox="0 0 100 100" width="74" height="74" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g class="bell-clapper-group">
                 <circle cx="50" cy="70.1" r="7.1" fill="#fef6aa" stroke="#1f212b" stroke-width="1.8"/>
             </g>
@@ -231,6 +231,21 @@
               <circle cx="17.5" cy="17.5" r="0.9" fill="#f8fafc"/>
             </svg>
         </button>
+        <button id="sound-toggle-btn" class="sound-toggle-btn" type="button" title="قطع افکت‌های صوتی" aria-label="قطع افکت‌های صوتی">
+            <svg class="sound-icon" viewBox="0 0 24 24" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Speaker Body -->
+                <path d="M11 5L6 9H2V15H6L11 19V5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/>
+                <!-- Sound waves when active -->
+                <g class="sound-icon-waves">
+                    <path d="M15.54 8.46C16.48 9.4 17 10.66 17 12C17 13.34 16.48 14.6 15.54 15.54" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M19.07 4.93C20.95 6.8 22 9.34 22 12C22 14.66 20.95 17.2 19.07 19.07" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.75"/>
+                </g>
+                <!-- Mute slash when muted -->
+                <g class="sound-icon-muted" style="display: none;">
+                    <line x1="22" y1="2" x2="2" y2="22" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </button>
         <button id="add-note-btn">یادداشت جدید +</button>
     </div>
 
@@ -283,6 +298,7 @@
     <script src="js/UI/trash-bin.js"></script>
     <script src="js/UI/pencil.js"></script>
     <script src="js/UI/eraser.js"></script>
+    <script src="js/UI/sound.js"></script>
     <script src="js/UI/window-controls.js"></script>
     <script src="js/UI/context-menu.js"></script>
     <script src="js/UI/theme.js"></script>

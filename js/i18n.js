@@ -22,6 +22,8 @@ const TRANSLATIONS = {
         noteTitlePlaceholder: 'عنوان یادداشت...',
         taskPlaceholder: 'کار جدید...',
         dropToStack: '➕ رها کنید برای دسته‌بندی',
+        soundMuteTip: 'قطع افکت‌های صوتی',
+        soundUnmuteTip: 'فعال‌سازی افکت‌های صوتی',
         pencilTitle: 'برای خط‌زدن تسک، مداد را روی آن بکشید',
         eraserTitle: 'برای حذف تسک، پاک‌کن را روی آن بکشید',
         themeToggleTitle: 'تغییر حالت شب و روز (روشن / تاریک)',
@@ -267,6 +269,8 @@ const TRANSLATIONS = {
         noteTitlePlaceholder: 'Note Title...',
         taskPlaceholder: 'New task...',
         dropToStack: '➕ Drop to group into stack',
+        soundMuteTip: 'Mute Sound Effects',
+        soundUnmuteTip: 'Enable Sound Effects',
         pencilTitle: 'Drag pencil over task to scribble!',
         eraserTitle: 'Drag eraser over task to delete instantly',
         themeToggleTitle: 'Toggle Dark / Light Theme',
@@ -512,6 +516,8 @@ const TRANSLATIONS = {
         noteTitlePlaceholder: '메모 제목...',
         taskPlaceholder: '새 할 일...',
         dropToStack: '➕ 스택으로 묶으려면 놓기',
+        soundMuteTip: '효과음 끄기',
+        soundUnmuteTip: '효과음 켜기',
         pencilTitle: '할 일을 지우려면 연필을 드래그하세요!',
         eraserTitle: '할 일을 즉시 삭제하려면 지우개를 드래그하세요',
         themeToggleTitle: '다크 / 라이트 모드 전환',
@@ -757,6 +763,8 @@ const TRANSLATIONS = {
         noteTitlePlaceholder: 'عنوان الملاحظة...',
         taskPlaceholder: 'مهمة جديدة...',
         dropToStack: '➕ اترك للتجميع في حزمة',
+        soundMuteTip: 'كتم المؤثرات الصوتية',
+        soundUnmuteTip: 'تفعيل المؤثرات الصوتية',
         pencilTitle: 'اسحب القلم للشطب على المهمة!',
         eraserTitle: 'اسحب الممحاة لحذف المهمة مباشرة',
         themeToggleTitle: 'تبديل الوضع الليلي / النهاري',
@@ -1040,6 +1048,7 @@ function formatDigits(numOrStr) {
 function setLanguage(newLang, switchCalendar = true) {
     if (!SUPPORTED_LANGUAGES.includes(newLang)) return;
     currentLanguage = newLang;
+    if (window.SoundEngine && typeof SoundEngine.updateButtonUI === 'function') SoundEngine.updateButtonUI();
 
     try {
         localStorage.setItem('appLanguage', newLang);

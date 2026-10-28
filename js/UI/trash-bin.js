@@ -155,6 +155,7 @@ function renderTrashModal() {
 function restoreNote(noteId) {
     const note = notes.find(n => n.id === noteId);
     if (!note) return;
+    if (window.SoundEngine) SoundEngine.stick();
 
     note.deletedAt = null;
     // If was in stack that no longer exists, clear stackId
@@ -177,6 +178,7 @@ function permanentlyDeleteNote(noteId) {
 }
 
 function emptyTrash() {
+    if (window.SoundEngine) SoundEngine.crumple();
     notes = notes.filter(n => !n.deletedAt);
     saveNotes();
     renderAllNotes();
@@ -233,6 +235,7 @@ trashBin.addEventListener("drop", (e) => {
     e.preventDefault();
     trashBin.classList.remove("drag-over");
     isDraggingToTrash = false;
+    if (window.SoundEngine) SoundEngine.crumple();
 
     // Trigger bounce animation on drop
     trashBin.classList.remove("trash-dropped");

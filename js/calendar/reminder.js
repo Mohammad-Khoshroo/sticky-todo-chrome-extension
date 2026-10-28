@@ -470,6 +470,7 @@ function renderFilteredReminderTasks(data) {
         if (checkbox) {
             checkbox.addEventListener("change", (e) => {
                 e.stopPropagation();
+                if (window.SoundEngine) SoundEngine.check(checkbox.checked);
                 if (notes[noteIndex] && notes[noteIndex].tasks[taskIndex]) {
                     notes[noteIndex].tasks[taskIndex].checked = checkbox.checked;
                     if (typeof saveNotes === "function") saveNotes();
@@ -594,6 +595,7 @@ function initReminderBellUI() {
     if (bellBtn) {
         bellBtn.addEventListener("click", (e) => {
             e.stopPropagation();
+            if (window.SoundEngine) SoundEngine.bell();
             if (typeof openExpandedCalendar === "function") {
                 openExpandedCalendar();
             } else {

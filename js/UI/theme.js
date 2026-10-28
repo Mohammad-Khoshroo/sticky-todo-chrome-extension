@@ -33,6 +33,7 @@ function applyTheme(theme) {
 }
 
 function toggleTheme() {
+    if (window.SoundEngine) SoundEngine.click();
     const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
     const newTheme = currentTheme === "dark" ? "light" : "dark";
 
