@@ -5,8 +5,77 @@
 //////////////////////////////////////////////////////////////////
 
 let dashboardActiveTab = "calendar"; // "calendar" | "analytics" | "management"
-let dashboardMonthOffset = 0; // 0 = current active month
+let dashJy = null;
+let dashJm = null;
+let dashGy = null;
+let dashGm = null;
+let dashHy = null;
+let dashHm = null;
 let dashboardSelectedDate = null; // Date object for Day Inspector
+
+function initDashboardCalendarState(targetDate) {
+    const base = (targetDate instanceof Date && !isNaN(targetDate.getTime())) ? new Date(targetDate) : new Date();
+    dashboardSelectedDate = new Date(base);
+    dashboardSelectedDate.setHours(12, 0, 0, 0);
+
+    if (typeof jalaali !== "undefined") {
+        const j = jalaali.toJalaali(base);
+        dashJy = j.jy;
+        dashJm = j.jm;
+    } else {
+        dashJy = 1405;
+        dashJm = 8;
+    }
+
+    dashGy = base.getFullYear();
+    dashGm = base.getMonth() + 1;
+
+    if (typeof getHijriParts === "function") {
+        const h = getHijriParts(base);
+        dashHy = h.hy;
+        dashHm = h.hm;
+    } else {
+        dashHy = 1448;
+        dashHm = 5;
+    }
+}
+
+function changeDashboardMonth(delta) {
+    const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
+
+    if (calType === "jalali") {
+        if (dashJy === null || dashJm === null) initDashboardCalendarState(dashboardSelectedDate);
+        dashJm += delta;
+        if (dashJm < 1) {
+            dashJm = 12;
+            dashJy--;
+        } else if (dashJm > 12) {
+            dashJm = 1;
+            dashJy++;
+        }
+    } else if (calType === "gregorian") {
+        if (dashGy === null || dashGm === null) initDashboardCalendarState(dashboardSelectedDate);
+        dashGm += delta;
+        if (dashGm < 1) {
+            dashGm = 12;
+            dashGy--;
+        } else if (dashGm > 12) {
+            dashGm = 1;
+            dashGy++;
+        }
+    } else if (calType === "hijri") {
+        if (dashHy === null || dashHm === null) initDashboardCalendarState(dashboardSelectedDate);
+        dashHm += delta;
+        if (dashHm < 1) {
+            dashHm = 12;
+            dashHy--;
+        } else if (dashHm > 12) {
+            dashHm = 1;
+            dashHy++;
+        }
+    }
+    renderDashboardCurrentTab();
+}
 
 // ----------------------
 //   ANALYTICS CALCULATIONS
@@ -365,12 +434,7 @@ function openRoutineDashboardModal(targetDate) {
     let modal = document.getElementById("routine-dashboard-modal");
     if (modal) modal.remove();
 
-    dashboardMonthOffset = 0;
-    if (targetDate instanceof Date) {
-        dashboardSelectedDate = targetDate;
-    } else if (!dashboardSelectedDate) {
-        dashboardSelectedDate = new Date();
-    }
+    initDashboardCalendarState(targetDate);
 
     modal = createRoutineDashboardModalDOM();
     document.body.appendChild(modal);
@@ -488,41 +552,43 @@ function renderDashboardCalendarTab(container) {
     const rDict = dict && dict.routines ? dict.routines : null;
     const fd = typeof formatDigits === "function" ? formatDigits : (x => x);
 
-    // Calculate month info based on offset & calendar type
+    // Calculate month info based on calendar state & calendar type
     const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
 
-    // Target date for month
-    const baseDate = new Date();
-    baseDate.setDate(1);
-    baseDate.setMonth(baseDate.getMonth() + dashboardMonthOffset);
+    if (dashJy === null || dashGy === null || dashHy === null) {
+        initDashboardCalendarState(dashboardSelectedDate || new Date());
+    }
 
-    let year = baseDate.getFullYear();
-    let month = baseDate.getMonth() + 1; // 1-based
+    let year = 1405;
+    let month = 1;
     let monthName = "";
     let daysCount = 30;
     let startWeekdayIndex = 0; // 0 = Sat, 6 = Fri
 
     if (calType === "jalali" && typeof jalaali !== "undefined") {
-        const j = jalaali.toJalaali(baseDate);
-        year = j.jy;
-        month = j.jm;
+        year = dashJy;
+        month = dashJm;
         monthName = dict && dict.months && dict.months.jalali ? dict.months.jalali[month - 1] : `ماه ${month}`;
         daysCount = jalaali.jalaaliMonthLength(year, month);
         const firstG = jalaali.toGregorian(year, month, 1);
         const gFirstDate = new Date(firstG.gy, firstG.gm - 1, firstG.gd);
-        startWeekdayIndex = (gFirstDate.getDay() + 1) % 7;
-    } else if (calType === "hijri" && typeof getHijriParts === "function") {
-        const h = getHijriParts(baseDate);
-        year = h.hy;
-        month = h.hm;
+        startWeekdayIndex = (gFirstDate.getDay() + 1) % 7; // Saturday = 0, Friday = 6
+    } else if (calType === "hijri" && typeof getHijriMonthInfo === "function") {
+        year = dashHy;
+        month = dashHm;
         monthName = dict && dict.months && dict.months.hijri ? dict.months.hijri[month - 1] : `ماه ${month}`;
-        daysCount = 30;
-        startWeekdayIndex = (baseDate.getDay() + 1) % 7;
+        const hInfo = getHijriMonthInfo(year, month);
+        daysCount = hInfo.totalDays;
+        startWeekdayIndex = hInfo.firstDayIndex;
     } else {
         // Gregorian
+        year = dashGy;
+        month = dashGm;
         monthName = dict && dict.months && dict.months.gregorian ? dict.months.gregorian[month - 1] : `Month ${month}`;
         daysCount = new Date(year, month, 0).getDate();
-        startWeekdayIndex = (baseDate.getDay() + 1) % 7;
+        const firstDate = new Date(year, month - 1, 1);
+        const isLtr = document.documentElement.getAttribute("dir") !== "rtl";
+        startWeekdayIndex = isLtr ? firstDate.getDay() : ((firstDate.getDay() + 1) % 7);
     }
 
     const weekdays = (dict && dict.weekdays && dict.weekdays.jalali)
@@ -576,16 +642,16 @@ function renderDashboardCalendarTab(container) {
 
     // Month Navigation listeners
     container.querySelector("#dash-cal-prev").addEventListener("click", () => {
-        dashboardMonthOffset--;
-        renderDashboardCurrentTab();
+        if (window.SoundEngine) SoundEngine.click();
+        changeDashboardMonth(-1);
     });
     container.querySelector("#dash-cal-next").addEventListener("click", () => {
-        dashboardMonthOffset++;
-        renderDashboardCurrentTab();
+        if (window.SoundEngine) SoundEngine.click();
+        changeDashboardMonth(1);
     });
     container.querySelector("#dash-cal-today").addEventListener("click", () => {
-        dashboardMonthOffset = 0;
-        dashboardSelectedDate = new Date();
+        if (window.SoundEngine) SoundEngine.click();
+        initDashboardCalendarState(new Date());
         renderDashboardCurrentTab();
     });
 
@@ -601,6 +667,10 @@ function renderDashboardCalendarTab(container) {
         gridEl.appendChild(emptyCell);
     }
 
+    let selectedCellFound = false;
+    let todayCellEl = null;
+    let firstDayCellData = null;
+
     // 2. Day cells
     for (let dayNum = 1; dayNum <= daysCount; dayNum++) {
         let gDate = null;
@@ -610,6 +680,13 @@ function renderDashboardCalendarTab(container) {
             const g = jalaali.toGregorian(year, month, dayNum);
             gDate = new Date(g.gy, g.gm - 1, g.gd, 12, 0, 0);
             dayJalaliKey = formatJalaliKey(year, month, dayNum);
+        } else if (calType === "hijri" && typeof hijriToGregorianDate === "function") {
+            gDate = hijriToGregorianDate(year, month, dayNum);
+            gDate.setHours(12, 0, 0, 0);
+            if (typeof jalaali !== "undefined") {
+                const j = jalaali.toJalaali(gDate);
+                dayJalaliKey = formatJalaliKey(j.jy, j.jm, j.jd);
+            }
         } else {
             gDate = new Date(year, month - 1, dayNum, 12, 0, 0);
             if (typeof jalaali !== "undefined") {
@@ -618,9 +695,13 @@ function renderDashboardCalendarTab(container) {
             }
         }
 
+        if (dayNum === 1) {
+            firstDayCellData = { gDate, dayJalaliKey };
+        }
+
         const isToday = gDate.toDateString() === today.toDateString();
+        const isSelected = dashboardSelectedDate && (gDate.toDateString() === dashboardSelectedDate.toDateString());
         const isPast = gDate.getTime() < today.getTime() && !isToday;
-        const isFuture = gDate.getTime() > today.getTime();
         const isLocked = typeof isDateLockedForRoutineEditing === "function" && isDateLockedForRoutineEditing(gDate);
 
         const scheduled = routines.filter(r => isRoutineScheduledForDate(r, gDate));
@@ -660,6 +741,11 @@ function renderDashboardCalendarTab(container) {
 
         const cell = document.createElement("div");
         cell.className = `dash-cal-cell ${statusClass} ${isToday ? 'is-today' : ''} ${isLocked ? 'is-locked' : ''}`;
+        if (isSelected) {
+            cell.classList.add("selected");
+            selectedCellFound = true;
+        }
+
         cell.innerHTML = `
             <div class="dash-cell-top">
                 <span class="dash-cell-num">${fd(dayNum)}</span>
@@ -673,23 +759,33 @@ function renderDashboardCalendarTab(container) {
         `;
 
         cell.addEventListener("click", () => {
+            if (window.SoundEngine) SoundEngine.click();
             gridEl.querySelectorAll(".dash-cal-cell").forEach(c => c.classList.remove("selected"));
             cell.classList.add("selected");
             dashboardSelectedDate = gDate;
             renderDayInspector(container.querySelector("#dash-day-inspector"), gDate, dayJalaliKey);
         });
 
-        // Default selection: select today or day 1
-        if (isToday || (!dashboardSelectedDate && dayNum === 1)) {
-            cell.classList.add("selected");
-            dashboardSelectedDate = gDate;
+        if (isToday) {
+            todayCellEl = { cell, gDate, dayJalaliKey };
         }
 
         gridEl.appendChild(cell);
     }
 
-    // Render inspector for currently selected day
-    if (dashboardSelectedDate) {
+    // Fallback selection if no cell matched dashboardSelectedDate
+    if (!selectedCellFound) {
+        if (todayCellEl) {
+            todayCellEl.cell.classList.add("selected");
+            dashboardSelectedDate = todayCellEl.gDate;
+            renderDayInspector(container.querySelector("#dash-day-inspector"), todayCellEl.gDate, todayCellEl.dayJalaliKey);
+        } else if (firstDayCellData) {
+            const firstCell = gridEl.querySelector(".dash-cal-cell:not(.empty)");
+            if (firstCell) firstCell.classList.add("selected");
+            dashboardSelectedDate = firstDayCellData.gDate;
+            renderDayInspector(container.querySelector("#dash-day-inspector"), firstDayCellData.gDate, firstDayCellData.dayJalaliKey);
+        }
+    } else if (dashboardSelectedDate) {
         const selJKey = (typeof jalaali !== "undefined") ? (() => {
             const j = jalaali.toJalaali(dashboardSelectedDate);
             return formatJalaliKey(j.jy, j.jm, j.jd);
