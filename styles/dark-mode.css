@@ -1053,3 +1053,61 @@ body.dark-mode {
 .dark-mode .sound-toggle-btn.is-muted:hover {
     color: #f87171;
 }
+
+/* Dark mode scheduling bar */
+.dark-mode .expanded-scheduling-bar {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.35) 0%, rgba(20, 83, 45, 0.25) 100%);
+    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .exp-scheduling-title-row {
+    color: #93c5fd;
+}
+
+.dark-mode .exp-scheduling-note-name {
+    color: #94a3b8;
+}
+
+.dark-mode .exp-scheduling-subhint {
+    color: #cbd5e1;
+}
+
+.dark-mode .exp-scheduling-task-card {
+    background: #1e293b;
+    border-color: #60a5fa;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode .exp-scheduling-task-text {
+    color: #f8fafc;
+}
+
+.dark-mode .exp-scheduling-deadline-tag {
+    background: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+}
+
+.dark-mode .exp-scheduling-deadline-tag.has-deadline {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.dark-mode .btn-exp-sched-clear {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark-mode .btn-exp-sched-clear:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.dark-mode .btn-exp-sched-done {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.dark-mode .btn-exp-sched-done:hover {
+    background: #1d4ed8;
+}

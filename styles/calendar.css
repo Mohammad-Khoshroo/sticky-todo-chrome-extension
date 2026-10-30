@@ -2000,3 +2000,200 @@ html[dir="ltr"] .exp-overdue-card.color-3 { border-left-color: #ef4444; }
 }
 
 
+
+/* ------------------------------------------------------------- */
+/*   TASK SCHEDULING DOCK / BAR IN EXPANDED CALENDAR             */
+/* ------------------------------------------------------------- */
+.expanded-scheduling-bar {
+    margin: 8px 14px 6px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border: 1.5px solid #93c5fd;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    animation: scheduling-dock-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    z-index: 10;
+}
+
+@keyframes scheduling-dock-slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.exp-scheduling-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.exp-scheduling-instruction {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.exp-scheduling-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.exp-scheduling-note-name {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.exp-scheduling-subhint {
+    font-size: 0.76rem;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Draggable Task Card in Scheduling Bar */
+.exp-scheduling-task-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1.5px solid #3b82f6;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.2);
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    flex-shrink: 0;
+    max-width: 320px;
+}
+
+.exp-scheduling-task-card:active {
+    cursor: grabbing;
+}
+
+.exp-scheduling-task-card.is-dragging {
+    opacity: 0.45;
+    transform: scale(0.96);
+}
+
+.exp-scheduling-task-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.28);
+}
+
+.exp-scheduling-drag-grip {
+    color: #3b82f6;
+    font-size: 1.1rem;
+    line-height: 1;
+    opacity: 0.85;
+}
+
+.exp-scheduling-task-text {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0f172a;
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.exp-scheduling-deadline-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: #e0f2fe;
+    color: #0369a1;
+    white-space: nowrap;
+}
+
+.exp-scheduling-deadline-tag.has-deadline {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.exp-scheduling-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-exp-sched-clear {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.btn-exp-sched-clear:hover {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.btn-exp-sched-done {
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+    transition: all 0.15s ease;
+}
+
+.btn-exp-sched-done:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.45);
+}
+
+/* Day cell drop pulse animation */
+.expanded-day-cell.cell-drop-success {
+    animation: cell-assign-pulse 0.6s ease-out;
+}
+
+@keyframes cell-assign-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        border-color: #22c55e;
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+        border-color: #22c55e;
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: none;
+        transform: scale(1);
+    }
+}

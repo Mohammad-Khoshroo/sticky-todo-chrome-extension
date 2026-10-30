@@ -14,6 +14,7 @@ let expHm = null;
 let isOverdueDrawerOpen = false;
 let draggedCalendarDeadline = null;
 let isDraggingCalendarItem = false;
+let schedulingTaskInfo = null; // { noteIndex, taskIndex }
 
 function initExpandedCalendarState() {
     const today = new Date();
@@ -53,6 +54,12 @@ function openExpandedCalendar() {
 }
 
 function closeExpandedCalendar(immediate = false) {
+    schedulingTaskInfo = null;
+    const schedBar = document.getElementById("exp-scheduling-bar");
+    if (schedBar) {
+        schedBar.style.display = "none";
+        schedBar.innerHTML = "";
+    }
     const modal = document.getElementById("expanded-calendar-modal");
     if (!modal) return;
 
@@ -125,6 +132,9 @@ function ensureExpandedCalendarSkeleton(modal) {
                     <button type="button" class="close-expanded-cal-btn" id="btn-close-expanded-cal" title="بستن">✕</button>
                 </div>
             </div>
+
+            <!-- Task Scheduling Banner (Active when setting deadline for a specific task) -->
+            <div class="expanded-scheduling-bar" id="exp-scheduling-bar" style="display: none;"></div>
 
             <!-- Overdue Tasks Accordion Banner -->
             <div class="expanded-overdue-banner" id="exp-overdue-banner" style="display: none;">
@@ -399,6 +409,9 @@ function renderExpandedCalendarContent(modal) {
     // Update Days Grid
     const gridEl = modal.querySelector("#expanded-cal-days-grid");
     if (gridEl) renderExpandedGridDays(gridEl, calType);
+
+    // Update task scheduling bar if in scheduling mode
+    updateSchedulingBar(modal);
 }
 
 function renderExpandedWeekdays(calType) {
@@ -742,22 +755,58 @@ function renderExpandedDayCell(gridEl, dayNumber, dayKey, gDate, isToday, fd) {
         note.tasks[taskIndex].deadline = targetParsed.jKey;
 
         if (typeof saveNotes === "function") saveNotes();
+        if (typeof refreshSingleNoteOnFridge === "function") refreshSingleNoteOnFridge(note);
         if (typeof renderCalendar === "function") renderCalendar();
         if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
             updateDeadlinePanel(selectedDeadlineKey);
         }
         if (typeof updateReminderBell === "function") updateReminderBell();
 
+        if (window.SoundEngine) SoundEngine.stick();
+        cell.classList.add("cell-drop-success");
+        setTimeout(() => cell.classList.remove("cell-drop-success"), 600);
+
         // Remove any open popover
         const pop = document.querySelector(".expanded-cal-popover");
         if (pop) pop.remove();
 
-        // Seamless in-place drop update (NO modal animation, NO drop pulse)
+        // Seamless in-place drop update
         handleCalendarDropUpdate(sourceDayKey, targetDayKey);
+        if (typeof updateSchedulingBar === "function") updateSchedulingBar();
     });
 
-    // Clicking cell selects it in the regular calendar too
+    // Clicking cell assigns deadline if in scheduling mode, or selects it in calendar
     cell.addEventListener("click", () => {
+        if (schedulingTaskInfo) {
+            const { noteIndex, taskIndex } = schedulingTaskInfo;
+            const note = (typeof notes !== "undefined" && notes[noteIndex]) ? notes[noteIndex] : null;
+            const task = (note && note.tasks) ? note.tasks[taskIndex] : null;
+            if (note && task) {
+                const targetParsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(dayKey) : null;
+                if (targetParsed) {
+                    const oldDeadline = task.deadline;
+                    if (oldDeadline !== targetParsed.jKey) {
+                        task.deadline = targetParsed.jKey;
+                        if (typeof saveNotes === "function") saveNotes();
+                        if (typeof refreshSingleNoteOnFridge === "function") refreshSingleNoteOnFridge(note);
+                        if (typeof renderCalendar === "function") renderCalendar();
+                        if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
+                            updateDeadlinePanel(selectedDeadlineKey);
+                        }
+                        if (typeof updateReminderBell === "function") updateReminderBell();
+
+                        if (window.SoundEngine) SoundEngine.stick();
+                        cell.classList.add("cell-drop-success");
+                        setTimeout(() => cell.classList.remove("cell-drop-success"), 600);
+
+                        handleCalendarDropUpdate(oldDeadline, dayKey);
+                        if (typeof updateSchedulingBar === "function") updateSchedulingBar();
+                        return;
+                    }
+                }
+            }
+        }
+
         if (typeof selectedDeadlineKey !== "undefined") {
             selectedDeadlineKey = dayKey;
             if (typeof updateDeadlinePanel === "function") {
@@ -984,3 +1033,195 @@ window.openExpandedCalendar = openExpandedCalendar;
 window.closeExpandedCalendar = closeExpandedCalendar;
 window.renderExpandedCalendarContent = renderExpandedCalendarContent;
 window.refreshExpandedDayCell = refreshExpandedDayCell;
+
+//////////////////////////////////////////////////////////////////
+// ---------------------------------------------------------------
+//   TASK DEADLINE DRAG & DROP SCHEDULING SYSTEM
+// ---------------------------------------------------------------
+//////////////////////////////////////////////////////////////////
+
+function openExpandedCalendarForTask(noteIndex, taskIndex) {
+    const note = (typeof notes !== "undefined" && notes[noteIndex]) ? notes[noteIndex] : null;
+    if (!note || !note.tasks || !note.tasks[taskIndex]) return;
+
+    schedulingTaskInfo = { noteIndex, taskIndex };
+    const task = note.tasks[taskIndex];
+
+    // If task already has a deadline, open the calendar on that deadline's month!
+    if (task.deadline && typeof parseAnyDeadlineKey === "function") {
+        const parsed = parseAnyDeadlineKey(task.deadline);
+        if (parsed) {
+            const calType = (typeof currentCalendarType !== "undefined") ? currentCalendarType : "jalali";
+            if (calType === "gregorian") {
+                expGy = parsed.gDate.getFullYear();
+                expGm = parsed.gDate.getMonth() + 1;
+            } else if (calType === "hijri") {
+                expHy = parsed.h ? parsed.h.hy : (parsed.hYear || expHy);
+                expHm = parsed.h ? parsed.h.hm : (parsed.hMonth || expHm);
+            } else {
+                expJy = parsed.j ? parsed.j.jy : (parsed.jYear || expJy);
+                expJm = parsed.j ? parsed.j.jm : (parsed.jMonth || expJm);
+            }
+        } else {
+            initExpandedCalendarState();
+        }
+    } else {
+        initExpandedCalendarState();
+    }
+
+    openExpandedCalendar();
+    updateSchedulingBar();
+}
+window.openExpandedCalendarForTask = openExpandedCalendarForTask;
+
+function updateSchedulingBar(modal) {
+    if (!modal) modal = document.getElementById("expanded-calendar-modal");
+    if (!modal) return;
+    const bar = modal.querySelector("#exp-scheduling-bar");
+    if (!bar) return;
+
+    if (!schedulingTaskInfo) {
+        bar.style.display = "none";
+        bar.innerHTML = "";
+        return;
+    }
+
+    const { noteIndex, taskIndex } = schedulingTaskInfo;
+    const note = (typeof notes !== "undefined" && notes[noteIndex]) ? notes[noteIndex] : null;
+    const task = (note && note.tasks) ? note.tasks[taskIndex] : null;
+
+    if (!note || !task) {
+        schedulingTaskInfo = null;
+        bar.style.display = "none";
+        bar.innerHTML = "";
+        return;
+    }
+
+    const dict = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLanguage]) ? TRANSLATIONS[currentLanguage] : null;
+    const remDict = dict && dict.reminder ? dict.reminder : null;
+    const expDict = dict && dict.expandedCal ? dict.expandedCal : null;
+    const fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
+        ? toFarsiNumber
+        : (x => x);
+
+    const noteTitle = note.title || (remDict ? remDict.untitledNote : 'یادداشت');
+    const colorClass = note.colorClass || 'color-0';
+    const taskText = task.text || (expDict && expDict.taskFallback ? expDict.taskFallback : 'تسک بدون عنوان');
+
+    let deadlineBadgeText = "";
+    let hasDeadline = false;
+    if (task.deadline) {
+        hasDeadline = true;
+        const parsed = (typeof parseAnyDeadlineKey === "function") ? parseAnyDeadlineKey(task.deadline) : null;
+        if (parsed) {
+            const calType = typeof currentCalendarType !== "undefined" ? currentCalendarType : "jalali";
+            let mName = "";
+            let dNum = parsed.jDay;
+            if (calType === "gregorian") {
+                mName = dict && dict.months && dict.months.gregorian ? dict.months.gregorian[parsed.gDate.getMonth()] : `Month ${parsed.gDate.getMonth() + 1}`;
+                dNum = parsed.gDate.getDate();
+            } else if (calType === "hijri") {
+                const hm = parsed.h ? parsed.h.hm : parsed.hMonth;
+                const hd = parsed.h ? parsed.h.hd : parsed.hDay;
+                mName = dict && dict.months && dict.months.hijri ? dict.months.hijri[hm - 1] : `ماه ${hm}`;
+                dNum = hd;
+            } else {
+                const jm = parsed.j ? parsed.j.jm : parsed.jMonth;
+                const jd = parsed.j ? parsed.j.jd : parsed.jDay;
+                mName = dict && dict.months && dict.months.jalali ? dict.months.jalali[jm - 1] : `ماه ${jm}`;
+                dNum = jd;
+            }
+            const dateStr = `${fd(dNum)} ${mName}`;
+            deadlineBadgeText = (expDict && expDict.schedulingCurrentDeadline ? expDict.schedulingCurrentDeadline : "ددلاین:") + " " + dateStr;
+        } else {
+            deadlineBadgeText = task.deadline;
+        }
+    } else {
+        deadlineBadgeText = expDict && expDict.schedulingNoDeadline ? expDict.schedulingNoDeadline : "بدون ددلاین";
+    }
+
+    const titleMsg = expDict && expDict.schedulingTitle ? expDict.schedulingTitle : "تنظیم ددلاین برای:";
+    const dragHint = expDict && expDict.schedulingDragHint ? expDict.schedulingDragHint : "این تسک را بکشید و روی روز مورد نظر در تقویم رها کنید (یا روی هر روز کلیک کنید)";
+    const clearBtnText = expDict && expDict.schedulingClear ? expDict.schedulingClear : "حذف ددلاین";
+    const doneBtnText = expDict && expDict.schedulingDone ? expDict.schedulingDone : "تأیید و بازگشت";
+
+    bar.style.display = "flex";
+    bar.innerHTML = `
+        <div class="exp-scheduling-left">
+            <div class="exp-scheduling-instruction">
+                <div class="exp-scheduling-title-row">
+                    <span>📌</span>
+                    <span>${titleMsg}</span>
+                    <span class="exp-scheduling-note-name">(${escapeHTML(noteTitle)})</span>
+                </div>
+                <div class="exp-scheduling-subhint">${dragHint}</div>
+            </div>
+
+            <div class="exp-scheduling-task-card ${colorClass}" id="exp-scheduling-drag-card" draggable="true" title="برای جابجایی بکشید">
+                <span class="exp-scheduling-drag-grip">⠿</span>
+                <span class="exp-scheduling-task-text">${escapeHTML(taskText)}</span>
+                <span class="exp-scheduling-deadline-tag ${hasDeadline ? 'has-deadline' : ''}">${deadlineBadgeText}</span>
+            </div>
+        </div>
+
+        <div class="exp-scheduling-right">
+            ${hasDeadline ? `<button type="button" class="btn-exp-sched-clear" id="btn-exp-sched-clear">${clearBtnText}</button>` : ''}
+            <button type="button" class="btn-exp-sched-done" id="btn-exp-sched-done">${doneBtnText}</button>
+        </div>
+    `;
+
+    // Draggable card listeners
+    const dragCard = bar.querySelector("#exp-scheduling-drag-card");
+    if (dragCard) {
+        dragCard.addEventListener("dragstart", (e) => {
+            isDraggingCalendarItem = true;
+            draggedCalendarDeadline = {
+                noteIndex,
+                taskIndex,
+                sourceDayKey: task.deadline || null,
+                isFromSchedulingBar: true
+            };
+            e.dataTransfer.setData("text/plain", JSON.stringify(draggedCalendarDeadline));
+            e.dataTransfer.effectAllowed = "move";
+            dragCard.classList.add("is-dragging");
+        });
+
+        dragCard.addEventListener("dragend", () => {
+            dragCard.classList.remove("is-dragging");
+            document.querySelectorAll(".expanded-day-cell.drag-over").forEach(c => c.classList.remove("drag-over"));
+            draggedCalendarDeadline = null;
+            setTimeout(() => {
+                isDraggingCalendarItem = false;
+            }, 60);
+        });
+    }
+
+    // Action listeners
+    const clearBtn = bar.querySelector("#btn-exp-sched-clear");
+    if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+            if (task.deadline) {
+                const oldKey = task.deadline;
+                task.deadline = null;
+                if (window.SoundEngine) SoundEngine.erase();
+                if (typeof saveNotes === "function") saveNotes();
+                if (typeof refreshSingleNoteOnFridge === "function") refreshSingleNoteOnFridge(note);
+                if (typeof renderCalendar === "function") renderCalendar();
+                if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
+                    updateDeadlinePanel(selectedDeadlineKey);
+                }
+                if (typeof updateReminderBell === "function") updateReminderBell();
+                handleCalendarDropUpdate(oldKey, null);
+                updateSchedulingBar();
+            }
+        });
+    }
+
+    const doneBtn = bar.querySelector("#btn-exp-sched-done");
+    if (doneBtn) {
+        doneBtn.addEventListener("click", () => {
+            closeExpandedCalendar();
+        });
+    }
+}
+window.updateSchedulingBar = updateSchedulingBar;

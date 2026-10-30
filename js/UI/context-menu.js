@@ -112,6 +112,11 @@ taskContextMenu.addEventListener("click", (e) => {
     if (action === "set-deadline") {
         closeTaskContextMenu();
 
+        if (typeof openExpandedCalendarForTask === "function") {
+            openExpandedCalendarForTask(noteIndex, taskIndex);
+            return;
+        }
+
         const currentKey = getTaskDeadlineKey(task);
         const baseKey = currentKey || formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd);
         let defaultPromptVal = baseKey;

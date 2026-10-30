@@ -254,7 +254,14 @@ const TRANSLATIONS = {
             expandBtnTitle: 'بزرگ‌نمایی تقویم و مشاهده ددلاین‌ها',
             modalTitle: 'نمای بزرگ تقویم',
             today: 'امروز',
-            close: 'بستن'
+            close: 'بستن',
+            schedulingTitle: 'تنظیم ددلاین برای تسک:',
+            schedulingDragHint: 'این تسک را با ماوس بکشید و روی روز مورد نظر رها کنید (یا روی هر روز کلیک کنید)',
+            schedulingCurrentDeadline: 'ددلاین فعلی:',
+            schedulingNoDeadline: 'بدون ددلاین',
+            schedulingClear: 'حذف ددلاین',
+            schedulingDone: 'تأیید و بازگشت',
+            taskFallback: 'تسک'
         },
         prompts: {
             setDeadline: 'تاریخ ددلاین را وارد کنید:\n• شمسی: 1405-07-28\n• میلادی: 2026-10-20\n• قمری: 1448-05-09',
@@ -501,7 +508,14 @@ const TRANSLATIONS = {
             expandBtnTitle: 'Expand Calendar & View Deadlines',
             modalTitle: 'Expanded Calendar',
             today: 'Today',
-            close: 'Close'
+            close: 'Close',
+            schedulingTitle: 'Set deadline for task:',
+            schedulingDragHint: 'Drag this task and drop onto any day (or click any day)',
+            schedulingCurrentDeadline: 'Current deadline:',
+            schedulingNoDeadline: 'No deadline',
+            schedulingClear: 'Clear deadline',
+            schedulingDone: 'Done & Return',
+            taskFallback: 'Task'
         },
         prompts: {
             setDeadline: 'Enter deadline date:\n• Gregorian: 2026-10-20\n• Solar Hijri: 1405-07-28\n• Lunar Hijri: 1448-05-09',
@@ -748,7 +762,14 @@ const TRANSLATIONS = {
             expandBtnTitle: '달력 확대 및 마감일 보기',
             modalTitle: '확대된 달력',
             today: '오늘',
-            close: '닫기'
+            close: '닫기',
+            schedulingTitle: '태스크 마감일 설정:',
+            schedulingDragHint: '이 태스크를 끌어다 원하는 날짜에 놓거나 클릭하세요',
+            schedulingCurrentDeadline: '현재 마감일:',
+            schedulingNoDeadline: '마감일 없음',
+            schedulingClear: '마감일 삭제',
+            schedulingDone: '확인 및 닫기',
+            taskFallback: '태스크'
         },
         prompts: {
             setDeadline: '마감 날짜를 입력하세요:\n• 양력 (그레고리력): 2026-10-20\n• 태양력 (페르시아): 1405-07-28\n• 이슬람력: 1448-05-09',
@@ -995,7 +1016,14 @@ const TRANSLATIONS = {
             expandBtnTitle: 'تكبير التقويم وعرض المواعيد النهائية',
             modalTitle: 'التقويم الموسع',
             today: 'اليوم',
-            close: 'إغلاق'
+            close: 'إغلاق',
+            schedulingTitle: 'تعيين الموعد النهائي للمهمة:',
+            schedulingDragHint: 'اسحب هذه المهمة وأفلتها على اليوم المطلوب (أو انقر على أي يوم)',
+            schedulingCurrentDeadline: 'الموعد الحالي:',
+            schedulingNoDeadline: 'بلا موعد',
+            schedulingClear: 'حذف الموعد',
+            schedulingDone: 'تأكيد وإغلاق',
+            taskFallback: 'مهمة'
         },
         prompts: {
             setDeadline: 'أدخل تاريخ الموعد النهائي:\n• هجري قمري: 1448-05-09\n• ميلادي: 2026-10-20\n• هجري شمسي: 1405-07-28',
