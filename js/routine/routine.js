@@ -342,22 +342,33 @@ function toggleRoutineCompletion(routineId, dayJalaliKey, gDate) {
     }
 
     saveRoutines();
-    if (typeof updateRoutinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
-        updateRoutinePanel(selectedDeadlineKey);
+    const activeKey = (typeof selectedDeadlineKey !== "undefined" && selectedDeadlineKey)
+        ? selectedDeadlineKey
+        : (typeof formatJalaliKey === "function" && typeof todayJalali !== "undefined" ? formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd) : null);
+
+    if (typeof updateRoutinePanel === "function") {
+        updateRoutinePanel(activeKey);
     }
-    if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
-        updateDeadlinePanel(selectedDeadlineKey);
+    if (typeof updateDeadlinePanel === "function") {
+        updateDeadlinePanel(activeKey);
     }
 }
 
 function deleteRoutine(routineId) {
     routines = routines.filter(r => r.id !== routineId);
     saveRoutines();
-    if (typeof updateRoutinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
-        updateRoutinePanel(selectedDeadlineKey);
+    const activeKey = (typeof selectedDeadlineKey !== "undefined" && selectedDeadlineKey)
+        ? selectedDeadlineKey
+        : (typeof formatJalaliKey === "function" && typeof todayJalali !== "undefined" ? formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd) : null);
+
+    if (typeof updateRoutinePanel === "function") {
+        updateRoutinePanel(activeKey);
     }
-    if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
-        updateDeadlinePanel(selectedDeadlineKey);
+    if (typeof updateDeadlinePanel === "function") {
+        updateDeadlinePanel(activeKey);
+    }
+    if (typeof updateSidePanelHeightAndCollapse === "function") {
+        updateSidePanelHeightAndCollapse();
     }
 }
 
@@ -1163,8 +1174,18 @@ function createRoutineModalDOM() {
         saveRoutines();
         closeAddRoutineModal();
 
-        if (typeof updateDeadlinePanel === "function" && typeof selectedDeadlineKey !== "undefined") {
-            updateDeadlinePanel(selectedDeadlineKey);
+        const activeKey = (typeof selectedDeadlineKey !== "undefined" && selectedDeadlineKey)
+            ? selectedDeadlineKey
+            : (typeof formatJalaliKey === "function" && typeof todayJalali !== "undefined" ? formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd) : null);
+
+        if (typeof updateRoutinePanel === "function") {
+            updateRoutinePanel(activeKey);
+        }
+        if (typeof updateDeadlinePanel === "function") {
+            updateDeadlinePanel(activeKey);
+        }
+        if (typeof updateSidePanelHeightAndCollapse === "function") {
+            updateSidePanelHeightAndCollapse();
         }
     });
 

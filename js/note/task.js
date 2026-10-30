@@ -10,32 +10,184 @@ fridgeContainer.addEventListener("blur", (e) => {
     }
 }, true);
 
-// Ctrl + Enter برای اضافه کردن تسک
-document.addEventListener("keydown", e => {
-    if (e.ctrlKey && e.key === "Enter" && activeNoteIndex != null) {
-        notes[activeNoteIndex].tasks.push({
-            text: "",
-            checked: false,
-            scribbled: false,
-            deadline: null
-        });
+// Keyboard shortcuts for tasks:
+// 1. Enter key: creates a new task directly below current task
+// 2. Backspace key on empty task: deletes the task and focuses previous
+// 3. Enter on note-title: moves focus to first task
+fridgeContainer.addEventListener("keydown", (e) => {
+    if (e.target.classList.contains("note-task-text")) {
+        const taskTextarea = e.target;
+        const taskEl = taskTextarea.closest(".note-task");
+        const notePaper = taskEl ? taskEl.closest(".note-paper") : null;
+        if (!taskEl || !notePaper) return;
 
-        saveNotes();
-        if (typeof refreshSingleNoteOnFridge === 'function') {
-            refreshSingleNoteOnFridge(notes[activeNoteIndex]);
-        } else {
-            renderAllNotes();
+        const noteIndex = Number(notePaper.dataset.noteIndex);
+        const taskIndex = Number(taskEl.dataset.taskIndex);
+        const note = notes[noteIndex];
+        if (!note) return;
+
+        if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
+            e.preventDefault();
+
+            note.tasks[taskIndex].text = taskTextarea.value;
+
+            const newTask = {
+                id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                text: "",
+                checked: false,
+                scribbled: false,
+                deadline: null
+            };
+            note.tasks.splice(taskIndex + 1, 0, newTask);
+
+            saveNotes();
+            if (window.SoundEngine) SoundEngine.click();
+            if (typeof refreshSingleNoteOnFridge === 'function') {
+                refreshSingleNoteOnFridge(note);
+            } else {
+                renderAllNotes();
+            }
+
+            setTimeout(() => {
+                const wrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`) ||
+                                (note.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${note.stackId}"]`) : null);
+                if (wrapper) {
+                    const allTasks = wrapper.querySelectorAll('.note-task');
+                    const targetEl = allTasks[taskIndex + 1] || allTasks[allTasks.length - 1];
+                    if (targetEl) {
+                        const input = targetEl.querySelector('.note-task-text');
+                        if (input) {
+                            input.removeAttribute("readonly");
+                            input.classList.remove("locked-task");
+                            input.classList.add("editing-task");
+                            input.focus();
+                        }
+                    }
+                }
+            }, 30);
+            return;
+        }
+
+        if (e.key === "Backspace" && taskTextarea.value.trim() === "") {
+            if (note.tasks.length > 1) {
+                e.preventDefault();
+                note.tasks.splice(taskIndex, 1);
+                saveNotes();
+                if (window.SoundEngine) SoundEngine.erase();
+                if (typeof refreshSingleNoteOnFridge === 'function') {
+                    refreshSingleNoteOnFridge(note);
+                } else {
+                    renderAllNotes();
+                }
+
+                setTimeout(() => {
+                    const wrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`) ||
+                                    (note.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${note.stackId}"]`) : null);
+                    if (wrapper) {
+                        const allTasks = wrapper.querySelectorAll('.note-task');
+                        const prevIdx = Math.max(0, taskIndex - 1);
+                        const prevEl = allTasks[prevIdx];
+                        if (prevEl) {
+                            const input = prevEl.querySelector('.note-task-text');
+                            if (input) {
+                                input.removeAttribute("readonly");
+                                input.classList.remove("locked-task");
+                                input.classList.add("editing-task");
+                                input.focus();
+                                const len = input.value.length;
+                                input.setSelectionRange(len, len);
+                            }
+                        }
+                    }
+                }, 30);
+                return;
+            }
+        }
+    }
+
+    if (e.target.classList.contains("note-title") && e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const notePaper = e.target.closest(".note-paper");
+        if (!notePaper) return;
+        const noteIndex = Number(notePaper.dataset.noteIndex);
+        const note = notes[noteIndex];
+        if (!note) return;
+
+        if (!note.tasks || note.tasks.length === 0) {
+            note.tasks = [{
+                id: 'task_' + Date.now(),
+                text: "",
+                checked: false,
+                scribbled: false,
+                deadline: null
+            }];
+            saveNotes();
+            if (typeof refreshSingleNoteOnFridge === 'function') {
+                refreshSingleNoteOnFridge(note);
+            } else {
+                renderAllNotes();
+            }
         }
 
         setTimeout(() => {
-            const inputs = document.querySelectorAll(
-                `.note-paper[data-note-index="${activeNoteIndex}"] .note-task-text`
-            );
-
-            if (inputs.length > 0) {
-                inputs[inputs.length - 1].focus();
+            const wrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`) ||
+                            (note.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${note.stackId}"]`) : null);
+            if (wrapper) {
+                const firstTaskInput = wrapper.querySelector(".note-task-text");
+                if (firstTaskInput) {
+                    firstTaskInput.removeAttribute("readonly");
+                    firstTaskInput.classList.remove("locked-task");
+                    firstTaskInput.classList.add("editing-task");
+                    firstTaskInput.focus();
+                }
             }
         }, 30);
+    }
+});
+
+// Ctrl + Enter برای اضافه کردن تسک به انتهای یادداشت فعال
+document.addEventListener("keydown", e => {
+    if (e.ctrlKey && e.key === "Enter") {
+        let targetIndex = activeNoteIndex;
+        if (targetIndex === null || targetIndex === undefined) {
+            const activePaper = document.activeElement ? document.activeElement.closest('.note-paper') : null;
+            if (activePaper) {
+                targetIndex = Number(activePaper.dataset.noteIndex);
+            }
+        }
+
+        if (targetIndex != null && notes[targetIndex]) {
+            notes[targetIndex].tasks.push({
+                id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                text: "",
+                checked: false,
+                scribbled: false,
+                deadline: null
+            });
+
+            saveNotes();
+            if (window.SoundEngine) SoundEngine.click();
+            if (typeof refreshSingleNoteOnFridge === 'function') {
+                refreshSingleNoteOnFridge(notes[targetIndex]);
+            } else {
+                renderAllNotes();
+            }
+
+            setTimeout(() => {
+                const wrapper = document.querySelector(`.note-wrapper[data-note-id="${notes[targetIndex].id}"]`) ||
+                                (notes[targetIndex].stackId ? document.querySelector(`.note-wrapper[data-stack-id="${notes[targetIndex].stackId}"]`) : null);
+                if (wrapper) {
+                    const inputs = wrapper.querySelectorAll('.note-task-text');
+                    if (inputs.length > 0) {
+                        const lastInput = inputs[inputs.length - 1];
+                        lastInput.removeAttribute("readonly");
+                        lastInput.classList.remove("locked-task");
+                        lastInput.classList.add("editing-task");
+                        lastInput.focus();
+                    }
+                }
+            }, 30);
+        }
     }
 });
 

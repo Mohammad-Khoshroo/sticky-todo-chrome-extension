@@ -242,10 +242,10 @@ function renderStackPileContainer(stackId, stackNotes, activeIdx) {
     return pileContainer;
 }
 
-function switchStackActiveNote(stackId, targetNoteId) {
+function switchStackActiveNote(stackId, targetNoteId, force = false) {
     if (typeof stacks === "undefined" || !stacks[stackId]) return null;
     const stack = stacks[stackId];
-    if (stack.activeNoteId === targetNoteId) {
+    if (!force && stack.activeNoteId === targetNoteId) {
         return document.querySelector(`.note-wrapper[data-stack-id="${stackId}"]`);
     }
 
@@ -286,7 +286,8 @@ function switchStackActiveNote(stackId, targetNoteId) {
         }
 
         const newHeight = wrapper.offsetHeight;
-        if (prevHeight !== newHeight && typeof msnry !== "undefined" && msnry && typeof msnry.layout === "function") {
+        if (typeof msnry !== "undefined" && msnry && typeof msnry.layout === "function") {
+            msnry.reloadItems();
             msnry.layout();
         }
         return wrapper;
@@ -431,7 +432,15 @@ function renderSingleNoteWrapper(note, noteIndex) {
 function refreshSingleNoteOnFridge(note) {
     if (!note || note.deletedAt) return;
     if (note.stackId) {
-        switchStackActiveNote(note.stackId, note.id);
+        switchStackActiveNote(note.stackId, note.id, true);
+        if (typeof renderCalendar === "function") renderCalendar(currentJy, currentJm);
+        if (typeof updateDeadlinePanel === "function") {
+            const dKey = (typeof selectedDeadlineKey !== "undefined" && selectedDeadlineKey)
+                ? selectedDeadlineKey
+                : (typeof formatJalaliKey === "function" && typeof todayJalali !== "undefined" ? formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd) : null);
+            updateDeadlinePanel(dKey);
+        }
+        if (typeof updateReminderBell === "function") updateReminderBell();
         return;
     }
     const oldWrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`);
@@ -447,15 +456,22 @@ function refreshSingleNoteOnFridge(note) {
     if (oldWrapper.style.left) newWrapper.style.left = oldWrapper.style.left;
     if (oldWrapper.style.top) newWrapper.style.top = oldWrapper.style.top;
 
-    const prevHeight = oldWrapper.offsetHeight;
     oldWrapper.replaceWith(newWrapper);
     autoResizeTextareas();
 
-    const newHeight = newWrapper.offsetHeight;
-    if (prevHeight !== newHeight && typeof msnry !== 'undefined' && msnry) {
+    if (typeof msnry !== 'undefined' && msnry) {
         msnry.reloadItems();
         msnry.layout();
     }
+
+    if (typeof renderCalendar === "function") renderCalendar(currentJy, currentJm);
+    if (typeof updateDeadlinePanel === "function") {
+        const dKey = (typeof selectedDeadlineKey !== "undefined" && selectedDeadlineKey)
+            ? selectedDeadlineKey
+            : (typeof formatJalaliKey === "function" && typeof todayJalali !== "undefined" ? formatJalaliKey(todayJalali.jy, todayJalali.jm, todayJalali.jd) : null);
+        updateDeadlinePanel(dKey);
+    }
+    if (typeof updateReminderBell === "function") updateReminderBell();
 }
 window.refreshSingleNoteOnFridge = refreshSingleNoteOnFridge;
 
