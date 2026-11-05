@@ -151,10 +151,7 @@ function ensureExpandedCalendarSkeleton(modal) {
                 <div class="expanded-overdue-body"></div>
             </div>
 
-            <!-- Weekdays Row -->
-            <div class="expanded-cal-weekdays"></div>
-
-            <!-- Days Grid -->
+            <!-- Days Grid (includes sticky Weekdays in row 1 for 100% column alignment) -->
             <div class="expanded-cal-days-grid" id="expanded-cal-days-grid"></div>
         </div>
     `;
@@ -402,11 +399,7 @@ function renderExpandedCalendarContent(modal) {
     // Update Overdue banner
     updateExpandedOverdueBanner(modal, overdueList, fd, remDict);
 
-    // Update Weekdays
-    const weekdaysEl = modal.querySelector(".expanded-cal-weekdays");
-    if (weekdaysEl) weekdaysEl.innerHTML = renderExpandedWeekdays(calType);
-
-    // Update Days Grid
+    // Update Days Grid (Weekdays are rendered as the sticky first row of the grid)
     const gridEl = modal.querySelector("#expanded-cal-days-grid");
     if (gridEl) renderExpandedGridDays(gridEl, calType);
 
@@ -419,15 +412,20 @@ function renderExpandedWeekdays(calType) {
     let days;
 
     if (!isLtr) {
-        days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
+        if (currentLanguage === "ar") {
+            days = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        } else {
+            days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
+        }
     } else {
-        days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         if (currentLanguage === "ko") {
             days = ['일', '월', '화', '수', '목', '금', '토'];
+        } else {
+            days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         }
     }
 
-    return days.map(d => `<div class="expanded-weekday-cell">${d}</div>`).join("");
+    return days.map(d => `<div class="expanded-weekday-cell" title="${d}">${d}</div>`).join("");
 }
 
 function changeExpandedMonth(delta) {
@@ -470,7 +468,8 @@ function changeExpandedMonth(delta) {
 
 function renderExpandedGridDays(gridEl, calType) {
     if (!gridEl) return;
-    gridEl.innerHTML = "";
+    // Row 1: Weekday headers lock directly to the grid's columns
+    gridEl.innerHTML = renderExpandedWeekdays(calType);
 
     const fd = (typeof toFarsiNumber === "function" && (currentLanguage === "fa" || currentLanguage === "ar"))
         ? toFarsiNumber

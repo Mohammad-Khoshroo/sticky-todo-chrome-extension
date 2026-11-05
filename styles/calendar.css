@@ -1547,20 +1547,34 @@ html[dir="ltr"] .deadline-item.done {
     border-radius: 4px;
 }
 
-/* WEEKDAYS */
+/* WEEKDAYS (Now rendered directly as row 1 of .expanded-cal-days-grid for 100% column alignment) */
 .expanded-cal-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: #f1f5f9;
-    border-bottom: 1px solid #e2e8f0;
+    display: none;
 }
 
 .expanded-weekday-cell {
-    padding: 8px 6px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 38px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-sizing: border-box;
     text-align: center;
-    font-size: 0.84rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: #475569;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    user-select: none;
 }
 
 /* DAYS GRID */
@@ -1569,7 +1583,7 @@ html[dir="ltr"] .deadline-item.done {
     grid-template-columns: repeat(7, 1fr);
     gap: 6px;
     padding: 10px;
-    overflow-y: auto;
+    overflow: auto;
     flex: 1;
     background: #eef2f6;
 }

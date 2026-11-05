@@ -648,12 +648,14 @@ body.dark-mode {
 }
 
 .dark-mode .expanded-cal-weekdays {
-    background: #0f172a;
-    border-color: #334155;
+    display: none;
 }
 
 .dark-mode .expanded-weekday-cell {
+    background: #111827;
+    border: 1px solid #1f2937;
     color: #94a3b8;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
 }
 
 .dark-mode .expanded-cal-days-grid {
