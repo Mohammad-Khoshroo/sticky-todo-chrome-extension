@@ -72,7 +72,7 @@ function getNoteFromPaper(notePaper) {
 
 // Keyboard shortcuts for tasks:
 // 1. Enter key: creates a new task directly below current task (splits if cursor in middle)
-// 2. Backspace key on empty task: deletes the task and focuses previous with bounce protection
+// 2. Backspace: deletes characters within current task, never deletes task or jumps to previous
 // 3. Enter on note-title: moves focus to first task
 fridgeContainer.addEventListener("keydown", (e) => {
     if (e.target.classList.contains("note-task-text")) {
@@ -142,96 +142,12 @@ fridgeContainer.addEventListener("keydown", (e) => {
         }
 
         if (e.key === "Backspace") {
-            // 1. Backspace immunity window protection from previous task deletion
-            const now = Date.now();
-            if (taskTextarea._ignoreBackspaceUntil && now < taskTextarea._ignoreBackspaceUntil) {
+            // Never delete task or jump to previous task on Backspace
+            if (taskTextarea.value === "") {
                 e.preventDefault();
                 return;
             }
-
-            // 2. If key is repeating (held down), NEVER delete the task container or jump to previous!
-            if (e.repeat) {
-                if (taskTextarea.value === "") {
-                    e.preventDefault();
-                }
-                return;
-            }
-
-            // 3. If there is text in the textarea, allow standard character deletion
-            if (taskTextarea.value.trim() !== "") {
-                return;
-            }
-
-            // 4. Field is already empty and user tapped Backspace afresh (!e.repeat)
-            if (note.tasks && note.tasks.length > 1) {
-                e.preventDefault();
-                note.tasks.splice(taskIndex, 1);
-                saveNotes();
-                if (window.SoundEngine) SoundEngine.erase();
-                if (typeof refreshSingleNoteOnFridge === 'function') {
-                    refreshSingleNoteOnFridge(note);
-                } else {
-                    renderAllNotes();
-                }
-
-                setTimeout(() => {
-                    const wrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`) ||
-                                    (note.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${note.stackId}"]`) : null);
-                    if (wrapper) {
-                        const allTasks = wrapper.querySelectorAll('.note-task');
-                        if (taskIndex > 0) {
-                            const prevIdx = taskIndex - 1;
-                            const prevEl = allTasks[prevIdx];
-                            if (prevEl) {
-                                const input = prevEl.querySelector('.note-task-text');
-                                if (input) {
-                                    input.removeAttribute("readonly");
-                                    input.classList.remove("locked-task");
-                                    input.classList.add("editing-task");
-                                    input._ignoreBackspaceUntil = Date.now() + 450;
-                                    input.focus();
-                                    const len = input.value.length;
-                                    input.setSelectionRange(len, len);
-                                }
-                            }
-                        } else {
-                            // Deleting task at index 0: focus note-title if exists, or first remaining task
-                            const titleInput = wrapper.querySelector('.note-title');
-                            if (titleInput) {
-                                titleInput.focus();
-                                const len = titleInput.value.length;
-                                titleInput.setSelectionRange(len, len);
-                            } else if (allTasks.length > 0) {
-                                const firstInput = allTasks[0].querySelector('.note-task-text');
-                                if (firstInput) {
-                                    firstInput.removeAttribute("readonly");
-                                    firstInput.classList.remove("locked-task");
-                                    firstInput.classList.add("editing-task");
-                                    firstInput._ignoreBackspaceUntil = Date.now() + 450;
-                                    firstInput.focus();
-                                }
-                            }
-                        }
-                    }
-                }, 30);
-                return;
-            } else if (note.tasks && note.tasks.length <= 1) {
-                // If it's the only task and empty, move cursor up to note title
-                if (taskIndex === 0) {
-                    e.preventDefault();
-                    const wrapper = document.querySelector(`.note-wrapper[data-note-id="${note.id}"]`) ||
-                                    (note.stackId ? document.querySelector(`.note-wrapper[data-stack-id="${note.stackId}"]`) : null);
-                    if (wrapper) {
-                        const titleInput = wrapper.querySelector('.note-title');
-                        if (titleInput) {
-                            titleInput.focus();
-                            const len = titleInput.value.length;
-                            titleInput.setSelectionRange(len, len);
-                        }
-                    }
-                }
-                return;
-            }
+            return;
         }
     }
 
