@@ -1,3 +1,20 @@
+function getNoteFromElement(el) {
+    if (!el) return null;
+    const notePaper = el.closest(".note-paper");
+    const wrapper = el.closest(".note-wrapper");
+    const noteId = (notePaper && notePaper.dataset.noteId) || (wrapper && wrapper.dataset.noteId);
+    if (noteId && typeof notes !== 'undefined') {
+        const found = notes.find(n => n.id === noteId);
+        if (found) return found;
+    }
+    if (notePaper && notePaper.dataset.noteIndex !== undefined && typeof notes !== 'undefined') {
+        const idx = Number(notePaper.dataset.noteIndex);
+        if (!isNaN(idx) && notes[idx]) return notes[idx];
+    }
+    return null;
+}
+window.getNoteFromElement = getNoteFromElement;
+
 // ----------------------
 //       RENDERING
 // ----------------------
@@ -207,6 +224,7 @@ function renderStackPileContainer(stackId, stackNotes, activeIdx) {
         noteDiv.style.setProperty('--page-rot', `${rotationAngle}deg`);
         noteDiv.className = `note-paper ${currentNote.colorClass} ${activeNoteIndex === currentNoteIndex ? 'active' : ''}`;
         noteDiv.dataset.noteIndex = currentNoteIndex;
+        noteDiv.dataset.noteId = currentNote.id;
 
         let tasksHTML = pageTasks.map((task, tIndex) => {
             const absoluteIndex = taskOffset + tIndex;
@@ -375,6 +393,7 @@ function renderSingleNoteWrapper(note, noteIndex) {
         noteDiv.style.setProperty('--page-rot', `${rotationAngle}deg`);
         noteDiv.className = `note-paper ${note.colorClass} ${activeNoteIndex === noteIndex ? 'active' : ''}`;
         noteDiv.dataset.noteIndex = noteIndex;
+        noteDiv.dataset.noteId = note.id;
 
         let tasksHTML = pageTasks.map((task, tIndex) => {
             const absoluteIndex = taskOffset + tIndex;
@@ -551,10 +570,13 @@ fridgeContainer.addEventListener('input', (e) => {
     const noteEl = e.target.closest('.note-paper');
     if (!noteEl) return;
 
-    const noteIndex = Number(noteEl.dataset.noteIndex);
+    const note = (typeof getNoteFromElement === 'function')
+        ? getNoteFromElement(noteEl)
+        : notes[Number(noteEl.dataset.noteIndex)];
+    if (!note) return;
 
     if (e.target.classList.contains('note-title')) {
-        notes[noteIndex].title = e.target.value;
+        note.title = e.target.value;
         e.target.style.height = 'auto';
         e.target.style.height = e.target.scrollHeight + 'px';
         saveNotes();
@@ -565,7 +587,9 @@ fridgeContainer.addEventListener('input', (e) => {
         if (!taskEl) return;
 
         const taskIndex = Number(taskEl.dataset.taskIndex);
-        notes[noteIndex].tasks[taskIndex].text = e.target.value;
+        if (note.tasks && note.tasks[taskIndex]) {
+            note.tasks[taskIndex].text = e.target.value;
+        }
 
         e.target.style.height = 'auto';
         e.target.style.height = e.target.scrollHeight + 'px';
@@ -578,14 +602,19 @@ fridgeContainer.addEventListener('change', (e) => {
     const noteEl = e.target.closest('.note-paper');
     if (!noteEl) return;
 
-    const noteIndex = Number(noteEl.dataset.noteIndex);
+    const note = (typeof getNoteFromElement === 'function')
+        ? getNoteFromElement(noteEl)
+        : notes[Number(noteEl.dataset.noteIndex)];
+    if (!note) return;
 
     if (e.target.classList.contains('task-checkbox')) {
         const taskEl = e.target.closest('.note-task');
         if (!taskEl) return;
 
         const taskIndex = Number(taskEl.dataset.taskIndex);
-        notes[noteIndex].tasks[taskIndex].checked = e.target.checked;
+        if (note.tasks && note.tasks[taskIndex]) {
+            note.tasks[taskIndex].checked = e.target.checked;
+        }
         if (window.SoundEngine) SoundEngine.check(e.target.checked);
         saveNotes();
         if (typeof updateDeadlinePanel === 'function') {

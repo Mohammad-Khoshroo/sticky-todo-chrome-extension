@@ -90,7 +90,7 @@
 }
 
 .note-task-text.locked-task {
-    cursor: grab;
+    cursor: text;
     user-select: none;
 }
 
